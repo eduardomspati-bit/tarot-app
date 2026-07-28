@@ -24,6 +24,13 @@
         .badge-premium { background: #22c55e; color: #052e16; }
         .badge-gratis { background: #64748b; color: #f8fafc; }
         .txt-ayuda { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+
+        /* Estilos de botones de acción rápida */
+        .btn-act-premium { background: #22c55e; color: #052e16; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-act-premium:hover { background: #16a34a; color: white; }
+        .btn-act-quitar { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-act-quitar:hover { background: #dc2626; }
+
 /* ==========================================
            CONTROL DE IMÁGENES DENTRO DEL ADMIN
            ========================================== */
@@ -88,10 +95,7 @@
 
 <script>
     // 1. CONFIGURACIÓN DE SEGURIDAD LOCAL
-    // Cambia esto por la contraseña que quieras usar para entrar a este HTML en tu navegador
     const CLAVE_ACCESO_HTML = "MarinaRabino1995"; 
-    
-    // Cambia esto por el token exacto que guardaste en la variable de entorno ADMIN_SECRET_KEY en Render
     const TOKEN_BACKEND = "MarinaRabino1995"; 
 
     // Auto-ejecutable para bloquear la vista si la contraseña del prompt es incorrecta
@@ -105,7 +109,7 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         actualizarBotonEstado();
-        cargarListaClientesDesdeServidor(); // 🌟 Ahora llamamos a la base de datos real
+        cargarListaClientesDesdeServidor();
     });
 
     // Detecta automáticamente si estás probando en tu PC o en producción (Render)
@@ -138,12 +142,11 @@
         contenedor.innerHTML = "<p style='color: #94a3b8; font-size: 14px;'>Consultando registros en el plano del servidor...</p>";
 
         try {
-            // Hacemos la petición al endpoint que programamos en el server.js
             const response = await fetch(`${API_URL}/api/admin/clientes`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-token': TOKEN_BACKEND // Enviamos el pase de seguridad obligatorio
+                    'x-admin-token': TOKEN_BACKEND
                 }
             });
 
@@ -162,7 +165,7 @@
                 return;
             }
 
-            // Armamos la tabla de forma dinámica con la respuesta de la API
+            // Armamos la tabla con la columna adicional de ACCIONES
             let html = `
                 <table>
                     <thead>
@@ -172,13 +175,21 @@
                             <th>Plan</th>
                             <th>Tiradas</th>
                             <th>Última Actividad</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
             
             clientesReales.forEach(c => {
-                const badgeClass = c.plan === 'Premium' ? 'badge-premium' : 'badge-gratis';
+                const esPremium = c.plan === 'Premium';
+                const badgeClass = esPremium ? 'badge-premium' : 'badge-gratis';
+                const idCliente = c.id || c.email; // Usa el ID o el email como identificador único
+
+                const botonAccion = esPremium 
+                    ? `<button class="btn-act-quitar" onclick="cambiarPlan('${idCliente}', 'Gratis')">Quitar Premium</button>`
+                    : `<button class="btn-act-premium" onclick="cambiarPlan('${idCliente}', 'Premium')">Hacer Premium</button>`;
+
                 html += `
                     <tr>
                         <td><strong>${c.nombre}</strong></td>
@@ -186,6 +197,7 @@
                         <td><span class="badge ${badgeClass}">${c.plan}</span></td>
                         <td>🔮 ${c.totalTiradas}</td>
                         <td>${c.ultimaConexion}</td>
+                        <td>${botonAccion}</td>
                     </tr>
                 `;
             });
@@ -201,6 +213,32 @@
                     <span style="font-size: 12px; color: #fca5a5;">Asegúrate de que tu backend esté corriendo y de que las claves coincidan exactamente.</span>
                 </div>
             `;
+        }
+    }
+
+    // 🌟 FUNCIÓN PARA CAMBIAR PLAN DESDE LA TABLA
+    async function cambiarPlan(userId, nuevoPlan) {
+        if (!confirm(`¿Seguro que querés cambiar el plan de este usuario a ${nuevoPlan}?`)) return;
+
+        try {
+            const response = await fetch(`${API_URL}/api/admin/cambiar-plan`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-token': TOKEN_BACKEND
+                },
+                body: JSON.stringify({ userId, nuevoPlan })
+            });
+
+            if (response.ok) {
+                alert(`¡Estado actualizado con éxito a ${nuevoPlan}!`);
+                cargarListaClientesDesdeServidor(); // Recarga la tabla en tiempo real
+            } else {
+                alert("Ocurrió un error en el servidor al intentar modificar el plan.");
+            }
+        } catch (error) {
+            console.error("❌ Error al cambiar el plan:", error);
+            alert("No se pudo conectar con el servidor.");
         }
     }
 </script>
