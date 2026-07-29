@@ -144,10 +144,11 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:3000'
     : 'https://tarot-613b.onrender.com';
 
-// Obtiene o crea un ID único para el consultante en este navegador
+// Obtiene o crea un ID único para el consultante, priorizando el email registrado
 function obtenerIdentidadConsultante() {
     let idUsuario = localStorage.getItem('usuario_tarot_id');
     let nombreUsuario = localStorage.getItem('usuario_tarot_nombre');
+    let emailUsuario = localStorage.getItem('usuario_tarot_email');
 
     if (!idUsuario) {
         // Genera un ID místico aleatorio único para el dispositivo
@@ -161,11 +162,12 @@ function obtenerIdentidadConsultante() {
     return {
         id: idUsuario,
         nombre: nombreUsuario,
-        email: `${idUsuario}@consultante.tarot` // Email simulado único para tracking
+        // Usa el email real si ya se vinculó; si no, usa el ID técnico de tracking
+        email: emailUsuario ? emailUsuario : `${idUsuario}@consultante.tarot`
     };
 }
 
-// Función que se comunica con el servidor en Render
+// Envía el registro de la tirada o datos del usuario al backend
 async function registrarConsumoEnServidor() {
     const usuario = obtenerIdentidadConsultante();
 
@@ -180,11 +182,51 @@ async function registrarConsumoEnServidor() {
         });
 
         const data = await res.json();
-        console.log("🔮 Registro de tirada actualizado en MongoDB:", data);
+        console.log("🔮 Registro actualizado en MongoDB Atlas:", data);
         return data;
     } catch (err) {
-        console.error("⚠️ No se pudo registrar la tirada en el backend:", err);
+        console.error("⚠️ No se pudo registrar en la base de datos:", err);
         return null;
+    }
+}
+
+// Permite al usuario registrar o vincular su email personal
+async function registrarEmailUsuario(emailIngresado) {
+    if (!emailIngresado || !emailIngresado.includes('@')) {
+        alert("🧙‍♂️ Por favor, ingresa un correo electrónico válido.");
+        return;
+    }
+
+    // Guarda el correo en el dispositivo local
+    localStorage.setItem('usuario_tarot_email', emailIngresado);
+
+    // Sincroniza inmediatamente con MongoDB Atlas
+    const usuario = obtenerIdentidadConsultante();
+    try {
+        const res = await fetch(`${API_URL}/api/usuarios/registrar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre: usuario.nombre,
+                email: emailIngresado
+            })
+        });
+
+        const data = await res.json();
+        alert("✨ ¡Tu correo electrónico ha sido vinculado exitosamente a tu cuenta!");
+        console.log("🔮 Email guardado en MongoDB Atlas:", data);
+    } catch (err) {
+        console.error("⚠️ Error al vincular el email:", err);
+    }
+}
+
+// Muestra una ventana emergente para solicitar el correo al usuario
+function pedirEmailAlUsuario() {
+    const emailActual = localStorage.getItem('usuario_tarot_email') || '';
+    const nuevoEmail = prompt("🧙‍♂️ Ingresa tu correo electrónico para vincular tu cuenta y tus lecturas:", emailActual);
+
+    if (nuevoEmail) {
+        registrarEmailUsuario(nuevoEmail.trim());
     }
 }
 
@@ -217,11 +259,9 @@ function verificarAccesoFisico() {
 // ==========================================
 // CONTROLADOR DE ADQUISICIÓN PREMIUM
 // ==========================================
-// ==========================================
-// CONTROLADOR DE ADQUISICIÓN PREMIUM
-// ==========================================
+
 function adquirirPasePremium() {
-    // Tu enlace real de Mercado Pago con protocolo completo
+    // Redirección directa a la pasarela de pago de Mercado Pago
     const LINK_DE_PAGO_REAL = "https://mpago.la/2rDcjLS"; 
 
     // Abre el enlace de pago en una pestaña nueva
@@ -244,6 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================
 // FLUJO INTERNO DE PANTALLA FÍSICA
 // ==========================================
+
 function inicializarYMostrarPantallaFisica() {
     ocultarTodasLasPantallas();
     const screenFisico = document.getElementById('screen-fisico');
@@ -288,6 +329,7 @@ function irAlEjeFisico() {
 // ==========================================
 // DESPACHO LÓGICO DE LECTURAS
 // ==========================================
+
 function ejecutarLecturaSegunModo(tema) {
     if (tema === 'Pregunta Específica') {
         abrirPantallaPregunta();
