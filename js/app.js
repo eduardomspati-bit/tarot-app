@@ -259,27 +259,29 @@ function verificarAccesoFisico() {
 // ==========================================
 // CONTROLADOR DE ADQUISICIÓN PREMIUM
 // ==========================================
+async function adquirirPasePremium() {
+    const emailGuardado = localStorage.getItem('usuario_tarot_email') || '';
+    
+    // 1. Pedir el mail real si aún no lo ha ingresado
+    let emailIngresado = emailGuardado;
+    
+    if (!emailIngresado || emailIngresado.includes('@consultante.tarot')) {
+        emailIngresado = prompt("🧙‍♂️ Ingresa tu correo electrónico para asociar tu suscripción Premium y no perder tus beneficios:");
+        
+        if (!emailIngresado || !emailIngresado.includes('@')) {
+            alert("⚠️ Necesitamos un correo válido para asociar tu pago y activar tu cuenta Premium.");
+            return;
+        }
+    }
 
-function adquirirPasePremium() {
-    // Redirección directa a la pasarela de pago de Mercado Pago
+    // 2. Guardar el correo real localmente y registrarlo en MongoDB Atlas
+    localStorage.setItem('usuario_tarot_email', emailIngresado.trim());
+    await registrarConsumoEnServidor(); // Registra/Actualiza el email en MongoDB
+
+    // 3. Abrir Mercado Pago
     const LINK_DE_PAGO_REAL = "https://mpago.la/2rDcjLS"; 
-
-    // Abre el enlace de pago en una pestaña nueva
     window.open(LINK_DE_PAGO_REAL, '_blank');
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    const btnPremium = document.getElementById('btn-adquirir-premium') 
-                    || document.getElementById('btn-premium') 
-                    || document.querySelector('.btn-premium');
-
-    if (btnPremium) {
-        btnPremium.addEventListener('click', (e) => {
-            e.preventDefault(); 
-            adquirirPasePremium();
-        });
-    }
-});
 
 // ==========================================
 // FLUJO INTERNO DE PANTALLA FÍSICA
