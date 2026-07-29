@@ -218,7 +218,7 @@ function verificarAccesoFisico() {
 // CONTROLADOR DE ADQUISICIÓN PREMIUM
 // ==========================================
 function adquirirPasePremium() {
-    const LINK_DE_PAGO_REAL = "google.com"; 
+    const LINK_DE_PAGO_REAL = "https://google.com"; 
 
     if (LINK_DE_PAGO_REAL.includes("tu_usuario_tarot_premium")) {
         alert("🧙‍♂️ ¡El portal místico de pagos se está configurando!\n\nSi estás probando el sistema, podés introducir un código válido (como ADMIN2026, PASEMISTICO o TAROTGRATIS) en el casillero de cupones para forzar el modo Premium gratis.");
