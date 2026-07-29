@@ -217,14 +217,15 @@ function verificarAccesoFisico() {
 // ==========================================
 // CONTROLADOR DE ADQUISICIÓN PREMIUM
 // ==========================================
+// ==========================================
+// CONTROLADOR DE ADQUISICIÓN PREMIUM
+// ==========================================
 function adquirirPasePremium() {
-    const LINK_DE_PAGO_REAL = "https://google.com"; 
+    // Tu enlace real de Mercado Pago con protocolo completo
+    const LINK_DE_PAGO_REAL = "https://mpago.la/2rDcjLS"; 
 
-    if (LINK_DE_PAGO_REAL.includes("tu_usuario_tarot_premium")) {
-        alert("🧙‍♂️ ¡El portal místico de pagos se está configurando!\n\nSi estás probando el sistema, podés introducir un código válido (como ADMIN2026, PASEMISTICO o TAROTGRATIS) en el casillero de cupones para forzar el modo Premium gratis.");
-    } else {
-        window.open(LINK_DE_PAGO_REAL, '_blank');
-    }
+    // Abre el enlace de pago en una pestaña nueva
+    window.open(LINK_DE_PAGO_REAL, '_blank');
 }
 
 document.addEventListener("DOMContentLoaded", () => {
