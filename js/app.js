@@ -1,17 +1,20 @@
 // ==========================================================
-// VARIABLES GLOBALES DE ESTADO
+// VARIABLES GLOBALES DE ESTADO Y CONFIGURACIÓN
 // ==========================================================
 let estiloSeleccionado = 'magico';
 let modoFisicoActivo = false;
 let cartasFisicasElegidas = [];
 
+// Reutilizar API_URL existente o definirla solo si no existe
+if (typeof API_URL === 'undefined') {
+    var API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : 'https://tarot-613b.onrender.com';
+}
+
 // ==========================================================
 // REGISTRO Y SEGUIMIENTO DE USUARIOS EN MONGODB ATLAS
 // ==========================================================
-
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000'
-    : 'https://tarot-613b.onrender.com';
 
 function obtenerIdentidadConsultante() {
     let idUsuario = localStorage.getItem('usuario_tarot_id');
@@ -199,7 +202,6 @@ function ejecutarLecturaSegunModo(tema) {
         return;
     }
 
-    // Registra la lectura en segundo plano
     registrarConsumoEnServidor();
 
     if (typeof procesarTiradaCompleta === 'function') {
