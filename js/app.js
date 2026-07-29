@@ -1,141 +1,10 @@
-// ==========================================
-// CONFIGURACIÓN GLOBAL Y VARIABLES DE ESTADO
-// ==========================================
-
-// 1. Revisa si el Administrador forzó la vista desde el panel de control
-let esUsuarioPremium = localStorage.getItem('simularPremium') === 'true';
-
-// 2. Lista de códigos Premium válidos (Administrables)
-const codigosPremiumValidos = ["ADMIN2026", "PASEMISTICO", "TAROTGRATIS"];
-
-// 3. Revisa si el cliente ya tenía un código válido guardado
-if (localStorage.getItem('cuponPremiumActivo') === 'true') {
-    esUsuarioPremium = true;
-}
-
-// Variables del flujo de la lectura
+// ==========================================================
+// VARIABLES GLOBALES DE ESTADO
+// ==========================================================
+let estiloSeleccionado = 'magico';
 let modoFisicoActivo = false;
-let estiloSeleccionado = 'filosofico';
 let cartasFisicasElegidas = [];
-let ultimaLecturaGuardadaContexto = "";
-let ultimasCartasElegidasContexto = { a: "", b: "", c: "", d: "" };
 
-// Endpoint de tu backend en Render
-const API_URL = "https://tarot-613b.onrender.com"; 
-
-// Inicialización de la aplicación al cargar el DOM
-document.addEventListener("DOMContentLoaded", () => {
-    console.log(`[TarotIA] Inicializado. Modo: ${esUsuarioPremium ? 'PREMIUM ✨' : 'GRATIS 🃏'}`);
-    actualizarBadgeMuestrasFisicas();
-});
-
-// ==========================================
-// MOTOR DE ACCESO Y CUPONES
-// ==========================================
-function canjearCodigoPremium(codigoIntroducido) {
-    const codigoLimpio = codigoIntroducido.trim().toUpperCase(); 
-    
-    if (codigosPremiumValidos.includes(codigoLimpio)) {
-        localStorage.setItem('cuponPremiumActivo', 'true');
-        alert("✨ ¡Código Celestial Aceptado! Has desbloqueado TarotIA Premium.");
-        window.location.reload(); 
-        return true;
-    } else {
-        alert("❌ El oráculo no reconoce ese código. Intenta de nuevo.");
-        return false;
-    }
-}
-
-// ==========================================
-// NAVEGACIÓN ENTRE PANTALLAS
-// ==========================================
-function ocultarTodasLasPantallas() {
-    const screens = [
-        'screen-portada', 
-        'screen-fisico', 
-        'screen-selector', 
-        'screen-pregunta', 
-        'screen-result', 
-        'screen-historial', 
-        'screen-modulo-profesional'
-    ];
-    screens.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.add('hidden');
-            el.style.display = 'none';
-        }
-    });
-}
-
-function irAlEjeConsulta(estilo) {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    estiloSeleccionado = estilo;
-    modoFisicoActivo = false; 
-    cartasFisicasElegidas = []; 
-    
-    const btnPregunta = document.getElementById('btn-pregunta-especifica');
-    if (btnPregunta) {
-        btnPregunta.style.display = 'block'; 
-    }
-
-    ocultarTodasLasPantallas();
-    const screenSelector = document.getElementById('screen-selector');
-    if (screenSelector) {
-        const tituloEje = document.getElementById('titulo-eje-estilo');
-        if (tituloEje) tituloEje.innerText = "Selecciona el eje de tu consulta:";
-        screenSelector.classList.remove('hidden');
-        screenSelector.style.display = 'block';
-    }
-}
-
-function abrirPantallaPregunta() {
-    ocultarTodasLasPantallas();
-    const screenPregunta = document.getElementById('screen-pregunta');
-    if (screenPregunta) {
-        screenPregunta.classList.remove('hidden');
-        screenPregunta.style.display = 'block';
-        const inputPregunta = document.getElementById('texto-pregunta-usuario');
-        if (inputPregunta) inputPregunta.value = "";
-    }
-}
-
-function volverAPortada() {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    modoFisicoActivo = false; 
-    
-    for (let i = 1; i <= 4; i++) {
-        const select = document.getElementById(`fisico-carta${i}`);
-        if (select) select.selectedIndex = 0; 
-    }
-
-    ocultarTodasLasPantallas();
-    const portada = document.getElementById('screen-portada');
-    if (portada) {
-        portada.classList.remove('hidden');
-        portada.style.display = 'block';
-    }
-}
-
-function abrirModuloProfesional() {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    ocultarTodasLasPantallas();
-    const modProf = document.getElementById('screen-modulo-profesional');
-    if (modProf) {
-        modProf.classList.remove('hidden');
-        modProf.style.display = 'block';
-    }
-}
-
-function volverInicio() {
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
-    modoFisicoActivo = false;
-    for (let i = 1; i <= 4; i++) {
-        const select = document.getElementById(`fisico-carta${i}`);
-        if (select) select.selectedIndex = 0; 
-    }
-    window.location.reload();
-}
 // ==========================================================
 // REGISTRO Y SEGUIMIENTO DE USUARIOS EN MONGODB ATLAS
 // ==========================================================
@@ -144,14 +13,12 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
     ? 'http://localhost:3000'
     : 'https://tarot-613b.onrender.com';
 
-// Obtiene o crea un ID único para el consultante, priorizando el email registrado
 function obtenerIdentidadConsultante() {
     let idUsuario = localStorage.getItem('usuario_tarot_id');
     let nombreUsuario = localStorage.getItem('usuario_tarot_nombre');
     let emailUsuario = localStorage.getItem('usuario_tarot_email');
 
     if (!idUsuario) {
-        // Genera un ID místico aleatorio único para el dispositivo
         idUsuario = 'user_' + Math.random().toString(36).substr(2, 9);
         nombreUsuario = 'Consultante #' + Math.floor(1000 + Math.random() * 9000);
 
@@ -162,71 +29,92 @@ function obtenerIdentidadConsultante() {
     return {
         id: idUsuario,
         nombre: nombreUsuario,
-        // Usa el email real si ya se vinculó; si no, usa el ID técnico de tracking
         email: emailUsuario ? emailUsuario : `${idUsuario}@consultante.tarot`
     };
 }
 
-// Envía el registro de la tirada o datos del usuario al backend
-async function registrarConsumoEnServidor() {
+function registrarConsumoEnServidor() {
     const usuario = obtenerIdentidadConsultante();
 
-    try {
-        const res = await fetch(`${API_URL}/api/usuarios/registrar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nombre: usuario.nombre,
-                email: usuario.email
-            })
-        });
-
-        const data = await res.json();
-        console.log("🔮 Registro actualizado en MongoDB Atlas:", data);
-        return data;
-    } catch (err) {
-        console.error("⚠️ No se pudo registrar en la base de datos:", err);
-        return null;
-    }
+    fetch(`${API_URL}/api/usuarios/registrar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            nombre: usuario.nombre,
+            email: usuario.email
+        })
+    })
+    .then(res => res.json())
+    .then(data => console.log("🔮 Registro actualizado en MongoDB Atlas:", data))
+    .catch(err => console.error("⚠️ No se pudo registrar en backend:", err));
 }
 
-// Permite al usuario registrar o vincular su email personal
-async function registrarEmailUsuario(emailIngresado) {
+function registrarEmailUsuario(emailIngresado) {
     if (!emailIngresado || !emailIngresado.includes('@')) {
         alert("🧙‍♂️ Por favor, ingresa un correo electrónico válido.");
         return;
     }
 
-    // Guarda el correo en el dispositivo local
     localStorage.setItem('usuario_tarot_email', emailIngresado);
-
-    // Sincroniza inmediatamente con MongoDB Atlas
-    const usuario = obtenerIdentidadConsultante();
-    try {
-        const res = await fetch(`${API_URL}/api/usuarios/registrar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nombre: usuario.nombre,
-                email: emailIngresado
-            })
-        });
-
-        const data = await res.json();
-        alert("✨ ¡Tu correo electrónico ha sido vinculado exitosamente a tu cuenta!");
-        console.log("🔮 Email guardado en MongoDB Atlas:", data);
-    } catch (err) {
-        console.error("⚠️ Error al vincular el email:", err);
-    }
+    registrarConsumoEnServidor();
+    alert("✨ ¡Tu correo electrónico ha sido vinculado exitosamente!");
 }
 
-// Muestra una ventana emergente para solicitar el correo al usuario
 function pedirEmailAlUsuario() {
     const emailActual = localStorage.getItem('usuario_tarot_email') || '';
     const nuevoEmail = prompt("🧙‍♂️ Ingresa tu correo electrónico para vincular tu cuenta y tus lecturas:", emailActual);
 
     if (nuevoEmail) {
         registrarEmailUsuario(nuevoEmail.trim());
+    }
+}
+
+// ==========================================
+// CONTROLADOR DE ADQUISICIÓN PREMIUM
+// ==========================================
+
+function adquirirPasePremium() {
+    let emailGuardado = localStorage.getItem('usuario_tarot_email') || '';
+
+    if (!emailGuardado || emailGuardado.includes('@consultante.tarot')) {
+        const correoIngresado = prompt("🧙‍♂️ Ingresa tu correo electrónico para asociar tu compra Premium a tu cuenta:");
+        if (correoIngresado && correoIngresado.includes('@')) {
+            localStorage.setItem('usuario_tarot_email', correoIngresado.trim());
+            registrarConsumoEnServidor();
+        } else if (correoIngresado !== null) {
+            alert("⚠️ Se requiere un mail válido para identificar tu cuenta Premium.");
+            return;
+        }
+    }
+
+    const LINK_DE_PAGO_REAL = "https://mpago.la/2rDcjLS"; 
+    window.open(LINK_DE_PAGO_REAL, '_blank');
+}
+
+// ==========================================
+// SELECCIÓN DE ESTILO Y NAVEGACIÓN
+// ==========================================
+
+function irAlEjeConsulta(estilo) {
+    estiloSeleccionado = estilo;
+    modoFisicoActivo = false;
+
+    if (typeof ocultarTodasLasPantallas === 'function') {
+        ocultarTodasLasPantallas();
+    }
+
+    const screenSelector = document.getElementById('screen-selector');
+    if (screenSelector) {
+        screenSelector.classList.remove('hidden');
+        screenSelector.style.display = 'block';
+
+        const tituloEje = document.getElementById('titulo-eje-estilo');
+        if (tituloEje) {
+            if (estilo === 'magico') tituloEje.innerText = "🔮 Módulo Mágico: Selecciona tu Eje";
+            else if (estilo === 'filosofico') tituloEje.innerText = "📜 Módulo Filosófico: Selecciona tu Eje";
+            else if (estilo === 'manual') tituloEje.innerText = "📖 Manual Tarotista: Selecciona el Eje";
+            else tituloEje.innerText = "Selecciona el Eje de tu Consulta:";
+        }
     }
 }
 
@@ -246,7 +134,7 @@ function verificarAccesoTarotistaFisico() {
 }
 
 function verificarAccesoFisico() {
-    if (!esUsuarioPremium && obtenerMuestrasFisicasRestantes() <= 0) {
+    if (typeof esUsuarioPremium !== 'undefined' && !esUsuarioPremium && typeof obtenerMuestrasFisicasRestantes === 'function' && obtenerMuestrasFisicasRestantes() <= 0) {
         alert("🧙‍♂️ Has agotado tus 5 muestras gratuitas de mazo físico. Adquiere el Pase Premium para continuar.");
         return;
     }
@@ -257,38 +145,11 @@ function verificarAccesoFisico() {
 }
 
 // ==========================================
-// CONTROLADOR DE ADQUISICIÓN PREMIUM
-// ==========================================
-async function adquirirPasePremium() {
-    const emailGuardado = localStorage.getItem('usuario_tarot_email') || '';
-    
-    // 1. Pedir el mail real si aún no lo ha ingresado
-    let emailIngresado = emailGuardado;
-    
-    if (!emailIngresado || emailIngresado.includes('@consultante.tarot')) {
-        emailIngresado = prompt("🧙‍♂️ Ingresa tu correo electrónico para asociar tu suscripción Premium y no perder tus beneficios:");
-        
-        if (!emailIngresado || !emailIngresado.includes('@')) {
-            alert("⚠️ Necesitamos un correo válido para asociar tu pago y activar tu cuenta Premium.");
-            return;
-        }
-    }
-
-    // 2. Guardar el correo real localmente y registrarlo en MongoDB Atlas
-    localStorage.setItem('usuario_tarot_email', emailIngresado.trim());
-    await registrarConsumoEnServidor(); // Registra/Actualiza el email en MongoDB
-
-    // 3. Abrir Mercado Pago
-    const LINK_DE_PAGO_REAL = "https://mpago.la/2rDcjLS"; 
-    window.open(LINK_DE_PAGO_REAL, '_blank');
-}
-
-// ==========================================
 // FLUJO INTERNO DE PANTALLA FÍSICA
 // ==========================================
 
 function inicializarYMostrarPantallaFisica() {
-    ocultarTodasLasPantallas();
+    if (typeof ocultarTodasLasPantallas === 'function') ocultarTodasLasPantallas();
     const screenFisico = document.getElementById('screen-fisico');
     if (screenFisico) {
         screenFisico.classList.remove('hidden');
@@ -314,12 +175,12 @@ function irAlEjeFisico() {
         btnPregunta.style.display = 'none'; 
     }
     
-    ocultarTodasLasPantallas();
+    if (typeof ocultarTodasLasPantallas === 'function') ocultarTodasLasPantallas();
     const screenSelector = document.getElementById('screen-selector');
     if (screenSelector) {
         const tituloEje = document.getElementById('titulo-eje-estilo');
         if (tituloEje) {
-            tituloEje.innerText = (estiloSeleccionado === 'manual') 
+            tituloEje.innerText = (typeof estiloSeleccionado !== 'undefined' && estiloSeleccionado === 'manual') 
                 ? "Manual Tarotista: Selecciona el eje de estudio:" 
                 : "Mazo Físico: Selecciona el eje de tu consulta:";
         }
@@ -334,13 +195,18 @@ function irAlEjeFisico() {
 
 function ejecutarLecturaSegunModo(tema) {
     if (tema === 'Pregunta Específica') {
-        abrirPantallaPregunta();
+        if (typeof abrirPantallaPregunta === 'function') abrirPantallaPregunta();
         return;
     }
 
-    // Registra la lectura en MongoDB antes de iniciar el procesamiento
+    // Registra la lectura en segundo plano
     registrarConsumoEnServidor();
-    procesarTiradaCompleta(tema, null);
+
+    if (typeof procesarTiradaCompleta === 'function') {
+        procesarTiradaCompleta(tema, null);
+    } else {
+        console.error("⚠️ La función procesarTiradaCompleta no está definida.");
+    }
 }
 
 function confirmarPreguntaYEjecutar() {
@@ -350,183 +216,14 @@ function confirmarPreguntaYEjecutar() {
         return;
     }
 
-    // Registra la lectura en MongoDB antes de iniciar la pregunta específica
     registrarConsumoEnServidor();
-    procesarTiradaCompleta('Pregunta Específica', preguntaTexto);
-}
 
-// ==========================================
-// NÚCLEO DE LA TIRADA
-// ==========================================
-async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
-    ocultarTodasLasPantallas();
-    const screenResult = document.getElementById('screen-result');
-    if (!screenResult) return;
-    
-    screenResult.classList.remove('hidden');
-    screenResult.style.display = 'block';
-
-    document.getElementById('reading-theme-title').innerText = `Consultando Oráculo: Eje ${tema}`;
-    document.getElementById('interpretation-text').innerHTML = "<p class='loading-cosmico'>✨ Conectando con los planos superiores del Tarot... Interpretando arquetipos...</p>";
-    
-    document.getElementById('voice-controls')?.classList.add('hidden');
-    document.getElementById('contenedor-repregunta')?.classList.add('hidden');
-
-    let a, b, c, d;
-
-    if (modoFisicoActivo) {
-        const c1 = document.getElementById('fisico-carta1')?.value;
-        const c2 = document.getElementById('fisico-carta2')?.value;
-        const c3 = document.getElementById('fisico-carta3')?.value;
-        const c4 = document.getElementById('fisico-carta4')?.value;
-
-        if (!c1 || !c2 || !c3 || !c4) {
-            document.getElementById('interpretation-text').innerHTML = "<p style='color:#ef4444; text-align:center;'>❌ Error: No se seleccionaron las 4 cartas físicas.</p>";
-            return;
-        }
-        cartasFisicasElegidas = [c1, c2, c3, c4];
-        [a, b, c, d] = cartasFisicasElegidas;
+    if (typeof procesarTiradaCompleta === 'function') {
+        procesarTiradaCompleta('Pregunta Específica', preguntaTexto);
     } else {
-        if (typeof arcanosCompleto === 'undefined' || !Array.isArray(arcanosCompleto)) {
-            document.getElementById('interpretation-text').innerHTML = "<p style='color:#ef4444;'>Error: Mazo de arcanos no cargado en arcanos.js</p>";
-            return;
-        }
-        let baraja = [...arcanosCompleto];
-        let elegidas = [];
-        for (let i = 0; i < 4; i++) {
-            let idx = Math.floor(Math.random() * baraja.length);
-            elegidas.push(baraja.splice(idx, 1)[0]);
-        }
-        [a, b, c, d] = elegidas;
-    }
-
-    document.getElementById('name-a').innerText = a;
-    document.getElementById('name-b').innerText = b;
-    document.getElementById('name-c').innerText = c;
-    document.getElementById('name-d').innerText = d;
-    
-    const urlBaseCartas = "https://tarotia-app-psi.github.io/tarot-app/cartas/";
-    const formatearNombre = (nombre) => nombre.toLowerCase().trim().replace(/ /g, "_");
-
-    document.getElementById('img-a').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(a)}.jpg" alt="${a}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    document.getElementById('img-b').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(b)}.jpg" alt="${b}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    document.getElementById('img-c').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(c)}.jpg" alt="${c}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    document.getElementById('img-d').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(d)}.jpg" alt="${d}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    
-    ultimasCartasElegidasContexto = { a, b, c, d };
-
-    try {
-        const response = await fetch(`${API_URL}/tirada`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                tema: tema,
-                pregunta: preguntaEspecifica, 
-                a: a, b: b, c: c, d: d,
-                estilo: estiloSeleccionado
-            })
-        });
-
-        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-
-        const datos = await response.json();
-
-        if (datos.lectura) {
-            document.getElementById('interpretation-text').innerHTML = datos.lectura;
-            ultimaLecturaGuardadaContexto = datos.lectura;
-
-            if (estiloSeleccionado !== 'manual') {
-                document.getElementById('voice-controls')?.classList.remove('hidden');
-            }
-
-            if (esUsuarioPremium) {
-                document.getElementById('contenedor-repregunta')?.classList.remove('hidden');
-                const textRepregunta = document.getElementById('texto-repregunta');
-                if (textRepregunta) textRepregunta.value = "";
-            }
-            
-            if (modoFisicoActivo) {
-                registrarUsoTiradaFisica();
-            }
-            
-            guardarEnHistorialLocal(tema, { a, b, c, d }, datos.lectura);
-        } else {
-            throw new Error("Respuesta vacía del servidor");
-        }
-
-    } catch (err) {
-        console.error("Error capturado:", err);
-        document.getElementById('interpretation-text').innerHTML = "<p style='color:#ef4444; text-align:center;'>❌ La tormenta magnética interrumpió la conexión espiritual. Por favor, verifica que tu servidor de Render esté encendido.</p>";
+        console.error("⚠️ La función procesarTiradaCompleta no está definida.");
     }
 }
-
-// ==========================================
-// ENVÍO DE RE-PREGUNTA PREMIUM
-// ==========================================
-async function enviarRepreguntaServidor() {
-    const textoDuda = document.getElementById('texto-repregunta')?.value.trim();
-    if (!textoDuda) {
-        alert("🧙‍♂️ Escribe tu duda antes de enviársela al oráculo.");
-        return;
-    }
-
-    const btn = document.getElementById('btn-enviar-repregunta');
-    if (!btn) return;
-    btn.disabled = true;
-    btn.innerText = "Consultando al plano sutil... 🔮";
-
-    const contenedorTexto = document.getElementById('interpretation-text');
-
-    try {
-        const response = await fetch(`${API_URL}/repregunta`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                cartas: ultimasCartasElegidasContexto,
-                lecturaAnterior: ultimaLecturaGuardadaContexto,
-                repregunta: textoDuda,
-                estilo: estiloSeleccionado
-            })
-        });
-
-        if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
-
-        const datos = await response.json();
-
-        if (datos.respuesta && contenedorTexto) {
-            const nuevaSeccion = document.createElement('div');
-            nuevaSeccion.className = 'reading-section';
-            nuevaSeccion.style.borderLeft = '3px solid #ffd700';
-            nuevaSeccion.style.background = 'rgba(255,215,0,0.02)';
-            nuevaSeccion.style.paddingTop = '15px';
-            nuevaSeccion.style.marginTop = '20px';
-            
-            nuevaSeccion.innerHTML = `
-                <h3 style="color: #ffd700;">🔮 Respuesta de Tara a tu Duda:</h3>
-                <p>${datos.respuesta}</p>
-            `;
-            
-            contenedorTexto.appendChild(nuevaSeccion);
-            
-            const textRepregunta = document.getElementById('texto-repregunta');
-            if (textRepregunta) textRepregunta.value = "";
-            
-            nuevaSeccion.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            throw new Error("Sin respuesta en el payload JSON");
-        }
-    } catch (error) {
-        console.error("Error en re-pregunta:", error);
-        alert("Hubo un corte en los planos sutiles. Intenta de nuevo.");
-    } finally {
-        btn.innerText = "Enviar Re-pregunta Premium 🔮";
-        btn.disabled = false;
-    }
-}
-
-// =========================================================
-// GESTIÓN DE MUESTRAS FÍSICAS Y HISTORIAL LOCAL
-// =========================================================
 function obtenerMuestrasFisicasRestantes() {
     let muestras = localStorage.getItem('muestrasFisicasTarot');
     if (muestras === null) {
