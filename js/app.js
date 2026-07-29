@@ -136,7 +136,55 @@ function volverInicio() {
     }
     window.location.reload();
 }
+// ==========================================================
+// REGISTRO Y SEGUIMIENTO DE USUARIOS EN MONGODB ATLAS
+// ==========================================================
 
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://tarot-613b.onrender.com';
+
+// Obtiene o crea un ID único para el consultante en este navegador
+function obtenerIdentidadConsultante() {
+    let idUsuario = localStorage.getItem('usuario_tarot_id');
+    let nombreUsuario = localStorage.getItem('usuario_tarot_nombre');
+
+    if (!idUsuario) {
+        // Genera un ID místico aleatorio único para el dispositivo
+        idUsuario = 'user_' + Math.random().toString(36).substr(2, 9);
+        nombreUsuario = 'Consultante #' + Math.floor(1000 + Math.random() * 9000);
+
+        localStorage.setItem('usuario_tarot_id', idUsuario);
+        localStorage.setItem('usuario_tarot_nombre', nombreUsuario);
+    }
+
+    return {
+        id: idUsuario,
+        nombre: nombreUsuario,
+        email: `${idUsuario}@consultante.tarot` // Email simulado único para tracking
+    };
+}
+
+// Función que se comunica con el servidor en Render
+async function registrarConsumoEnServidor() {
+    const usuario = obtenerIdentidadConsultante();
+
+    try {
+        const res = await fetch(`${API_URL}/api/usuarios/registrar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombre: usuario.nombre,
+                email: usuario.email
+            })
+        });
+
+        const data = await res.json();
+        console.log("🔮 Registro de tirada actualizado en MongoDB:", data);
+    } catch (err) {
+        console.error("⚠️ No se pudo registrar la tirada en el backend:", err);
+    }
+}
 // ==========================================
 // ACCESOS DESDE EL MÓDULO PROFESIONAL
 // ==========================================
