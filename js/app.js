@@ -181,10 +181,13 @@ async function registrarConsumoEnServidor() {
 
         const data = await res.json();
         console.log("🔮 Registro de tirada actualizado en MongoDB:", data);
+        return data;
     } catch (err) {
         console.error("⚠️ No se pudo registrar la tirada en el backend:", err);
+        return null;
     }
 }
+
 // ==========================================
 // ACCESOS DESDE EL MÓDULO PROFESIONAL
 // ==========================================
@@ -289,6 +292,9 @@ function ejecutarLecturaSegunModo(tema) {
         abrirPantallaPregunta();
         return;
     }
+
+    // Registra la lectura en MongoDB antes de iniciar el procesamiento
+    registrarConsumoEnServidor();
     procesarTiradaCompleta(tema, null);
 }
 
@@ -298,6 +304,9 @@ function confirmarPreguntaYEjecutar() {
         alert("🧙‍♂️ Por favor, escribe tu duda o consulta mística antes de continuar.");
         return;
     }
+
+    // Registra la lectura en MongoDB antes de iniciar la pregunta específica
+    registrarConsumoEnServidor();
     procesarTiradaCompleta('Pregunta Específica', preguntaTexto);
 }
 
