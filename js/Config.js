@@ -1,10 +1,9 @@
-
 // ==========================================
 // CONFIGURACIÓN GLOBAL DE TAROTIA
 // ==========================================
 
-// URL de tu servidor backend en Render
-const API_URL = typeof window.API_URL !== 'undefined' ? window.API_URL : "https://tu-servidor.onrender.com";
+// Reemplazá con tu URL real de Render
+const API_URL = typeof window.API_URL !== 'undefined' ? window.API_URL : "https://tarotia-backend.onrender.com";
 
 // Estado global de usuario (evita ReferenceError)
 window.esUsuarioPremium = window.esUsuarioPremium || false;
