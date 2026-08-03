@@ -3,7 +3,7 @@
 // ==========================================
 
 // Reemplazá con tu URL real de Render
-const API_URL = typeof window.API_URL !== 'undefined' ? window.API_URL : "https://tarotia-backend.onrender.com";
+const API_URL = typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com';
 
 // Estado global de usuario (evita ReferenceError)
 window.esUsuarioPremium = window.esUsuarioPremium || false;
