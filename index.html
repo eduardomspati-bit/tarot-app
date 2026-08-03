@@ -13,101 +13,68 @@
     <h1>Tarot Sagrado</h1>
     <div class="subtitle">Sistema de Lectura Inteligente</div>
 
-    <!-- ============================================================ -->
-    <!-- PANTALLA 1: PORTADA PRINCIPAL (REDISEÑADA & CORREGIDA)         -->
-    <!-- ============================================================ -->
+    <!-- PANTALLA 1: PORTADA PRINCIPAL -->
     <div id="screen-portada" class="screen">
-        
-        <!-- CABECERA MÍSTICA -->
-        <div class="header-mistico">
-            <div class="header-top">
-                <span class="racha-dias">🔥 3 días</span>
-                <span class="fase-lunar">🌙 Luna Creciente</span>
-            </div>
-            <h1 class="titulo-principal">✦ Tarot Sagrado ✦</h1>
-            <p class="subtitulo-elegante">El universo habla, vos escuchás</p>
-        </div>
+        <button class="btn-carta-diaria" onclick="tirarCartaDiaria()">
+            ✨ Mi Carta Consejo del Día Gratis ✨
+        </button>
 
-        <!-- CARTA DEL DÍA DESTACADA -->
-        <div class="carta-del-dia-destacada" onclick="tirarCartaDiaria()">
-            <div class="cdd-brillo"></div>
-            <div class="cdd-contenido">
-                <span class="cdd-etiqueta">✨ Tu carta del día</span>
-                <span class="cdd-titulo">Haz clic para recibir tu consejo</span>
-                <span class="cdd-icono">🃏</span>
-            </div>
-        </div>
-
-        <!-- SEPARADOR -->
-        <div class="separador-mistico">✧ Elige tu lectura ✧</div>
-
-        <!-- MENÚ DE ESTILOS -->
-        <div class="menu-portada-redisenado">
+        <h3 style="margin-bottom: 15px;">Selecciona el estilo de lectura:</h3>
+        <div class="menu-portada">
             
-            <!-- ESTILO MÁGICO -->
-            <div class="opcion-tarjeta-elegante" onclick="irAlEjeConsulta('magico')">
-                <div class="ote-bg-glow" style="background: radial-gradient(circle at 30% 30%, rgba(255,215,0,0.15), transparent 70%);"></div>
-                <div class="ote-icono">🔮</div>
-                <div class="ote-info">
+            <!-- ESTILO MÁGICO (GRATIS) -->
+            <div class="opcion-tarjeta" onclick="irAlEjeConsulta('magico')">
+                <div class="opcion-icono">🔮</div>
+                <div class="opcion-info">
                     <h3>Estilo Mágico</h3>
-                    <p>Directo, místico y al hueso. Consejos prácticos y predictivos.</p>
+                    <p>Lectura directa, mística y al hueso. Consejos prácticos y predictivos.</p>
                 </div>
-                <span class="ote-badge-gratis">GRATIS</span>
             </div>
 
-            <!-- ESTILO FILOSÓFICO -->
-            <div class="opcion-tarjeta-elegante" onclick="irAlEjeConsulta('filosofico')">
-                <div class="ote-bg-glow" style="background: radial-gradient(circle at 70% 30%, rgba(168,85,247,0.15), transparent 70%);"></div>
-                <div class="ote-icono">🧘</div>
-                <div class="ote-info">
+            <!-- ESTILO FILOSÓFICO (GRATIS) -->
+            <div class="opcion-tarjeta" onclick="irAlEjeConsulta('filosofico')">
+                <div class="opcion-icono">🧘‍♂️</div>
+                <div class="opcion-info">
                     <h3>Estilo Filosófico</h3>
-                    <p>Profundo, psicológico y reflexivo para tu evolución interior.</p>
+                    <p>Lectura profunda, psicológica y reflexiva para tu evolución.</p>
                 </div>
-                <span class="ote-badge-gratis">GRATIS</span>
             </div>
 
             <!-- MÓDULO PROFESIONAL (PREMIUM) -->
-            <div class="opcion-tarjeta-elegante premium" onclick="abrirModuloProfesional()">
-                <div class="ote-bg-glow" style="background: radial-gradient(circle at 50% 50%, rgba(167,139,250,0.2), transparent 70%);"></div>
-                <div class="ote-icono">💼</div>
-                <div class="ote-info">
-                    <h3>Módulo Profesional <span class="badge-premium">PREMIUM</span></h3>
-                    <p>Herramientas para tarotistas, mazo físico y guía de negocio.</p>
+            <div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="abrirModuloProfesional()">
+                <div class="opcion-icono">💼</div>
+                <div class="opcion-info">
+                    <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
+                    <p>Trabajá de tarotista o estudiá a fondo: herramientas técnicas, lecturas con mazo físico y guías de negocio.</p>
                 </div>
-                <span class="ote-badge-premium">🔒 PRO</span>
             </div>
         </div>
 
-        <!-- ACCIONES SECUNDARIAS -->
-        <div class="acciones-secundarias">
-            <button class="btn-secundario" onclick="abrirHistorial()">
-                <span class="btn-icono">📜</span> Historial
-            </button>
-            <button class="btn-secundario" onclick="pedirEmailAlUsuario()">
-                <span class="btn-icono">📧</span> Vincular email
-            </button>
-        </div>
+        <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
+            📜 Ver Mis Lecturas Anteriores
+        </button>
+<button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo">
+    📧 Vincular mi Correo Electrónico
+</button>
+        <!-- BANNER DE SUSCRIPCIÓN PREMIUM -->
+        <div class="banner-suscripcion">
+            <h4>Pase Místico Premium</h4>
+            <p style="font-size: 0.95rem; margin: 5px 0 15px 0; color: #ffd700; font-weight: bold;">
+                Desbloqueá todo el power por $7.000 ARS al mes
+            </p>
+            
+            <ul style="text-align: left; margin: 0 auto; max-width: 480px; font-size: 0.9rem; line-height: 1.5;">
+                <li>🚀 <b>TRABAJE DE TAROTISTA:</b> Herramientas e indicaciones para trabajar de forma virtual o presencial.</li>
+                <li>📚 <b>Primeros pasos:</b> Instrucciones guiadas para comenzar tu camino como tarotista profesional.</li>
+                <li>🃏 <b>Mazo Físico y Modo Tarotista:</b> Accesos ilimitados para tus sesiones en vivo.</li>
+                <li>🔍 <b>Modo de definiciones:</b> Acceso a significados clave para que hagas tu propia interpretación.</li>
+                <li>🔮 <b>Consultas Avanzadas:</b> Preguntas específicas a la IA y re-preguntas aclaratorias sin límites.</li>
+                <li>✨ <b>Navegación fluida:</b> Interfaz limpia y 100% libre de banners publicitarios.</li>
+            </ul>
 
-        <!-- BANNER PREMIUM COLLAPSIBLE -->
-        <div class="banner-premium-collapsible">
-            <button class="btn-toggle-premium" onclick="togglePremiumBanner()">
-                <span>⭐ Pase Místico Premium</span>
-                <span id="premium-toggle-icon">▶</span>
+            <button class="btn-suscribirse" style="margin-top: 20px;" onclick="window.open('https://mpago.la/2rDcjLS', '_blank')">
+                Adquirir Pase Premium ✨
             </button>
-            <div id="premium-contenido" class="premium-contenido-oculto">
-                <p class="precio-destacado">$7.000 ARS / mes</p>
-                <ul class="lista-beneficios">
-                    <li>🚀 Trabajá de tarotista (virtual o presencial)</li>
-                    <li>📚 Primeros pasos guiados</li>
-                    <li>🃏 Mazo Físico + Modo Tarotista</li>
-                    <li>🔍 Definiciones técnicas ilimitadas</li>
-                    <li>🔮 Re-preguntas a la IA sin límite</li>
-                    <li>✨ Interfaz 100% sin banners</li>
-                </ul>
-                <button class="btn-suscribirse" onclick="adquirirPasePremium()">
-                    ✨ Adquirir Pase Premium
-                </button>
-            </div>
         </div>
     </div>
 
