@@ -39,3 +39,29 @@ function abrirModuloProfesional() {
 function abrirPantallaPregunta() {
     mostrarPantalla('screen-pregunta');
 }
+// ==========================================
+// SELECCIÓN DE ESTILO Y NAVEGACIÓN
+// ==========================================
+
+// Función que se ejecuta cuando hacés clic en "Estilo Mágico", "Filosófico", etc.
+function seleccionarEstilo(estilo) {
+    // 1. Guardamos el estilo en la variable global
+    window.estiloSeleccionado = estilo;
+    window.modoFisicoActivo = false;
+
+    // 2. Si es estilo manual/tarotista, validamos acceso
+    if (estilo === 'manual') {
+        if (typeof verificarAccesoTarotista === 'function') {
+            verificarAccesoTarotista();
+        }
+        return;
+    }
+
+    // 3. Abrimos la pantalla con la lista de Ejes Temáticos
+    mostrarPantalla('screen-ejes');
+}
+
+// Función auxiliar para ir a los ejes temáticos (por si tus botones la llaman directo)
+function irAlEjeConsulta(estilo = 'magico') {
+    seleccionarEstilo(estilo);
+}
