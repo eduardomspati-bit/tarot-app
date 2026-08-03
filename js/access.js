@@ -65,3 +65,11 @@ function verificarAccesoFisico() {
         }
     }
 }
+
+// ==========================================
+// PUENTE / ALIAS PARA EVITAR EL REFERENCE ERROR
+// ==========================================
+function verificarAccesoTarotistaFisico() {
+    // Redirige la llamada de tu index.html hacia la función de Mazo Físico
+    verificarAccesoFisico();
+}
