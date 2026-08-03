@@ -31,9 +31,7 @@
         .btn-act-quitar { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-act-quitar:hover { background: #dc2626; }
 
-/* ==========================================
-           CONTROL DE IMÁGENES DENTRO DEL ADMIN
-           ========================================== */
+        /* CONTROL DE IMÁGENES DENTRO DEL ADMIN */
         .card-visual img, .img-carta-tarot {
             width: 100% !important;
             height: 100% !important;
@@ -87,7 +85,7 @@
         <!-- COLUMNA DERECHA: LISTADO DE CLIENTES -->
         <div class="card">
             <h2>👥 Listado de Clientes y Consumos</h2>
-            <p class="txt-ayuda">Historial simulado de usuarios registrados en la plataforma:</p>
+            <p class="txt-ayuda">Historial real de usuarios registrados en MongoDB Atlas:</p>
             <div id="tabla-clientes-contenedor"></div>
         </div>
     </div>
@@ -112,10 +110,10 @@
         cargarListaClientesDesdeServidor();
     });
 
-    // Detecta automáticamente si estás probando en tu PC o en producción (Render)
-    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    // Detecta automáticamente si estás probando en tu PC o en producción (Render con la URL correcta)
+    const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:3000' 
-        : 'https://tarot-613b.onrender.com';
+        : 'https://tarotia-backend.onrender.com';
 
     function actualizarBotonEstado() {
         const btn = document.getElementById('btn-toggle-premium');
@@ -136,7 +134,7 @@
         actualizarBotonEstado();
     });
 
-    // 🌟 NUEVA FUNCIÓN CON CONEXIÓN EN VIVO AL BACKEND
+    // CONEXIÓN EN VIVO AL BACKEND
     async function cargarListaClientesDesdeServidor() {
         const contenedor = document.getElementById('tabla-clientes-contenedor');
         contenedor.innerHTML = "<p style='color: #94a3b8; font-size: 14px;'>Consultando registros en el plano del servidor...</p>";
@@ -184,7 +182,7 @@
             clientesReales.forEach(c => {
                 const esPremium = c.plan === 'Premium';
                 const badgeClass = esPremium ? 'badge-premium' : 'badge-gratis';
-                const idCliente = c.id || c.email; // Usa el ID o el email como identificador único
+                const idCliente = c.id || c.email;
 
                 const botonAccion = esPremium 
                     ? `<button class="btn-act-quitar" onclick="cambiarPlan('${idCliente}', 'Gratis')">Quitar Premium</button>`
@@ -216,7 +214,7 @@
         }
     }
 
-    // 🌟 FUNCIÓN PARA CAMBIAR PLAN DESDE LA TABLA
+    // FUNCIÓN PARA CAMBIAR PLAN DESDE LA TABLA
     async function cambiarPlan(userId, nuevoPlan) {
         if (!confirm(`¿Seguro que querés cambiar el plan de este usuario a ${nuevoPlan}?`)) return;
 
@@ -232,7 +230,7 @@
 
             if (response.ok) {
                 alert(`¡Estado actualizado con éxito a ${nuevoPlan}!`);
-                cargarListaClientesDesdeServidor(); // Recarga la tabla en tiempo real
+                cargarListaClientesDesdeServidor();
             } else {
                 alert("Ocurrió un error en el servidor al intentar modificar el plan.");
             }
