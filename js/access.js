@@ -48,22 +48,29 @@ function verificarAccesoTarotista() {
     }
 }
 
-function verificarAccesoFisico() {
-    if (window.esUsuarioPremium) {
-        if (typeof inicializarYMostrarPantallaFisica === 'function') inicializarYMostrarPantallaFisica();
-        return;
-    }
+// ==========================================
+// ACCESO A MAZO FÍSICO (SIN LÍMITE DE MUESTRAS)
+// ==========================================
 
-    const restantes = obtenerMuestrasFisicasRestantes();
-    if (restantes > 0) {
-        alert(`🔮 ¡Bienvenido al Mazo Físico!\nTienes ${restantes} de ${MAX_MUESTRAS} tiradas gratuitas restantes.`);
-        if (typeof inicializarYMostrarPantallaFisica === 'function') inicializarYMostrarPantallaFisica();
-    } else {
-        const codigo = prompt("❌ Has agotado tus tiradas de muestra para Mazo Físico.\nIngresa tu código Premium para desbloquear acceso ilimitado:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
-        }
+function verificarAccesoFisico() {
+    // Ingreso directo sin validación de muestras gratis ni pase premium
+    if (typeof inicializarYMostrarPantallaFisica === 'function') {
+        inicializarYMostrarPantallaFisica();
+    } else if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-selector');
     }
+}
+
+// Desactivar o limpiar la actualización del badge de muestras
+function actualizarBadgeMuestrasFisicas() {
+    const badge = document.getElementById('badge-physic-muestra-prof') 
+               || document.getElementById('badge-fisico-muestra-prof') 
+               || document.getElementById('badge-fisico-muestra');
+               
+    if (badge) {
+        badge.style.display = 'none'; // Oculta la etiqueta de "5 Muestras" en la interfaz
+    }
+}
 }
 
 // ==========================================
