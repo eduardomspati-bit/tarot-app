@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TarotIA - Panel de Administración</title>
+    <!-- Evita el error favicon.ico 404 en la consola -->
+    <link rel="icon" href="data:,">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
@@ -110,10 +112,10 @@
         cargarListaClientesDesdeServidor();
     });
 
-    // Detecta automáticamente si estás probando en tu PC o en producción (Render con la URL correcta)
+    // Detecta automáticamente si estás probando en tu PC o en producción (Render)
     const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:3000' 
-        : 'https://tarotia-backend.onrender.com';
+        : 'https://tarot-613b.onrender.com';
 
     function actualizarBotonEstado() {
         const btn = document.getElementById('btn-toggle-premium');
@@ -208,7 +210,7 @@
             contenedor.innerHTML = `
                 <div style="background: #7f1d1d; border: 1px solid #f87171; padding: 15px; border-radius: 8px; color: #fca5a5; font-size: 14px;">
                     <strong>Error de conexión:</strong> ${error.message}<br><br>
-                    <span style="font-size: 12px; color: #fca5a5;">Asegúrate de que tu backend esté corriendo y de que las claves coincidan exactamente.</span>
+                    <span style="font-size: 12px; color: #fca5a5;">Asegúrate de que tu backend esté corriendo en Render y de que las claves coincidan.</span>
                 </div>
             `;
         }
