@@ -16,6 +16,7 @@ function mostrarPantalla(idPantalla) {
     if (pantalla) {
         pantalla.classList.remove('hidden');
         pantalla.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Asegura que la pantalla abra desde arriba
     } else {
         console.error(`La pantalla con ID '${idPantalla}' no existe en el HTML.`);
     }
@@ -33,7 +34,7 @@ function seleccionarEstilo(estilo) {
         return;
     }
 
-    // Usamos el ID EXACTO de tu HTML: "screen-selector"
+    // Usamos el ID EXACTO del HTML: "screen-selector"
     mostrarPantalla('screen-selector'); 
 }
 
@@ -76,6 +77,11 @@ function abrirGuiaLectura() {
 
 function abrirPantallaPregunta() {
     mostrarPantalla('screen-pregunta');
+    const inputPregunta = document.getElementById('texto-pregunta-usuario');
+    if (inputPregunta) {
+        inputPregunta.value = ''; // Limpia el texto de preguntas previas
+        setTimeout(() => inputPregunta.focus(), 100);
+    }
 }
 
 // ==========================================
@@ -85,8 +91,8 @@ function abrirPantallaPregunta() {
 function pedirEmailAlUsuario() {
     const email = prompt("📧 Ingresa tu correo electrónico para vincular tu cuenta y respaldar tus lecturas:");
     if (email && email.includes('@')) {
-        localStorage.setItem('tarotUserEmail', email);
-        alert(`¡Gracias! Tu correo (${email}) ha sido vinculado exitosamente.`);
+        localStorage.setItem('tarotUserEmail', email.trim().toLowerCase());
+        alert(`¡Gracias! Tu correo (${email.trim()}) ha sido vinculado exitosamente.`);
     } else if (email) {
         alert("❌ Por favor, ingresa un correo electrónico válido.");
     }
@@ -111,5 +117,6 @@ function confirmarPreguntaYEjecutar() {
 
     if (typeof procesarTiradaCompleta === 'function') {
         procesarTiradaCompleta("Consulta Personalizada", preguntaText);
+        if (inputPregunta) inputPregunta.value = ''; // Limpia el cuadro tras procesar
     }
 }
