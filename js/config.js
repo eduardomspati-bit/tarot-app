@@ -2,14 +2,14 @@
 // CONFIGURACIÓN GLOBAL DE TAROTIA
 // ==========================================
 
-// Reemplazá con tu URL real de Render
+// URL base del servidor backend en Render
 const API_URL = typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com';
 
-// Estado global de usuario (evita ReferenceError)
+// Estado global de la aplicación y permisos del usuario
 window.esUsuarioPremium = window.esUsuarioPremium || false;
 window.modoFisicoActivo = window.modoFisicoActivo || false;
 window.estiloSeleccionado = window.estiloSeleccionado || 'magico';
 
-// Contexto de lectura activa
-let ultimasCartasElegidasContexto = null;
-let ultimaLecturaGuardadaContexto = "";
+// Contexto global de la lectura activa para repreguntas e historial
+window.ultimasCartasElegidasContexto = window.ultimasCartasElegidasContexto || null;
+window.ultimaLecturaGuardadaContexto = window.ultimaLecturaGuardadaContexto || "";
