@@ -53,9 +53,11 @@
         <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
             📜 Ver Mis Lecturas Anteriores
         </button>
-<button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo">
-    📧 Vincular mi Correo Electrónico
-</button>
+
+        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo">
+            📧 Vincular mi Correo Electrónico
+        </button>
+
         <!-- BANNER DE SUSCRIPCIÓN PREMIUM -->
         <div class="banner-suscripcion">
             <h4>Pase Místico Premium</h4>
@@ -72,7 +74,7 @@
                 <li>✨ <b>Navegación fluida:</b> Interfaz limpia y 100% libre de banners publicitarios.</li>
             </ul>
 
-            <button class="btn-suscribirse" style="margin-top: 20px;" onclick="window.open('https://mpago.la/2rDcjLS', '_blank')">
+            <button class="btn-suscribirse" style="margin-top: 20px;" onclick="if(typeof abrirMercadoPago === 'function'){ abrirMercadoPago(); } else { window.open('https://mpago.la/2rDcjLS', '_blank'); }">
                 Adquirir Pase Premium ✨
             </button>
         </div>
@@ -324,7 +326,7 @@
     <div class="ad-placeholder-text">[ Espacio reservado para Publicidad Banner ]</div>
 </div>
 
-<!-- 1. Mazo de Arcanos -->
+    <!-- 1. Mazo de Arcanos -->
     <script src="js/arcanos.js"></script>
 
     <!-- 2. Configuración Global -->
