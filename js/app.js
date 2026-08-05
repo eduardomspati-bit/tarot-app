@@ -1,9 +1,8 @@
 // ==========================================
 // VARIABLES DE CONTEXTO GLOBAL
 // ==========================================
-let ultimasCartasElegidasContexto = null;
-let ultimaLecturaGuardadaContexto = "";
-
+window.ultimasCartasElegidasContexto = window.ultimasCartasElegidasContexto || null;
+window.ultimaLecturaGuardadaContexto = window.ultimaLecturaGuardadaContexto || "";
 // ==========================================
 // NÚCLEO DE LA TIRADA
 // ==========================================
