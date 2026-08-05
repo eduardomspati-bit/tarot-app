@@ -1,20 +1,36 @@
 // ==========================================
+// VARIABLES DE CONTEXTO GLOBAL
+// ==========================================
+let ultimasCartasElegidasContexto = null;
+let ultimaLecturaGuardadaContexto = "";
+
+// ==========================================
 // NÚCLEO DE LA TIRADA
 // ==========================================
 
 async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
-    ocultarTodasLasPantallas();
+    if (typeof ocultarTodasLasPantallas === 'function') ocultarTodasLasPantallas();
     
     const screenResult = document.getElementById('screen-result');
     if (!screenResult) return;
     
-    mostrarPantalla('screen-result');
+    if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-result');
 
-    document.getElementById('reading-theme-title').innerText = `Consultando Oráculo: Eje ${tema}`;
-    document.getElementById('interpretation-text').innerHTML = "<p class='loading-cosmico'>✨ Conectando con los planos superiores del Tarot... Interpretando arquetipos...</p>";
+    const themeTitle = document.getElementById('reading-theme-title');
+    if (themeTitle) themeTitle.innerText = `Consultando Oráculo: Eje ${tema}`;
+
+    const interpretationText = document.getElementById('interpretation-text');
+    if (interpretationText) {
+        interpretationText.innerHTML = "<p class='loading-cosmico'>✨ Conectando con los planos superiores del Tarot... Interpretando arquetipos...</p>";
+    }
     
     document.getElementById('voice-controls')?.classList.add('hidden');
-    document.getElementById('contenedor-repregunta')?.classList.add('hidden');
+    
+    const contenedorRepregunta = document.getElementById('contenedor-repregunta');
+    if (contenedorRepregunta) {
+        contenedorRepregunta.classList.add('hidden');
+        contenedorRepregunta.style.display = 'none';
+    }
 
     let a, b, c, d;
 
@@ -25,13 +41,17 @@ async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
         const c4 = document.getElementById('fisico-carta4')?.value;
 
         if (!c1 || !c2 || !c3 || !c4) {
-            document.getElementById('interpretation-text').innerHTML = "<p style='color:#ef4444; text-align:center;'>❌ Error: No se seleccionaron las 4 cartas físicas.</p>";
+            if (interpretationText) {
+                interpretationText.innerHTML = "<p style='color:#ef4444; text-align:center;'>❌ Error: No se seleccionaron las 4 cartas físicas.</p>";
+            }
             return;
         }
         [a, b, c, d] = [c1, c2, c3, c4];
     } else {
         if (typeof arcanosCompleto === 'undefined' || !Array.isArray(arcanosCompleto)) {
-            document.getElementById('interpretation-text').innerHTML = "<p style='color:#ef4444; text-align:center;'>Error: Mazo de arcanos no cargado en arcanos.js</p>";
+            if (interpretationText) {
+                interpretationText.innerHTML = "<p style='color:#ef4444; text-align:center;'>Error: Mazo de arcanos no cargado en arcanos.js</p>";
+            }
             return;
         }
         let baraja = [...arcanosCompleto];
@@ -43,23 +63,25 @@ async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
         [a, b, c, d] = elegidas;
     }
 
-    document.getElementById('name-a').innerText = a;
-    document.getElementById('name-b').innerText = b;
-    document.getElementById('name-c').innerText = c;
-    document.getElementById('name-d').innerText = d;
+    // Actualización de nombres de las cartas en el HTML
+    const nameA = document.getElementById('name-a'); if (nameA) nameA.innerText = a;
+    const nameB = document.getElementById('name-b'); if (nameB) nameB.innerText = b;
+    const nameC = document.getElementById('name-c'); if (nameC) nameC.innerText = c;
+    const nameD = document.getElementById('name-d'); if (nameD) nameD.innerText = d;
     
     const urlBaseCartas = "https://tarotia-app-psi.github.io/tarot-app/cartas/";
     const formatearNombre = (nombre) => nombre.toLowerCase().trim().replace(/ /g, "_");
 
-    document.getElementById('img-a').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(a)}.jpg" alt="${a}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    document.getElementById('img-b').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(b)}.jpg" alt="${b}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    document.getElementById('img-c').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(c)}.jpg" alt="${c}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
-    document.getElementById('img-d').innerHTML = `<img src="${urlBaseCartas}${formatearNombre(d)}.jpg" alt="${d}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
+    const imgA = document.getElementById('img-a'); if (imgA) imgA.innerHTML = `<img src="${urlBaseCartas}${formatearNombre(a)}.jpg" alt="${a}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
+    const imgB = document.getElementById('img-b'); if (imgB) imgB.innerHTML = `<img src="${urlBaseCartas}${formatearNombre(b)}.jpg" alt="${b}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
+    const imgC = document.getElementById('img-c'); if (imgC) imgC.innerHTML = `<img src="${urlBaseCartas}${formatearNombre(c)}.jpg" alt="${c}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
+    const imgD = document.getElementById('img-d'); if (imgD) imgD.innerHTML = `<img src="${urlBaseCartas}${formatearNombre(d)}.jpg" alt="${d}" class="img-carta-tarot" onerror="this.src='reverso_filosofico.jpg'">`;
     
     ultimasCartasElegidasContexto = { a, b, c, d };
 
     try {
-        const response = await fetch(`${API_URL}/tirada`, {
+        const endpointUrl = (typeof API_URL !== 'undefined') ? `${API_URL}/tirada` : '/tirada';
+        const response = await fetch(endpointUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -75,31 +97,36 @@ async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
         const datos = await response.json();
 
         if (datos.lectura) {
-            document.getElementById('interpretation-text').innerHTML = datos.lectura;
+            if (interpretationText) interpretationText.innerHTML = datos.lectura;
             ultimaLecturaGuardadaContexto = datos.lectura;
 
             if (window.estiloSeleccionado !== 'manual') {
                 document.getElementById('voice-controls')?.classList.remove('hidden');
             }
 
-            if (window.esUsuarioPremium) {
-                document.getElementById('contenedor-repregunta')?.classList.remove('hidden');
+            if (window.esUsuarioPremium && contenedorRepregunta) {
+                contenedorRepregunta.classList.remove('hidden');
+                contenedorRepregunta.style.display = 'flex';
                 const textRepregunta = document.getElementById('texto-repregunta');
                 if (textRepregunta) textRepregunta.value = "";
             }
             
-            if (window.modoFisicoActivo) {
+            if (window.modoFisicoActivo && typeof registrarUsoTiradaFisica === 'function') {
                 registrarUsoTiradaFisica();
             }
             
-            guardarEnHistorialLocal(tema, { a, b, c, d }, datos.lectura);
+            if (typeof guardarEnHistorialLocal === 'function') {
+                guardarEnHistorialLocal(tema, { a, b, c, d }, datos.lectura);
+            }
         } else {
             throw new Error("Respuesta vacía del servidor");
         }
 
     } catch (err) {
         console.error("Error capturado:", err);
-        document.getElementById('interpretation-text').innerHTML = "<p style='color:#ef4444; text-align:center;'>❌ La tormenta magnética interrumpió la conexión espiritual. Por favor, verifica que tu servidor de Render esté encendido.</p>";
+        if (interpretationText) {
+            interpretationText.innerHTML = "<p style='color:#ef4444; text-align:center;'>❌ La tormenta magnética interrumpió la conexión espiritual. Por favor, verifica que tu servidor de Render esté encendido.</p>";
+        }
     }
 }
 
@@ -122,7 +149,8 @@ async function enviarRepreguntaServidor() {
     const contenedorTexto = document.getElementById('interpretation-text');
 
     try {
-        const response = await fetch(`${API_URL}/repregunta`, {
+        const endpointUrl = (typeof API_URL !== 'undefined') ? `${API_URL}/repregunta` : '/repregunta';
+        const response = await fetch(endpointUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -146,7 +174,7 @@ async function enviarRepreguntaServidor() {
             nuevaSeccion.style.marginTop = '20px';
             
             nuevaSeccion.innerHTML = `
-                <h3 style="color: #ffd700;">🔮 Respuesta de Tara a tu Duda:</h3>
+                <h3 style="color: #ffd700;">🔮 Respuesta a tu Duda:</h3>
                 <p>${datos.respuesta}</p>
             `;
             
