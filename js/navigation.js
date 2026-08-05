@@ -88,11 +88,38 @@ function abrirPantallaPregunta() {
 // FUNCIONES AUXILIARES / UTILIDADES
 // ==========================================
 
-function pedirEmailAlUsuario() {
+async function pedirEmailAlUsuario() {
     const email = prompt("📧 Ingresa tu correo electrónico para vincular tu cuenta y respaldar tus lecturas:");
+    
     if (email && email.includes('@')) {
-        localStorage.setItem('tarotUserEmail', email.trim().toLowerCase());
-        alert(`¡Gracias! Tu correo (${email.trim()}) ha sido vinculado exitosamente.`);
+        const emailLimpio = email.trim().toLowerCase();
+        
+        // 1. Guardar localmente
+        localStorage.setItem('tarotUserEmail', emailLimpio);
+
+        // 2. Enviar a MongoDB Atlas a través de Render
+        try {
+            const respuesta = await fetch('https://tarot-613b.onrender.com/api/usuarios/registrar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: 'Consultante Místico',
+                    email: emailLimpio
+                })
+            });
+
+            const data = await respuesta.json();
+            console.log('✅ Usuario registrado exitosamente en MongoDB:', data);
+            
+            alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido vinculado exitosamente.`);
+        } catch (error) {
+            console.error('❌ Error al guardar en el servidor:', error);
+            // Igual mostramos éxito local para no desarmar la experiencia del usuario
+            alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido guardado localmente.`);
+        }
+
     } else if (email) {
         alert("❌ Por favor, ingresa un correo electrónico válido.");
     }
