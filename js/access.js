@@ -1,4 +1,3 @@
-
 // ==========================================
 // CONTROL DE ACCESOS Y MUESTRAS FÍSICAS
 // ==========================================
@@ -25,7 +24,10 @@ function registrarUsoTiradaFisica() {
 }
 
 function actualizarBadgeMuestrasFisicas() {
-    const badge = document.getElementById('badge-physic-muestra-prof') || document.getElementById('badge-fisico-muestra-prof') || document.getElementById('badge-fisico-muestra');
+    const badge = document.getElementById('badge-physic-muestra-prof') 
+               || document.getElementById('badge-fisico-muestra-prof') 
+               || document.getElementById('badge-fisico-muestra');
+               
     if (badge) {
         if (window.esUsuarioPremium) {
             badge.innerText = "Ilimitado ✨";
@@ -49,11 +51,10 @@ function verificarAccesoTarotista() {
 }
 
 // ==========================================
-// ACCESO A MAZO FÍSICO (SIN LÍMITE DE MUESTRAS)
+// ACCESO A MAZO FÍSICO
 // ==========================================
 
 function verificarAccesoFisico() {
-    // Ingreso directo sin validación de muestras gratis ni pase premium
     if (typeof inicializarYMostrarPantallaFisica === 'function') {
         inicializarYMostrarPantallaFisica();
     } else if (typeof mostrarPantalla === 'function') {
@@ -61,22 +62,9 @@ function verificarAccesoFisico() {
     }
 }
 
-// Desactivar o limpiar la actualización del badge de muestras
-function actualizarBadgeMuestrasFisicas() {
-    const badge = document.getElementById('badge-physic-muestra-prof') 
-               || document.getElementById('badge-fisico-muestra-prof') 
-               || document.getElementById('badge-fisico-muestra');
-               
-    if (badge) {
-        badge.style.display = 'none'; // Oculta la etiqueta de "5 Muestras" en la interfaz
-    }
-}
-}
-
 // ==========================================
 // PUENTE / ALIAS PARA EVITAR EL REFERENCE ERROR
 // ==========================================
 function verificarAccesoTarotistaFisico() {
-    // Redirige la llamada de tu index.html hacia la función de Mazo Físico
     verificarAccesoFisico();
 }
