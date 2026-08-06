@@ -1,8 +1,14 @@
 // ==========================================
+// CONFIGURACIÓN DE LA API (RENDER)
+// ==========================================
+const API_URL = "https://tarot-613b.onrender.com";
+
+// ==========================================
 // VARIABLES DE CONTEXTO GLOBAL
 // ==========================================
 window.ultimasCartasElegidasContexto = window.ultimasCartasElegidasContexto || null;
 window.ultimaLecturaGuardadaContexto = window.ultimaLecturaGuardadaContexto || "";
+
 // ==========================================
 // NÚCLEO DE LA TIRADA
 // ==========================================
