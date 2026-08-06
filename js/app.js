@@ -4,7 +4,6 @@
 
 window.SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
 
-// Obtención del mazo activo o de respaldo
 function obtenerMazoActivo() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
         return arcanosCompleto;
@@ -36,14 +35,12 @@ function obtenerMazoActivo() {
 // FUNCIONES DE MANEJO DE CARTAS
 // ==========================================
 
-// Generar 4 cartas aleatorias
 window.obtenerCuatroCartasAleatorias = function() {
     const mazo = obtenerMazoActivo();
     const mazoMezclado = [...mazo].sort(() => 0.5 - Math.random());
     return mazoMezclado.slice(0, 4);
 };
 
-// Cargar selectores desplegables de mazo físico
 window.cargarSelectoresFisicos = function() {
     const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
     const mazo = obtenerMazoActivo();
@@ -64,7 +61,6 @@ window.cargarSelectoresFisicos = function() {
     });
 };
 
-// Dibujar las duplas en la mesa de resultados
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
@@ -93,37 +89,33 @@ window.renderizarMesaDuplas = function(cartas, tema) {
 };
 
 // ==========================================
-// PETICIÓN HTTP AL SERVIDOR EN RENDER
+// PETICIÓN COMPATIBLE PARA GROQ / RENDER
 // ==========================================
 
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     const contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
-        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con los arcanos por Duplas... Generando interpretación (${window.estiloSeleccionado || 'mágico'})...</p>`;
+        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con Groq... Generando lectura por Duplas (${window.estiloSeleccionado || 'filosofico'})...</p>`;
     }
 
     try {
         const d1 = [cartas[0], cartas[1]];
         const d2 = [cartas[2], cartas[3]];
 
-        // Payload multi-compatibilidad: incluye duplas sueltas, objeto duplas y array de cartas
+        // Estructura completa: envía 'cartas' para validar y 'dupla1'/'dupla2' para el prompt
         const payload = {
             cartas: cartas,
             cartasElegidas: cartas,
             dupla1: d1,
             dupla2: d2,
-            duplas: {
-                dupla1: d1,
-                dupla2: d2
-            },
-            tema: tema,
+            tema: tema || 'General',
             pregunta: preguntaCustom || "",
             estilo: window.estiloSeleccionado || 'filosofico',
             esFisico: window.modoFisicoActivo || false,
             submodoFisico: window.submodoFisicoActual || 'predictivo_fisico'
         };
 
-        console.log("📤 Enviando datos ultra-compatibles a Render:", payload);
+        console.log("📤 Enviando datos a Groq en Render:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -132,7 +124,7 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         });
 
         const data = await respuesta.json();
-        console.log("📥 Respuesta recibida de Render:", data);
+        console.log("📥 Respuesta de Groq:", data);
 
         if (!respuesta.ok) {
             throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
@@ -155,12 +147,13 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         }
 
     } catch (error) {
-        console.error("❌ Error en la lectura:", error);
+        console.error("❌ Error en la llamada a Groq:", error);
         if (contenedorTexto) {
             contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Error: ${error.message}</p>`;
         }
     }
 };
+
 // ==========================================
 // FLUJO PRINCIPAL DE LA TIRADA
 // ==========================================
@@ -187,7 +180,6 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
 
-// Carga inicial al estar el DOM listo
 document.addEventListener('DOMContentLoaded', () => {
     window.cargarSelectoresFisicos();
 });
