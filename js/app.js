@@ -71,9 +71,11 @@ function nombreAImagen(nombre) {
         .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
         .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
         .replace(/[^a-z0-9_]/g, '');
-    return `cartas/${slug}.jpg`;
+    
+    const ruta = `./cartas/${slug}.jpg`;
+    console.log(`🖼️ Buscando imagen para "${nombre}" → ${ruta}`);
+    return ruta;
 }
-
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
