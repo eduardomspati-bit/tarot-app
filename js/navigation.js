@@ -43,9 +43,27 @@ function irAlEjeConsulta(estilo = 'magico') {
     seleccionarEstilo(estilo);
 }
 
-// Confirmación para avanzar desde Mazo Físico al Selector de Eje
+// 1. Abre el selector de cartas físicas sin disparar la lectura
+function abrirModoFisico() {
+    window.modoFisicoActivo = true;
+    mostrarPantalla('screen-fisico');
+}
+
+// 2. Valida las cartas seleccionadas antes de pasar al Eje de Consulta
 function irAlEjeFisico() {
     window.modoFisicoActivo = true;
+
+    // Verificar si el usuario ya seleccionó las 4 cartas físicas
+    const c1 = document.getElementById('fisico-carta1')?.value;
+    const c2 = document.getElementById('fisico-carta2')?.value;
+    const c3 = document.getElementById('fisico-carta3')?.value;
+    const c4 = document.getElementById('fisico-carta4')?.value;
+
+    if (!c1 || !c2 || !c3 || !c4) {
+        alert("⚠️ Por favor, selecciona las 4 cartas físicas antes de continuar.");
+        return;
+    }
+
     mostrarPantalla('screen-selector');
 }
 
@@ -116,7 +134,6 @@ async function pedirEmailAlUsuario() {
             alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido vinculado exitosamente.`);
         } catch (error) {
             console.error('❌ Error al guardar en el servidor:', error);
-            // Igual mostramos éxito local para no desarmar la experiencia del usuario
             alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido guardado localmente.`);
         }
 
