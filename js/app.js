@@ -2,7 +2,7 @@
 // CONFIGURACIÓN DE SERVIDOR Y ARCANOS
 // ==========================================
 
-window.SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
+window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com') + '/tirada';
 
 function obtenerMazoActivo() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
@@ -12,21 +12,21 @@ function obtenerMazoActivo() {
         return window.arcanosCompleto;
     }
     return [
-        "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa", 
-        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna", 
-        "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre", 
+        "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa",
+        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
+        "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre",
         "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo",
-        "As de Bastos", "2 de Bastos", "3 de Bastos", "4 de Bastos", "5 de Bastos", 
-        "6 de Bastos", "7 de Bastos", "8 de Bastos", "9 de Bastos", "10 de Bastos", 
+        "As de Bastos", "2 de Bastos", "3 de Bastos", "4 de Bastos", "5 de Bastos",
+        "6 de Bastos", "7 de Bastos", "8 de Bastos", "9 de Bastos", "10 de Bastos",
         "Sota de Bastos", "Caballero de Bastos", "Reina de Bastos", "Rey de Bastos",
-        "As de Copas", "2 de Copas", "3 de Copas", "4 de Copas", "5 de Copas", 
-        "6 de Copas", "7 de Copas", "8 de Copas", "9 de Copas", "10 de Copas", 
+        "As de Copas", "2 de Copas", "3 de Copas", "4 de Copas", "5 de Copas",
+        "6 de Copas", "7 de Copas", "8 de Copas", "9 de Copas", "10 de Copas",
         "Sota de Copas", "Caballero de Copas", "Reina de Copas", "Rey de Copas",
-        "As de Espadas", "2 de Espadas", "3 de Espadas", "4 de Espadas", "5 de Espadas", 
-        "6 de Espadas", "7 de Espadas", "8 de Espadas", "9 de Espadas", "10 de Espadas", 
+        "As de Espadas", "2 de Espadas", "3 de Espadas", "4 de Espadas", "5 de Espadas",
+        "6 de Espadas", "7 de Espadas", "8 de Espadas", "9 de Espadas", "10 de Espadas",
         "Sota de Espadas", "Caballero de Espadas", "Reina de Espadas", "Rey de Espadas",
-        "As de Oros", "2 de Oros", "3 de Oros", "4 de Oros", "5 de Oros", 
-        "6 de Oros", "7 de Oros", "8 de Oros", "9 de Oros", "10 de Oros", 
+        "As de Oros", "2 de Oros", "3 de Oros", "4 de Oros", "5 de Oros",
+        "6 de Oros", "7 de Oros", "8 de Oros", "9 de Oros", "10 de Oros",
         "Sota de Oros", "Caballero de Oros", "Reina de Oros", "Rey de Oros"
     ];
 }
@@ -37,8 +37,12 @@ function obtenerMazoActivo() {
 
 window.obtenerCuatroCartasAleatorias = function() {
     const mazo = obtenerMazoActivo();
-    const mazoMezclado = [...mazo].sort(() => 0.5 - Math.random());
-    return mazoMezclado.slice(0, 4);
+    const mezclado = [...mazo];
+    for (let i = mezclado.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [mezclado[i], mezclado[j]] = [mezclado[j], mezclado[i]];
+    }
+    return mezclado.slice(0, 4);
 };
 
 window.cargarSelectoresFisicos = function() {
@@ -61,6 +65,15 @@ window.cargarSelectoresFisicos = function() {
     });
 };
 
+function nombreAImagen(nombre) {
+    const slug = nombre.toLowerCase()
+        .replace(/ /g, '_')
+        .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
+        .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
+        .replace(/[^a-z0-9_]/g, '');
+    return `cartas/${slug}.jpg`;
+}
+
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
@@ -81,41 +94,40 @@ window.renderizarMesaDuplas = function(cartas, tema) {
             elNombre.textContent = cartaNombre;
             elNombre.style.display = 'block';
         }
-        
+
         if (elImg) {
-            elImg.innerHTML = `<div style="padding: 12px; background: rgba(168,85,247,0.15); border: 1px solid #a855f7; border-radius: 8px; text-align: center; font-size: 1.5rem; margin-bottom: 5px;">🃏</div>`;
+            const imgUrl = nombreAImagen(cartaNombre);
+            elImg.innerHTML = `<img src="${imgUrl}" alt="${cartaNombre}" onerror="this.parentElement.innerHTML='🃏'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
         }
     });
 };
 
 // ==========================================
-// PETICIÓN COMPATIBLE PARA GROQ / RENDER
+// PETICIÓN AL SERVIDOR (RENDER)
 // ==========================================
 
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     const contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
-        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con Groq... Generando lectura por Duplas (${window.estiloSeleccionado || 'filosofico'})...</p>`;
+        contenedorTexto.innerHTML = `
+            <div style="text-align:center; padding:20px; color:#a78bfa;">
+                ✨ Conectando con el Oráculo... Generando lectura por Duplas (${window.estiloSeleccionado || 'filosofico'})...
+            </div>
+        `;
     }
 
     try {
-        const d1 = [cartas[0], cartas[1]];
-        const d2 = [cartas[2], cartas[3]];
-
-        // Estructura completa: envía 'cartas' para validar y 'dupla1'/'dupla2' para el prompt
         const payload = {
-            cartas: cartas,
-            cartasElegidas: cartas,
-            dupla1: d1,
-            dupla2: d2,
+            a: cartas[0],
+            b: cartas[1],
+            c: cartas[2],
+            d: cartas[3],
             tema: tema || 'General',
             pregunta: preguntaCustom || "",
-            estilo: window.estiloSeleccionado || 'filosofico',
-            esFisico: window.modoFisicoActivo || false,
-            submodoFisico: window.submodoFisicoActual || 'predictivo_fisico'
+            estilo: window.estiloSeleccionado || 'filosofico'
         };
 
-        console.log("📤 Enviando datos a Groq en Render:", payload);
+        console.log("📤 Enviando datos al servidor:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -124,32 +136,45 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         });
 
         const data = await respuesta.json();
-        console.log("📥 Respuesta de Groq:", data);
+        console.log("📥 Respuesta del servidor:", data);
 
         if (!respuesta.ok) {
             throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
         }
 
         if (contenedorTexto) {
-            let texto = data.resultado || 
-                        data.interpretacion || 
-                        data.respuesta || 
-                        data.texto || 
-                        data.mensaje || 
-                        data.reading ||
-                        (data.choices && data.choices[0]?.message?.content);
+            let texto = data.lectura ||
+                data.resultado ||
+                data.interpretacion ||
+                data.respuesta ||
+                data.texto ||
+                data.mensaje ||
+                data.reading ||
+                (data.choices && data.choices[0]?.message?.content);
 
             if (!texto) {
                 texto = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
             }
 
-            contenedorTexto.innerHTML = `<div class="interpretacion-contenido" style="line-height: 1.6; text-align: left; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">${texto}</div>`;
+            contenedorTexto.innerHTML = texto;
+
+            // Guardar en historial si existe la función
+            if (typeof guardarEnHistorialLocal === 'function') {
+                guardarEnHistorialLocal(tema, 
+                    {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, 
+                    texto);
+            }
         }
 
     } catch (error) {
-        console.error("❌ Error en la llamada a Groq:", error);
+        console.error("❌ Error en la llamada al servidor:", error);
         if (contenedorTexto) {
-            contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Error: ${error.message}</p>`;
+            contenedorTexto.innerHTML = `
+                <div style="color: #ff6b6b; text-align: center; padding: 20px;">
+                    ❌ Error: ${error.message}<br><br>
+                    <small>Si el servidor está dormido en Render, esperá 30 segundos y probá de nuevo.</small>
+                </div>
+            `;
         }
     }
 };
