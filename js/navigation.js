@@ -1,10 +1,13 @@
 // ==========================================
-// GESTIÓN DE PANTALLAS Y NAVEGACIÓN
+// GESTIÓN DE PANTALLAS Y ESTADOS GLOBALES
 // ==========================================
 
-// Variables globales de estado de navegación
-window.submodoFisicoActual = window.submodoFisicoActual || 'predictivo_fisico';
+// Variables de estado del sistema
+window.estiloSeleccionado = 'magico';          // 'magico' o 'filosofico'
+window.modoFisicoActivo = false;              // false = Automático | true = Mazo Físico
+window.submodoFisicoActual = 'predictivo_fisico'; // 'predictivo_fisico' o 'tarotista_fisico'
 
+// Oculta todas las pantallas activas
 function ocultarTodasLasPantallas() {
     const pantallas = document.querySelectorAll('.screen');
     pantallas.forEach(p => {
@@ -13,70 +16,46 @@ function ocultarTodasLasPantallas() {
     });
 }
 
+// Muestra una pantalla específica por su ID
 function mostrarPantalla(idPantalla) {
     ocultarTodasLasPantallas();
     const pantalla = document.getElementById(idPantalla);
     if (pantalla) {
         pantalla.classList.remove('hidden');
         pantalla.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' }); // Asegura que la pantalla abra desde arriba
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-        console.error(`La pantalla con ID '${idPantalla}' no existe en el HTML.`);
+        console.error(`La pantalla con ID '${idPantalla}' no existe.`);
     }
 }
 
-// Resuelve la selección de Estilo Mágico, Filosófico, etc.
-function seleccionarEstilo(estilo) {
+// ==========================================
+// RUTAS Y FLUJOS DE LECTURA
+// ==========================================
+
+// 1. FLUJO AUTOMÁTICO: Estilo Mágico o Filosófico (Gratis)
+function seleccionarEstiloAutomatico(estilo) {
     window.estiloSeleccionado = estilo;
-    window.modoFisicoActivo = false;
-
-    if (estilo === 'manual') {
-        if (typeof window.verificarAccesoTarotista === 'function') {
-            window.verificarAccesoTarotista();
-        } else if (typeof verificarAccesoTarotista === 'function') {
-            verificarAccesoTarotista();
-        }
-        return;
-    }
-
-    // Usamos el ID EXACTO del HTML: "screen-selector"
-    mostrarPantalla('screen-selector'); 
+    window.modoFisicoActivo = false; // Fuerza el modo automático (cartas aleatorias)
+    
+    mostrarPantalla('screen-selector'); // Pasa directo a elegir tema (Amor, Negocios, etc.)
 }
 
-// Alias para los botones de la portada onclick="irAlEjeConsulta('magico')"
-function irAlEjeConsulta(estilo = 'magico') {
-    seleccionarEstilo(estilo);
-}
-
-// ==========================================
-// GESTIÓN DE MAZO FÍSICO
-// ==========================================
-
-// 1. Abre la pantalla del Mazo Físico (screen-fisico) registrando el submodo recibido
+// 2. FLUJO MAZO FÍSICO: Menú de Selección de 4 Cartas (Módulo Profesional)
 function abrirSeleccionFisico(submodo = 'predictivo_fisico') {
     window.submodoFisicoActual = submodo;
-    window.modoFisicoActivo = true;
+    window.modoFisicoActivo = true; // Activa la lectura desde los selectores manuales
     
-    // Si la función para poblar los selectores con los 78 arcanos existe, la ejecutamos
+    // Poblamos los selectores con las 78 cartas si la función está lista
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
-    } else if (typeof cargarSelectoresFisicos === 'function') {
-        cargarSelectoresFisicos();
     }
     
-    mostrarPantalla('screen-fisico');
+    mostrarPantalla('screen-fisico'); // Abre el menú para elegir las 4 cartas
 }
 
-// Alias de retrocompatibilidad
-function abrirModoFisico() {
-    abrirSeleccionFisico('predictivo_fisico');
-}
-
-// 2. Valida las 4 cartas seleccionadas en screen-fisico antes de avanzar al eje de consulta
+// 3. Confirmación del Mazo Físico
 function irAlEjeFisico() {
-    window.modoFisicoActivo = true;
-
-    // Verificar si el usuario ya seleccionó las 4 cartas físicas
     const c1 = document.getElementById('fisico-carta1')?.value;
     const c2 = document.getElementById('fisico-carta2')?.value;
     const c3 = document.getElementById('fisico-carta3')?.value;
@@ -87,12 +66,11 @@ function irAlEjeFisico() {
         return;
     }
 
-    // Si las cartas están elegidas, mostramos la pantalla para elegir el Eje
     mostrarPantalla('screen-selector');
 }
 
 // ==========================================
-// RUTAS Y SUBPANTALLAS
+// NAVEGACIÓN GENERAL Y MODALES
 // ==========================================
 
 function volverAPortada() {
@@ -117,65 +95,29 @@ function abrirGuiaLectura() {
     mostrarPantalla('screen-guia-lectura');
 }
 
+function abrirHistorial() {
+    mostrarPantalla('screen-historial');
+    if (typeof window.renderizarHistorialUI === 'function') {
+        window.renderizarHistorialUI();
+    }
+}
+
 function abrirPantallaPregunta() {
     mostrarPantalla('screen-pregunta');
     const inputPregunta = document.getElementById('texto-pregunta-usuario');
     if (inputPregunta) {
-        inputPregunta.value = ''; // Limpia el texto de preguntas previas
+        inputPregunta.value = '';
         setTimeout(() => inputPregunta.focus(), 100);
     }
 }
 
-// ==========================================
-// FUNCIONES AUXILIARES / UTILIDADES
-// ==========================================
-
-async function pedirEmailAlUsuario() {
-    const email = prompt("📧 Ingresa tu correo electrónico para vincular tu cuenta y respaldar tus lecturas:");
-    
-    if (email && email.includes('@')) {
-        const emailLimpio = email.trim().toLowerCase();
-        
-        // 1. Guardar localmente
-        localStorage.setItem('tarotUserEmail', emailLimpio);
-
-        // 2. Enviar a MongoDB Atlas a través de Render
-        try {
-            const respuesta = await fetch('https://tarot-613b.onrender.com/api/usuarios/registrar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    nombre: 'Consultante Místico',
-                    email: emailLimpio
-                })
-            });
-
-            const data = await respuesta.json();
-            console.log('✅ Usuario registrado exitosamente en MongoDB:', data);
-            
-            alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido vinculado exitosamente.`);
-        } catch (error) {
-            console.error('❌ Error al guardar en el servidor:', error);
-            alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido guardado localmente.`);
-        }
-
-    } else if (email) {
-        alert("❌ Por favor, ingresa un correo electrónico válido.");
-    }
-}
-
-// Lógica para ejecutar la lectura según si es pregunta fija (Amor, Negocios, etc.)
+// Disparadores de lectura desde la pantalla de ejes/temas
 function ejecutarLecturaSegunModo(tema) {
     if (typeof window.procesarTiradaCompleta === 'function') {
         window.procesarTiradaCompleta(tema, null);
-    } else if (typeof procesarTiradaCompleta === 'function') {
-        procesarTiradaCompleta(tema, null);
     }
 }
 
-// Lógica cuando el usuario hace una Pregunta Específica Custom
 function confirmarPreguntaYEjecutar() {
     const inputPregunta = document.getElementById('texto-pregunta-usuario');
     const preguntaText = inputPregunta ? inputPregunta.value.trim() : "";
@@ -187,29 +129,34 @@ function confirmarPreguntaYEjecutar() {
 
     if (typeof window.procesarTiradaCompleta === 'function') {
         window.procesarTiradaCompleta("Consulta Personalizada", preguntaText);
-        if (inputPregunta) inputPregunta.value = ''; // Limpia el cuadro tras procesar
-    } else if (typeof procesarTiradaCompleta === 'function') {
-        procesarTiradaCompleta("Consulta Personalizada", preguntaText);
-        if (inputPregunta) inputPregunta.value = ''; // Limpia el cuadro tras procesar
+        if (inputPregunta) inputPregunta.value = '';
     }
 }
 
-// ==========================================
-// EXPORTACIÓN EXPLÍCITA AL OBJETO WINDOW
-// ==========================================
+async function pedirEmailAlUsuario() {
+    const email = prompt("📧 Ingresa tu correo electrónico para vincular tu cuenta y respaldar tus lecturas:");
+    if (email && email.includes('@')) {
+        const emailLimpio = email.trim().toLowerCase();
+        localStorage.setItem('tarotUserEmail', emailLimpio);
+        alert(`¡Gracias! Tu correo (${emailLimpio}) ha sido guardado exitosamente.`);
+    } else if (email) {
+        alert("❌ Por favor, ingresa un correo electrónico válido.");
+    }
+}
+
+// Exportación explícita a window para compatibilidad total con el HTML
 window.ocultarTodasLasPantallas = ocultarTodasLasPantallas;
 window.mostrarPantalla = mostrarPantalla;
-window.seleccionarEstilo = seleccionarEstilo;
-window.irAlEjeConsulta = irAlEjeConsulta;
+window.seleccionarEstiloAutomatico = seleccionarEstiloAutomatico;
 window.abrirSeleccionFisico = abrirSeleccionFisico;
-window.abrirModoFisico = abrirModoFisico;
 window.irAlEjeFisico = irAlEjeFisico;
 window.volverAPortada = volverAPortada;
 window.volverInicio = volverInicio;
 window.abrirModuloProfesional = abrirModuloProfesional;
 window.volverAlModuloProfesional = volverAlModuloProfesional;
 window.abrirGuiaLectura = abrirGuiaLectura;
+window.abrirHistorial = abrirHistorial;
 window.abrirPantallaPregunta = abrirPantallaPregunta;
-window.pedirEmailAlUsuario = pedirEmailAlUsuario;
 window.ejecutarLecturaSegunModo = ejecutarLecturaSegunModo;
 window.confirmarPreguntaYEjecutar = confirmarPreguntaYEjecutar;
+window.pedirEmailAlUsuario = pedirEmailAlUsuario;
