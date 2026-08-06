@@ -2,7 +2,7 @@
 // CONFIGURACIÓN Y LISTA DE ARCANOS
 // ==========================================
 
-const arcanosCompleto = [
+window.arcanosCompleto = [
     "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa", 
     "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna", 
     "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre", 
@@ -21,16 +21,28 @@ const arcanosCompleto = [
     "Sota de Oros", "Caballero de Oros", "Reina de Oros", "Rey de Oros"
 ];
 
-const SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
+window.SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
 
 // ==========================================
-// POBLAR SELECTORES DEL MAZO FÍSICO
+// FUNCIONES GLOBALES PRINCIPALES
 // ==========================================
 
-function cargarSelectoresFisicos() {
+// 1. Generación de 4 cartas aleatorias
+window.obtenerCuatroCartasAleatorias = function() {
+    const mazo = window.arcanosCompleto || [];
+    if (mazo.length === 0) {
+        return ["El Loco", "El Mago", "La Sacerdotisa", "El Emperador"];
+    }
+    const mazoMezclado = [...mazo].sort(() => 0.5 - Math.random());
+    return mazoMezclado.slice(0, 4);
+};
+
+// 2. Poblado de selectores físicos
+window.cargarSelectoresFisicos = function() {
     const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
+    const mazo = window.arcanosCompleto || [];
 
-    if (!arcanosCompleto || arcanosCompleto.length === 0) {
+    if (mazo.length === 0) {
         console.error("⚠️ No se encontró el array arcanosCompleto");
         return;
     }
@@ -41,70 +53,20 @@ function cargarSelectoresFisicos() {
 
         select.innerHTML = `<option value="">-- Selecciona Carta ${index + 1} --</option>`;
 
-        arcanosCompleto.forEach(nombreCarta => {
+        mazo.forEach(nombreCarta => {
             const option = document.createElement('option');
             option.value = nombreCarta;
             option.textContent = nombreCarta;
             select.appendChild(option);
         });
     });
-}
+};
 
-// Carga automática al cargar la página
-document.addEventListener('DOMContentLoaded', () => {
-    cargarSelectoresFisicos();
-});
-
-// ==========================================
-// GENERACIÓN DE CARTAS ALEATORIAS (AUTOMÁTICO)
-// ==========================================
-
-function obtenerCuatroCartasAleatorias() {
-    const mazoMezclado = [...arcanosCompleto].sort(() => 0.5 - Math.random());
-    return mazoMezclado.slice(0, 4);
-}
-
-// ==========================================
-// EJECUCIÓN Y PETICIÓN AL SERVIDOR
-// ==========================================
-
-async function procesarTiradaCompleta(tema, preguntaCustom) {
-    let cartasElegidas = [];
-
-    if (window.modoFisicoActivo) {
-        // MAZO FÍSICO
-        const c1 = document.getElementById('fisico-carta1')?.value;
-        const c2 = document.getElementById('fisico-carta2')?.value;
-        const c3 = document.getElementById('fisico-carta3')?.value;
-        const c4 = document.getElementById('fisico-carta4')?.value;
-
-        if (!c1 || !c2 || !c3 || !c4) {
-            alert("⚠️ Por favor, selecciona las 4 cartas de tu mazo físico.");
-            return;
-        }
-
-        cartasElegidas = [c1, c2, c3, c4];
-    } else {
-        // MAZO AUTOMÁTICO
-        cartasElegidas = obtenerCuatroCartasAleatorias();
-    }
-
-    // Dibujar en pantalla
-    if (typeof mostrarPantalla === 'function') {
-        mostrarPantalla('screen-result');
-    }
-    
-    renderizarMesaDuplas(cartasElegidas, tema);
-
-    // Enviar la petición a tu servidor en Render
-    await enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
-}
-
-// Renderizar nombres en la mesa de lectura por Duplas
-function renderizarMesaDuplas(cartas, tema) {
+// 3. Renderizar Duplas en Pantalla
+window.renderizarMesaDuplas = function(cartas, tema) {
     const tituloTema = document.getElementById('reading-theme-title');
     if (tituloTema) {
-        tituloTema.textContent = `🔮 Lectura por Duplas: ${tema}`;
+        tituloTema.textContent = `🔮 Lectura por Duplas (${window.estiloSeleccionado || 'Mágico'}): ${tema}`;
     }
 
     // Dupla 1 (Presente / Estado Inicial)
@@ -118,13 +80,13 @@ function renderizarMesaDuplas(cartas, tema) {
     const nameD = document.getElementById('name-d');
     if (nameC) nameC.textContent = cartas[2];
     if (nameD) nameD.textContent = cartas[3];
-}
+};
 
-// Petición HTTP POST al backend en Render
-async function enviarPeticionRender(cartas, tema, preguntaCustom) {
+// 4. Enviar Petición POST al Backend de Render
+window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     const contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
-        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center;">✨ Conectando con los arcanos y generando interpretación...</p>`;
+        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center;">✨ Conectando con los arcanos y generando interpretación (${window.estiloSeleccionado || 'mágico'})...</p>`;
     }
 
     try {
@@ -133,12 +95,12 @@ async function enviarPeticionRender(cartas, tema, preguntaCustom) {
             dupla2: [cartas[2], cartas[3]],
             tema: tema,
             pregunta: preguntaCustom || "",
-            estilo: window.estiloSeleccionado || 'magico',
+            estilo: window.estiloSeleccionado || 'filosofico',
             esFisico: window.modoFisicoActivo || false,
             submodoFisico: window.submodoFisicoActual || 'predictivo_fisico'
         };
 
-        const respuesta = await fetch(SERVIDOR_URL, {
+        const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -158,10 +120,42 @@ async function enviarPeticionRender(cartas, tema, preguntaCustom) {
             contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Hubo un problema al conectar con el servidor. Intenta nuevamente.</p>`;
         }
     }
-}
+};
 
-// Exportación global
-window.arcanosCompleto = arcanosCompleto;
-window.cargarSelectoresFisicos = cargarSelectoresFisicos;
-window.obtenerCuatroCartasAleatorias = obtenerCuatroCartasAleatorias;
-window.procesarTiradaCompleta = procesarTiradaCompleta;
+// 5. Procesamiento general de la tirada
+window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
+    let cartasElegidas = [];
+
+    if (window.modoFisicoActivo) {
+        // MAZO FÍSICO
+        const c1 = document.getElementById('fisico-carta1')?.value;
+        const c2 = document.getElementById('fisico-carta2')?.value;
+        const c3 = document.getElementById('fisico-carta3')?.value;
+        const c4 = document.getElementById('fisico-carta4')?.value;
+
+        if (!c1 || !c2 || !c3 || !c4) {
+            alert("⚠️ Por favor, selecciona las 4 cartas de tu mazo físico.");
+            return;
+        }
+
+        cartasElegidas = [c1, c2, c3, c4];
+    } else {
+        // MAZO AUTOMÁTICO
+        cartasElegidas = window.obtenerCuatroCartasAleatorias();
+    }
+
+    // Dibujar pantalla de resultado
+    if (typeof window.mostrarPantalla === 'function') {
+        window.mostrarPantalla('screen-result');
+    }
+    
+    window.renderizarMesaDuplas(cartasElegidas, tema);
+
+    // Enviar a Render
+    await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
+};
+
+// Carga de selectores cuando el DOM está listo
+document.addEventListener('DOMContentLoaded', () => {
+    window.cargarSelectoresFisicos();
+});
