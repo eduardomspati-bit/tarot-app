@@ -2,6 +2,9 @@
 // GESTIÓN DE PANTALLAS Y NAVEGACIÓN
 // ==========================================
 
+// Variables globales de estado de navegación
+window.submodoFisicoActual = window.submodoFisicoActual || 'predictivo_fisico';
+
 function ocultarTodasLasPantallas() {
     const pantallas = document.querySelectorAll('.screen');
     pantallas.forEach(p => {
@@ -38,15 +41,31 @@ function seleccionarEstilo(estilo) {
     mostrarPantalla('screen-selector'); 
 }
 
-// Alias para los botones de tu portada onclick="irAlEjeConsulta('magico')"
+// Alias para los botones de la portada onclick="irAlEjeConsulta('magico')"
 function irAlEjeConsulta(estilo = 'magico') {
     seleccionarEstilo(estilo);
 }
 
-// 1. Abre la pantalla del Mazo Físico (screen-fisico) sin ejecutar la lectura
-function abrirModoFisico() {
+// ==========================================
+// GESTIÓN DE MAZO FÍSICO
+// ==========================================
+
+// 1. Abre la pantalla del Mazo Físico (screen-fisico) registrando el submodo recibido
+function abrirSeleccionFisico(submodo = 'predictivo_fisico') {
+    window.submodoFisicoActual = submodo;
     window.modoFisicoActivo = true;
+    
+    // Si la función para poblar los selectores con los 78 arcanos existe, la ejecutamos
+    if (typeof cargarSelectoresFisicos === 'function') {
+        cargarSelectoresFisicos();
+    }
+    
     mostrarPantalla('screen-fisico');
+}
+
+// Alias de retrocompatibilidad
+function abrirModoFisico() {
+    abrirSeleccionFisico('predictivo_fisico');
 }
 
 // 2. Valida las 4 cartas seleccionadas en screen-fisico antes de avanzar al eje de consulta
