@@ -1,65 +1,136 @@
-// Carga los 78 arcanos en los 4 selectores del Mazo Físico
-function cargarSelectoresFisicos() {
-    const ids = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
-    
-    // Verificamos que exista la lista global de arcanos
-    const mazo = window.arcanos || window.mazoTarot || [];
-    if (mazo.length === 0) return;
+// ==========================================
+// POBLAR SELECTORES DEL MAZO FÍSICO
+// ==========================================
 
-    ids.forEach(id => {
+function obtenerListaArcanos() {
+    // Busca el mazo en las variables globales más comunes
+    if (Array.isArray(window.arcanos) && window.arcanos.length > 0) return window.arcanos;
+    if (Array.isArray(window.mazoTarot) && window.mazoTarot.length > 0) return window.mazoTarot;
+    if (Array.isArray(window.MAZO) && window.MAZO.length > 0) return window.MAZO;
+    return [];
+}
+
+function cargarSelectoresFisicos() {
+    const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
+    const mazo = obtenerListaArcanos();
+
+    if (mazo.length === 0) {
+        console.error("❌ No se encontró la lista de arcanos en arcanos.js");
+        return;
+    }
+
+    idsSelects.forEach((id, index) => {
         const select = document.getElementById(id);
-        if (select && select.children.length <= 1) {
-            select.innerHTML = '<option value="">-- Selecciona una Carta --</option>';
-            mazo.forEach(carta => {
-                const opt = document.createElement('option');
-                opt.value = carta.nombre || carta;
-                opt.textContent = carta.nombre || carta;
-                select.appendChild(opt);
-            });
-        }
+        if (!select) return;
+
+        // Limpiamos y colocamos la opción por defecto
+        select.innerHTML = `<option value="">-- Selecciona Carta ${index + 1} --</option>`;
+
+        mazo.forEach(carta => {
+            // Saca el nombre de la carta según cómo esté estructurado en arcanos.js
+            const nombreCarta = typeof carta === 'string' ? carta : (carta.nombre || carta.name || carta.titulo);
+            
+            if (nombreCarta) {
+                const option = document.createElement('option');
+                option.value = nombreCarta;
+                option.textContent = nombreCarta;
+                select.appendChild(option);
+            }
+        });
     });
 }
 
-// Función principal que procesa y lanza la lectura
+// ==========================================
+// GENERACIÓN DE CARTAS ALEATORIAS (AUTOMÁTICO)
+// ==========================================
+
+function obtenerCuatroCartasAleatorias() {
+    const mazo = obtenerListaArcanos();
+    if (mazo.length === 0) return ["El Loco", "El Mago", "La Sacerdotisa", "El Emperador"];
+
+    // Copia superficial y mezcla (Fisher-Yates)
+    const mazoMezclado = [...mazo].sort(() => 0.5 - Math.random());
+    
+    // Extraemos 4 cartas
+    return mazoMezclado.slice(0, 4).map(carta => 
+        typeof carta === 'string' ? carta : (carta.nombre || carta.name || carta.titulo)
+    );
+}
+
+// ==========================================
+// NÚCLEO Y EJECUCIÓN DE TIRADAS POR DUPLAS
+// ==========================================
+
 async function procesarTiradaCompleta(tema, preguntaCustom) {
     let cartasElegidas = [];
 
     if (window.modoFisicoActivo) {
-        // ==========================================
-        // CAMINO A: MAZO FÍSICO (Obtiene de los 4 <select>)
-        // ==========================================
+        // MAZO FÍSICO: Leemos las 2 Duplas
         const c1 = document.getElementById('fisico-carta1')?.value;
         const c2 = document.getElementById('fisico-carta2')?.value;
         const c3 = document.getElementById('fisico-carta3')?.value;
         const c4 = document.getElementById('fisico-carta4')?.value;
 
         if (!c1 || !c2 || !c3 || !c4) {
-            alert("⚠️ Selecciona las 4 cartas físicas antes de continuar.");
+            alert("⚠️ Por favor, selecciona las 4 cartas de tu mazo antes de continuar.");
             return;
         }
+
+        // Dupla 1 (Presente): [c1, c2] | Dupla 2 (Futuro): [c3, c4]
         cartasElegidas = [c1, c2, c3, c4];
 
     } else {
-        // ==========================================
-        // CAMINO B: TIRADA AUTOMÁTICA (Saca 4 aleatorias)
-        // ==========================================
-        if (typeof obtenerCuatroCartasAleatorias === 'function') {
-            cartasElegidas = obtenerCuatroCartasAleatorias();
-        } else {
-            console.error("No se encontró la función obtenerCuatroCartasAleatorias.");
-            return;
-        }
+        // TIRADA AUTOMÁTICA
+        cartasElegidas = obtenerCuatroCartasAleatorias();
     }
 
-    // Cambiar a la mesa de resultados y solicitar interpretación
+    // Dibujar los resultados en pantalla
     mostrarPantalla('screen-result');
-    
-    // Llamada a tu servidor / IA enviando la información consolidada
-    if (typeof solicitarInterpretacionIA === 'function') {
-        await solicitarInterpretacionIA(cartasElegidas, tema, preguntaCustom);
-    }
+    renderizarMesaDuplas(cartasElegidas, tema);
+
+    // Enviar solicitud a la IA o motor de interpretación
+    await solicitarInterpretacionIA({
+        dupla1: [cartasElegidas[0], cartasElegidas[1]], // Presente / Situación Actual
+        dupla2: [cartasElegidas[2], cartasElegidas[3]], // Futuro / Evolución
+        tema: tema,
+        pregunta: preguntaCustom,
+        estilo: window.estiloSeleccionado,
+        esFisico: window.modoFisicoActivo,
+        submodoFisico: window.submodoFisicoActual
+    });
 }
 
-// Exportar globalmente
+// Visualización clara por Duplas en screen-result
+function renderizarMesaDuplas(cartas, tema) {
+    const tituloTema = document.getElementById('reading-theme-title');
+    if (tituloTema) {
+        tituloTema.textContent = `🔮 Lectura por Duplas: ${tema}`;
+    }
+
+    // Dupla 1 (Estado Inicial / Presente)
+    const nameA = document.getElementById('name-a');
+    const nameB = document.getElementById('name-b');
+    if (nameA) nameA.textContent = cartas[0];
+    if (nameB) nameB.textContent = cartas[1];
+
+    // Dupla 2 (Evolución / Futuro)
+    const nameC = document.getElementById('name-c');
+    const nameD = document.getElementById('name-d');
+    if (nameC) nameC.textContent = cartas[2];
+    if (nameD) nameD.textContent = cartas[3];
+}
+
+// Mock/Envío a servidor para interpretación
+async function solicitarInterpretacionIA(datosLectura) {
+    const contenedorTexto = document.getElementById('interpretation-text');
+    if (!contenedorTexto) return;
+
+    contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center;">✨ Interpretando Dupla 1 (${datosLectura.dupla1.join(' + ')}) y Dupla 2 (${datosLectura.dupla2.join(' + ')})...</p>`;
+
+    // Aquí conecta con tu backend o API de Render/MongoDB si corresponde
+}
+
+// Exportación al objeto global
 window.cargarSelectoresFisicos = cargarSelectoresFisicos;
+window.obtenerCuatroCartasAleatorias = obtenerCuatroCartasAleatorias;
 window.procesarTiradaCompleta = procesarTiradaCompleta;
