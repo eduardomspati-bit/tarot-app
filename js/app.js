@@ -103,14 +103,19 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     }
 
     try {
-        const dupla1 = [cartas[0], cartas[1]];
-        const dupla2 = [cartas[2], cartas[3]];
+        const d1 = [cartas[0], cartas[1]];
+        const d2 = [cartas[2], cartas[3]];
 
-        // Estructura limpia: Duplas para la IA + Array 'cartas' para la validación del servidor
+        // Payload multi-compatibilidad: incluye duplas sueltas, objeto duplas y array de cartas
         const payload = {
-            dupla1: dupla1,
-            dupla2: dupla2,
-            cartas: [...dupla1, ...dupla2],
+            cartas: cartas,
+            cartasElegidas: cartas,
+            dupla1: d1,
+            dupla2: d2,
+            duplas: {
+                dupla1: d1,
+                dupla2: d2
+            },
             tema: tema,
             pregunta: preguntaCustom || "",
             estilo: window.estiloSeleccionado || 'filosofico',
@@ -118,7 +123,7 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
             submodoFisico: window.submodoFisicoActual || 'predictivo_fisico'
         };
 
-        console.log("📤 Enviando estructura de Duplas a Render:", payload);
+        console.log("📤 Enviando datos ultra-compatibles a Render:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -156,7 +161,6 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         }
     }
 };
-
 // ==========================================
 // FLUJO PRINCIPAL DE LA TIRADA
 // ==========================================
