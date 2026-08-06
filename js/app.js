@@ -1,6 +1,10 @@
+// ==========================================
+// CONFIGURACIÓN DE SERVIDOR Y ARCANOS
+// ==========================================
+
 window.SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
 
-// Obtención del mazo
+// Obtención del mazo activo o de respaldo
 function obtenerMazoActivo() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
         return arcanosCompleto;
@@ -27,6 +31,10 @@ function obtenerMazoActivo() {
         "Sota de Oros", "Caballero de Oros", "Reina de Oros", "Rey de Oros"
     ];
 }
+
+// ==========================================
+// FUNCIONES DE MANEJO DE CARTAS
+// ==========================================
 
 // Generar 4 cartas aleatorias
 window.obtenerCuatroCartasAleatorias = function() {
@@ -56,7 +64,7 @@ window.cargarSelectoresFisicos = function() {
     });
 };
 
-// Dibujar las cartas en pantalla
+// Dibujar las duplas en la mesa de resultados
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
@@ -84,25 +92,33 @@ window.renderizarMesaDuplas = function(cartas, tema) {
     });
 };
 
-// Enviar datos al servidor y mostrar interpretación
+// ==========================================
+// PETICIÓN HTTP AL SERVIDOR EN RENDER
+// ==========================================
+
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     const contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
-        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con los arcanos... Generando interpretación en estilo ${window.estiloSeleccionado || 'mágico'}...</p>`;
+        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con los arcanos por Duplas... Generando interpretación (${window.estiloSeleccionado || 'mágico'})...</p>`;
     }
 
     try {
+        const dupla1 = [cartas[0], cartas[1]];
+        const dupla2 = [cartas[2], cartas[3]];
+
+        // Estructura limpia: Duplas para la IA + Array 'cartas' para la validación del servidor
         const payload = {
-            dupla1: [cartas[0], cartas[1]],
-            dupla2: [cartas[2], cartas[3]],
+            dupla1: dupla1,
+            dupla2: dupla2,
+            cartas: [...dupla1, ...dupla2],
             tema: tema,
             pregunta: preguntaCustom || "",
-            estilo: window.estiloSeleccionado || 'magico',
+            estilo: window.estiloSeleccionado || 'filosofico',
             esFisico: window.modoFisicoActivo || false,
             submodoFisico: window.submodoFisicoActual || 'predictivo_fisico'
         };
 
-        console.log("📤 Enviando a Render:", payload);
+        console.log("📤 Enviando estructura de Duplas a Render:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -111,7 +127,11 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         });
 
         const data = await respuesta.json();
-        console.log("📥 Respuesta Render:", data);
+        console.log("📥 Respuesta recibida de Render:", data);
+
+        if (!respuesta.ok) {
+            throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
+        }
 
         if (contenedorTexto) {
             let texto = data.resultado || 
@@ -130,14 +150,17 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         }
 
     } catch (error) {
-        console.error("❌ Error en backend:", error);
+        console.error("❌ Error en la lectura:", error);
         if (contenedorTexto) {
-            contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Error de conexión con el servidor de lectura.</p>`;
+            contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Error: ${error.message}</p>`;
         }
     }
 };
 
-// Proceso general
+// ==========================================
+// FLUJO PRINCIPAL DE LA TIRADA
+// ==========================================
+
 window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     let cartasElegidas = [];
 
@@ -160,7 +183,7 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
 
-// Inicialización
+// Carga inicial al estar el DOM listo
 document.addEventListener('DOMContentLoaded', () => {
     window.cargarSelectoresFisicos();
 });
