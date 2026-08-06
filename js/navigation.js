@@ -43,13 +43,13 @@ function irAlEjeConsulta(estilo = 'magico') {
     seleccionarEstilo(estilo);
 }
 
-// 1. Abre el selector de cartas físicas sin disparar la lectura
+// 1. Abre la pantalla del Mazo Físico (screen-fisico) sin ejecutar la lectura
 function abrirModoFisico() {
     window.modoFisicoActivo = true;
     mostrarPantalla('screen-fisico');
 }
 
-// 2. Valida las cartas seleccionadas antes de pasar al Eje de Consulta
+// 2. Valida las 4 cartas seleccionadas en screen-fisico antes de avanzar al eje de consulta
 function irAlEjeFisico() {
     window.modoFisicoActivo = true;
 
@@ -64,6 +64,7 @@ function irAlEjeFisico() {
         return;
     }
 
+    // Si las cartas están elegidas, mostramos la pantalla para elegir el Eje
     mostrarPantalla('screen-selector');
 }
 
