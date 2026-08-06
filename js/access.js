@@ -4,6 +4,22 @@
 
 const MAX_MUESTRAS = 5;
 
+// Códigos premium válidos
+const CODIGOS_PREMIUM_VALIDOS = [
+    'ADMIN2026',
+    'PASEMISTICO',
+    'TAROTGRATIS'
+];
+
+// Inicializar estado premium desde localStorage al cargar
+(function inicializarEstadoPremium() {
+    const simulado = localStorage.getItem('simularPremium') === 'true';
+    if (simulado) {
+        window.esUsuarioPremium = true;
+        console.log('✨ Modo Premium activado desde localStorage');
+    }
+})();
+
 function obtenerMuestrasFisicasRestantes() {
     let muestras = localStorage.getItem('muestrasFisicasTarot');
     if (muestras === null) {
@@ -24,10 +40,10 @@ function registrarUsoTiradaFisica() {
 }
 
 function actualizarBadgeMuestrasFisicas() {
-    const badge = document.getElementById('badge-physic-muestra-prof') 
-               || document.getElementById('badge-fisico-muestra-prof') 
+    const badge = document.getElementById('badge-physic-muestra-prof')
+               || document.getElementById('badge-fisico-muestra-prof')
                || document.getElementById('badge-fisico-muestra');
-               
+
     if (badge) {
         if (window.esUsuarioPremium) {
             badge.innerText = "Ilimitado ✨";
@@ -39,21 +55,43 @@ function actualizarBadgeMuestrasFisicas() {
     }
 }
 
-function verificarAccesoTarotista() {
-    if (window.esUsuarioPremium) {
-        if (typeof irAlEjeConsulta === 'function') irAlEjeConsulta('manual');
+// ==========================================
+// CANJEAR CÓDIGO PREMIUM
+// ==========================================
+function canjearCodigoPremium(codigo) {
+    if (!codigo) return;
+    const codigoLimpio = codigo.trim().toUpperCase();
+
+    if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
+        window.esUsuarioPremium = true;
+        localStorage.setItem('simularPremium', 'true');
+        alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
+        actualizarBadgeMuestrasFisicas();
     } else {
-        const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
-        }
+        alert('❌ Código inválido o expirado. Probá con otro o contactá al administrador.');
+    }
+}
+
+// ==========================================
+// MERCADO PAGO (STUB)
+// ==========================================
+function abrirMercadoPago() {
+    alert('🛒 Próximamente: enlace de pago por Mercado Pago.\n\nContactá al administrador para adquirir tu Pase Místico.');
+}
+
+// ==========================================
+// IR AL EJE CONSULTA (STUB)
+// ==========================================
+function irAlEjeConsulta(modo) {
+    window.modoFisicoActivo = (modo === 'manual');
+    if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-selector');
     }
 }
 
 // ==========================================
 // ACCESO A MAZO FÍSICO (CORREGIDO)
 // ==========================================
-
 function verificarAccesoFisico() {
     // 1. Si es usuario Premium, abre directamente la carga de cartas físicas
     if (window.esUsuarioPremium) {
@@ -90,6 +128,17 @@ function verificarAccesoFisico() {
 // ==========================================
 function verificarAccesoTarotistaFisico() {
     verificarAccesoFisico();
+}
+
+function verificarAccesoTarotista() {
+    if (window.esUsuarioPremium) {
+        if (typeof irAlEjeConsulta === 'function') irAlEjeConsulta('manual');
+    } else {
+        const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
+        if (codigo && typeof canjearCodigoPremium === 'function') {
+            canjearCodigoPremium(codigo);
+        }
+    }
 }
 
 // Inicializar el estado de los badges al cargar el módulo
