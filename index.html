@@ -11,7 +11,7 @@
 
 <div class="container">
     <h1>Tarot Sagrado</h1>
-    <div class="subtitle">Sistema de Lectura Inteligente</div>
+    <div class="subtitle">Sistema de Lectura Inteligente por Duplas</div>
 
     <!-- PANTALLA 1: PORTADA PRINCIPAL -->
     <div id="screen-portada" class="screen">
@@ -27,7 +27,7 @@
                 <div class="opcion-icono">🔮</div>
                 <div class="opcion-info">
                     <h3>Estilo Mágico</h3>
-                    <p>Tirada automática instantánea. Lectura directa, mística y al hueso.</p>
+                    <p>Tirada automática por duplas. Lectura directa, mística y predictiva.</p>
                 </div>
             </div>
 
@@ -36,7 +36,7 @@
                 <div class="opcion-icono">🧘‍♂️</div>
                 <div class="opcion-info">
                     <h3>Estilo Filosófico</h3>
-                    <p>Tirada automática profunda, psicológica y reflexiva.</p>
+                    <p>Tirada automática por duplas. Lectura profunda, psicológica y evolutiva.</p>
                 </div>
             </div>
 
@@ -45,7 +45,7 @@
                 <div class="opcion-icono">💼</div>
                 <div class="opcion-info">
                     <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
-                    <p>Herramientas avanzadas, lecturas con Mazo Físico y guías de negocio.</p>
+                    <p>Herramientas avanzadas, lecturas con Mazo Físico y desgloses técnicos.</p>
                 </div>
             </div>
         </div>
@@ -61,41 +61,43 @@
 
     <!-- PANTALLA: MENÚ DE CARGA PARA MAZO FÍSICO -->
     <div id="screen-fisico" class="screen hidden" style="display: none;">
-        <h2 style="color: #ffd700; margin-bottom: 5px;">🔮 Mazo Físico</h2>
+        <h2 style="color: #ffd700; margin-bottom: 5px;">🔮 Mazo Físico (Lectura por Duplas)</h2>
         <p style="font-size: 0.9rem; color: #ccc; margin-bottom: 20px;">
-            Mezclá tu mazo real de 78 cartas, sacá dos duplas y elegilas a continuación:
+            Mezclá tu mazo real, extraé las 2 duplas y selecciónalas a continuación:
         </p>
 
-        <div class="dupla-container" style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(255,215,0,0.1);">
+        <!-- DUPLA 1 -->
+        <div class="dupla-container" style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(168,85,247,0.3);">
             <h4 style="color: #a855f7; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem;">
-                🌓 Dupla 1: Situación Actual y Pasado
+                🌓 Dupla 1: Estado Inicial / Presente y Pasado
             </h4>
             <div style="margin-bottom: 10px;">
                 <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 1 (Presente):</label>
                 <select id="fisico-carta1" class="select-carta-fisica"></select>
             </div>
             <div>
-                <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 2 (Pasado):</label>
+                <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 2 (Pasado / Contexto):</label>
                 <select id="fisico-carta2" class="select-carta-fisica"></select>
             </div>
         </div>
 
-        <div class="dupla-container" style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(255,215,0,0.1);">
-            <h4 style="color: #a855f7; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem;">
-                🚀 Dupla 2: Evolución Futura
+        <!-- DUPLA 2 -->
+        <div class="dupla-container" style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid rgba(255,215,0,0.3);">
+            <h4 style="color: #ffd700; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem;">
+                🚀 Dupla 2: Evolución / Futuro y Resultado
             </h4>
             <div style="margin-bottom: 10px;">
-                <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 3 (Futuro):</label>
+                <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 3 (Futuro Cercano):</label>
                 <select id="fisico-carta3" class="select-carta-fisica"></select>
             </div>
             <div>
-                <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 4 (Resultado):</label>
+                <label style="display:block; font-size: 0.8rem; margin-bottom: 4px;">Carta 4 (Resultado Desembocado):</label>
                 <select id="fisico-carta4" class="select-carta-fisica"></select>
             </div>
         </div>
 
         <button class="btn-carta-diaria" onclick="irAlEjeFisico()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #111; font-weight: bold; width: 100%;">
-            Confirmar Cartas y Elegir Eje ✨
+            Confirmar Duplas y Elegir Eje ✨
         </button>
         
         <button onclick="volverAPortada()" style="background: transparent; color: #aaa; border: none; margin-top: 15px; cursor: pointer; text-decoration: underline; display: block; margin-left: auto; margin-right: auto;">
@@ -121,7 +123,7 @@
     <div id="screen-pregunta" class="screen hidden" style="display: none;">
         <h3 style="color: var(--accent);">🔮 Consulta Específica</h3>
         <p style="font-size: 0.9rem; color: var(--muted-text); margin-bottom: 20px;">
-            Escribí tu pregunta detallada para que la IA la responda con tus cartas:
+            Escribí tu pregunta detallada para que la IA interprete las duplas en tu caso:
         </p>
         
         <textarea id="texto-pregunta-usuario" rows="4" placeholder="Ej: ¿Qué debo tener en cuenta sobre la propuesta laboral que me hicieron?..." style="width: 100%; background: #1a0f2e; color: #fff; border: 1px solid var(--glass-border); padding: 12px; border-radius: 12px; font-size: 1rem; outline: none; resize: none; box-sizing: border-box; margin-bottom: 20px; font-family: inherit;"></textarea>
@@ -138,8 +140,9 @@
         <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
         
         <div class="tarot-table">
+            <!-- DUPLA 1 -->
             <div class="duple-box">
-                <div class="duple-title">Presente y Pasado</div>
+                <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
                 <div class="card-container">
                     <div id="img-a" class="card-visual"></div>
                     <div id="name-a" class="card-name"></div>
@@ -150,8 +153,9 @@
                 </div>
             </div>
             
+            <!-- DUPLA 2 -->
             <div class="duple-box">
-                <div class="duple-title">Futuro Cercano</div>
+                <div class="duple-title">Dupla 2: Futuro / Evolución</div>
                 <div class="card-container">
                     <div id="img-c" class="card-visual"></div>
                     <div id="name-c" class="card-name"></div>
@@ -171,7 +175,7 @@
     <div id="screen-modulo-profesional" class="screen hidden" style="display: none;">
         <h2 style="color: #a78bfa; margin-bottom: 5px;">💼 Módulo Profesional</h2>
         <p style="font-size: 0.95rem; color: #ccc; margin-bottom: 25px;">
-            Herramientas para tus consultas profesionales o estudio personal:
+            Herramientas para tus consultas con Mazo Físico:
         </p>
 
         <div class="menu-portada">
@@ -180,22 +184,22 @@
                 <div class="opcion-icono">🃏</div>
                 <div class="opcion-info">
                     <h3>Mazo Físico Predictivo</h3>
-                    <p>Elegí tus 4 cartas reales para una traducción fluida y predictiva de la IA.</p>
+                    <p>Cargá la Dupla 1 y Dupla 2 de tu mazo real para una lectura fluida.</p>
                 </div>
             </div>
 
-            <!-- OPCIÓN 2: MAZO FÍSICO TAROTISTA (DESGROSE TÉCNICO) -->
+            <!-- OPCIÓN 2: MAZO FÍSICO TAROTISTA (DESGLOSE TÉCNICO) -->
             <div class="opcion-tarjeta" style="border-color: rgba(167, 139, 250, 0.5);" onclick="abrirSeleccionFisico('tarotista_fisico')">
                 <div class="opcion-icono">📖🃏</div>
                 <div class="opcion-info">
                     <h3>Mazo Físico (Estructural / Técnico)</h3>
-                    <p>Cargá tus 4 cartas reales y obtené un desglose analítico y técnico por duplas.</p>
+                    <p>Cargá tus duplas reales y obtené un análisis técnico detallado.</p>
                 </div>
             </div>
         </div>
 
         <button onclick="abrirGuiaLectura()" class="btn-profesional btn-guia-mistica" style="margin-top: 15px; width: 100%;">
-            📖 Guía: ¿Cómo se lee el Tarot?
+            📖 Guía: ¿Cómo se lee el Tarot por Duplas?
         </button>
 
         <button class="back-btn" onclick="volverAPortada()" style="margin-top: 25px; width: 100%;">⬅ Volver al Menú Principal</button>
@@ -204,8 +208,9 @@
     <!-- PANTALLA: GUÍA DE LECTURA DE TAROT -->
     <div id="screen-guia-lectura" class="screen hidden" style="display: none;">
         <div class="guia-card" style="max-width: 600px; margin: 20px auto; padding: 20px; background: rgba(20, 15, 35, 0.95); border: 1px solid #a855f7; border-radius: 12px; color: #fff;">
-            <h2 style="color: #ffd700; text-align: center; margin-bottom: 20px;">✨ Guía de Lectura</h2>
-            <p>La lectura por duplas combina dos energías para formar una interpretación profunda y contextualizada.</p>
+            <h2 style="color: #ffd700; text-align: center; margin-bottom: 20px;">✨ Guía de Lectura por Duplas</h2>
+            <p><strong>Dupla 1 (Cartas 1 y 2):</strong> Muestra la situación actual, el punto de partida y la energía presente.</p>
+            <p><strong>Dupla 2 (Cartas 3 y 4):</strong> Muestra la evolución futura y el resultado en el que desembocará la situación.</p>
             <div style="text-align: center; margin-top: 25px;">
                 <button onclick="volverAlModuloProfesional()" style="background: #a855f7; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
                     ⬅ Volver al Módulo Profesional
@@ -221,9 +226,9 @@
         <button class="back-btn" onclick="volverAPortada()" style="margin-top: 20px;">⬅ Volver al Menú</button>
     </div>
 
-</div> <!-- FIN DEL CONTAINER -->
+</div>
 
-    <!-- Carga de Scripts en Orden Correcto -->
+    <!-- Carga de Scripts -->
     <script src="js/arcanos.js"></script>
     <script src="js/config.js"></script>
     <script src="js/navigation.js"></script>
