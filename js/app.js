@@ -1,6 +1,6 @@
-// ==========================================
-// 1. OBTENCIÓN ROBUSTA DEL MAZO DE ARCANOS
-// ==========================================
+window.SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
+
+// Obtención del mazo
 function obtenerMazoActivo() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
         return arcanosCompleto;
@@ -8,8 +8,6 @@ function obtenerMazoActivo() {
     if (window.arcanosCompleto && Array.isArray(window.arcanosCompleto) && window.arcanosCompleto.length > 0) {
         return window.arcanosCompleto;
     }
-    
-    // Mazo de respaldo por si el array global aún no ha cargado
     return [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa", 
         "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna", 
@@ -30,33 +28,14 @@ function obtenerMazoActivo() {
     ];
 }
 
-window.SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
-
-// ==========================================
-// 2. CONTROL DE MODO Y GENERACIÓN DE CARTAS
-// ==========================================
-
-// Seleccionar modo automático (Mágico o Filosófico)
-window.seleccionarEstiloAutomatico = function(estilo) {
-    window.estiloSeleccionado = estilo; // 'magico' o 'filosofico'
-    window.modoFisicoActivo = false;     // Forzamos el modo automático (no mazo físico)
-    
-    if (typeof window.mostrarPantalla === 'function') {
-        window.mostrarPantalla('screen-selector');
-    } else {
-        const screenPortada = document.getElementById('screen-portada');
-        const screenSelector = document.getElementById('screen-selector');
-        if (screenPortada) screenPortada.style.display = 'none';
-        if (screenSelector) screenSelector.style.display = 'block';
-    }
-};
-
+// Generar 4 cartas aleatorias
 window.obtenerCuatroCartasAleatorias = function() {
     const mazo = obtenerMazoActivo();
     const mazoMezclado = [...mazo].sort(() => 0.5 - Math.random());
     return mazoMezclado.slice(0, 4);
 };
 
+// Cargar selectores desplegables de mazo físico
 window.cargarSelectoresFisicos = function() {
     const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
     const mazo = obtenerMazoActivo();
@@ -77,10 +56,7 @@ window.cargarSelectoresFisicos = function() {
     });
 };
 
-// ==========================================
-// 3. RENDERIZADO EN PANTALLA (MESA DE LECTURA)
-// ==========================================
-
+// Dibujar las cartas en pantalla
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
@@ -103,19 +79,16 @@ window.renderizarMesaDuplas = function(cartas, tema) {
         }
         
         if (elImg) {
-            elImg.innerHTML = `<div style="padding: 15px; background: rgba(168,85,247,0.15); border: 1px solid #a855f7; border-radius: 8px; text-align: center; font-size: 1.5rem; margin-bottom: 5px;">🃏</div>`;
+            elImg.innerHTML = `<div style="padding: 12px; background: rgba(168,85,247,0.15); border: 1px solid #a855f7; border-radius: 8px; text-align: center; font-size: 1.5rem; margin-bottom: 5px;">🃏</div>`;
         }
     });
 };
 
-// ==========================================
-// 4. PETICIÓN Y PROCESAMIENTO CON RENDER
-// ==========================================
-
+// Enviar datos al servidor y mostrar interpretación
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     const contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
-        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con los arcanos (${window.estiloSeleccionado || 'filosofico'}). Generando interpretación...</p>`;
+        contenedorTexto.innerHTML = `<p style="color: #ffd700; text-align: center; font-weight: bold;">✨ Conectando con los arcanos... Generando interpretación en estilo ${window.estiloSeleccionado || 'mágico'}...</p>`;
     }
 
     try {
@@ -124,12 +97,12 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
             dupla2: [cartas[2], cartas[3]],
             tema: tema,
             pregunta: preguntaCustom || "",
-            estilo: window.estiloSeleccionado || 'filosofico',
+            estilo: window.estiloSeleccionado || 'magico',
             esFisico: window.modoFisicoActivo || false,
             submodoFisico: window.submodoFisicoActual || 'predictivo_fisico'
         };
 
-        console.log("📤 Datos enviados al servidor:", payload);
+        console.log("📤 Enviando a Render:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -138,78 +111,56 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         });
 
         const data = await respuesta.json();
-        console.log("📥 Respuesta recibida de Render:", data);
+        console.log("📥 Respuesta Render:", data);
 
         if (contenedorTexto) {
-            // Mapeo exhaustivo para extraer el texto de la IA sea cual sea el nombre del atributo devuelto
-            let textoInterpretacion = data.resultado || 
-                                       data.interpretacion || 
-                                       data.respuesta || 
-                                       data.texto || 
-                                       data.mensaje || 
-                                       data.reading ||
-                                       (data.choices && data.choices[0]?.message?.content);
+            let texto = data.resultado || 
+                        data.interpretacion || 
+                        data.respuesta || 
+                        data.texto || 
+                        data.mensaje || 
+                        data.reading ||
+                        (data.choices && data.choices[0]?.message?.content);
 
-            if (!textoInterpretacion) {
-                if (typeof data === 'string') {
-                    textoInterpretacion = data;
-                } else {
-                    textoInterpretacion = JSON.stringify(data, null, 2);
-                }
+            if (!texto) {
+                texto = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
             }
 
-            contenedorTexto.innerHTML = `<div class="interpretacion-contenido" style="line-height: 1.6; text-align: left; padding: 15px;">${textoInterpretacion}</div>`;
+            contenedorTexto.innerHTML = `<div class="interpretacion-contenido" style="line-height: 1.6; text-align: left; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">${texto}</div>`;
         }
 
     } catch (error) {
-        console.error("❌ Error al conectar con el servidor en Render:", error);
+        console.error("❌ Error en backend:", error);
         if (contenedorTexto) {
-            contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Hubo un error de comunicación con el servidor. Revisa la consola F12 para más detalles.</p>`;
+            contenedorTexto.innerHTML = `<p style="color: #ff6b6b; text-align: center;">❌ Error de conexión con el servidor de lectura.</p>`;
         }
     }
 };
 
-// ==========================================
-// 5. FLUJO PRINCIPAL DE LA TIRADA
-// ==========================================
-
+// Proceso general
 window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     let cartasElegidas = [];
 
     if (window.modoFisicoActivo) {
-        // MAZO FÍSICO
-        const c1 = document.getElementById('fisico-carta1')?.value;
-        const c2 = document.getElementById('fisico-carta2')?.value;
-        const c3 = document.getElementById('fisico-carta3')?.value;
-        const c4 = document.getElementById('fisico-carta4')?.value;
-
-        if (!c1 || !c2 || !c3 || !c4) {
-            alert("⚠️ Por favor, selecciona las 4 cartas de tu mazo físico.");
-            return;
-        }
-        cartasElegidas = [c1, c2, c3, c4];
+        cartasElegidas = [
+            document.getElementById('fisico-carta1')?.value,
+            document.getElementById('fisico-carta2')?.value,
+            document.getElementById('fisico-carta3')?.value,
+            document.getElementById('fisico-carta4')?.value
+        ];
     } else {
-        // TIRADA AUTOMÁTICA (Mágico o Filosófico)
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
     }
 
-    console.log("🎴 Cartas en mesa:", cartasElegidas);
-
-    // Cambiar a pantalla de resultados
     if (typeof window.mostrarPantalla === 'function') {
         window.mostrarPantalla('screen-result');
-    } else {
-        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-        const resScreen = document.getElementById('screen-result');
-        if (resScreen) resScreen.style.display = 'block';
     }
 
-    // Renderizar cartas y hacer la petición al backend
     window.renderizarMesaDuplas(cartasElegidas, tema);
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
 
-// Carga inicial
+// Inicialización
 document.addEventListener('DOMContentLoaded', () => {
     window.cargarSelectoresFisicos();
 });
