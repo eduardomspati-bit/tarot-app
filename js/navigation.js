@@ -31,7 +31,9 @@ function seleccionarEstilo(estilo) {
     window.modoFisicoActivo = false;
 
     if (estilo === 'manual') {
-        if (typeof verificarAccesoTarotista === 'function') {
+        if (typeof window.verificarAccesoTarotista === 'function') {
+            window.verificarAccesoTarotista();
+        } else if (typeof verificarAccesoTarotista === 'function') {
             verificarAccesoTarotista();
         }
         return;
@@ -56,7 +58,9 @@ function abrirSeleccionFisico(submodo = 'predictivo_fisico') {
     window.modoFisicoActivo = true;
     
     // Si la función para poblar los selectores con los 78 arcanos existe, la ejecutamos
-    if (typeof cargarSelectoresFisicos === 'function') {
+    if (typeof window.cargarSelectoresFisicos === 'function') {
+        window.cargarSelectoresFisicos();
+    } else if (typeof cargarSelectoresFisicos === 'function') {
         cargarSelectoresFisicos();
     }
     
@@ -164,7 +168,9 @@ async function pedirEmailAlUsuario() {
 
 // Lógica para ejecutar la lectura según si es pregunta fija (Amor, Negocios, etc.)
 function ejecutarLecturaSegunModo(tema) {
-    if (typeof procesarTiradaCompleta === 'function') {
+    if (typeof window.procesarTiradaCompleta === 'function') {
+        window.procesarTiradaCompleta(tema, null);
+    } else if (typeof procesarTiradaCompleta === 'function') {
         procesarTiradaCompleta(tema, null);
     }
 }
@@ -179,8 +185,31 @@ function confirmarPreguntaYEjecutar() {
         return;
     }
 
-    if (typeof procesarTiradaCompleta === 'function') {
+    if (typeof window.procesarTiradaCompleta === 'function') {
+        window.procesarTiradaCompleta("Consulta Personalizada", preguntaText);
+        if (inputPregunta) inputPregunta.value = ''; // Limpia el cuadro tras procesar
+    } else if (typeof procesarTiradaCompleta === 'function') {
         procesarTiradaCompleta("Consulta Personalizada", preguntaText);
         if (inputPregunta) inputPregunta.value = ''; // Limpia el cuadro tras procesar
     }
 }
+
+// ==========================================
+// EXPORTACIÓN EXPLÍCITA AL OBJETO WINDOW
+// ==========================================
+window.ocultarTodasLasPantallas = ocultarTodasLasPantallas;
+window.mostrarPantalla = mostrarPantalla;
+window.seleccionarEstilo = seleccionarEstilo;
+window.irAlEjeConsulta = irAlEjeConsulta;
+window.abrirSeleccionFisico = abrirSeleccionFisico;
+window.abrirModoFisico = abrirModoFisico;
+window.irAlEjeFisico = irAlEjeFisico;
+window.volverAPortada = volverAPortada;
+window.volverInicio = volverInicio;
+window.abrirModuloProfesional = abrirModuloProfesional;
+window.volverAlModuloProfesional = volverAlModuloProfesional;
+window.abrirGuiaLectura = abrirGuiaLectura;
+window.abrirPantallaPregunta = abrirPantallaPregunta;
+window.pedirEmailAlUsuario = pedirEmailAlUsuario;
+window.ejecutarLecturaSegunModo = ejecutarLecturaSegunModo;
+window.confirmarPreguntaYEjecutar = confirmarPreguntaYEjecutar;
