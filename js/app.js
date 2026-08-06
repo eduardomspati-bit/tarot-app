@@ -1,8 +1,8 @@
 // ==========================================
 // CONFIGURACIÓN DE LA API (RENDER)
 // ==========================================
-window.API_URL = window.API_URL || "https://tarot-613b.onrender.com";
-var API_URL = window.API_URL;
+window.API_URL = "https://tarot-613b.onrender.com";
+
 // ==========================================
 // VARIABLES DE CONTEXTO GLOBAL
 // ==========================================
