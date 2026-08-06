@@ -8,7 +8,7 @@ const MAX_HISTORIAL_ITEMS = 10;
 function guardarEnHistorialLocal(eje, cartas, lecturaHtml) {
     try {
         let historial = obtenerHistorialLocal();
-        
+
         const nuevaLectura = {
             id: Date.now(),
             fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -19,7 +19,6 @@ function guardarEnHistorialLocal(eje, cartas, lecturaHtml) {
 
         historial.unshift(nuevaLectura);
 
-        // Mantener solo los últimos registros
         if (historial.length > MAX_HISTORIAL_ITEMS) {
             historial = historial.slice(0, MAX_HISTORIAL_ITEMS);
         }
@@ -40,18 +39,14 @@ function obtenerHistorialLocal() {
     }
 }
 
-function abrirHistorial() {
-    if (typeof mostrarPantalla === 'function') {
-        mostrarPantalla('screen-historial');
-    }
-
+function cargarHistorial() {
     const contenedor = document.getElementById('lista-historial-contenedor');
     if (!contenedor) return;
 
     const historial = obtenerHistorialLocal();
 
     if (historial.length === 0) {
-        contenedor.innerHTML = "<p style='color: var(--muted-text); text-align: center; padding: 20px;'>Aún no tienes lecturas guardadas en este dispositivo.</p>";
+        contenedor.innerHTML = "<p style='color: var(--muted-text); text-align: center; padding: 20px;'>Aun no tienes lecturas guardadas en este dispositivo.</p>";
         return;
     }
 
@@ -65,11 +60,18 @@ function abrirHistorial() {
                 🃏 <b>Cartas:</b> ${item.cartas.a}, ${item.cartas.b} | ${item.cartas.c}, ${item.cartas.d}
             </p>
             <details style="margin-top: 10px; cursor: pointer; color: #ccc; font-size: 0.9rem;">
-                <summary style="outline: none; font-weight: bold; color: #a78bfa;">Ver interpretación</summary>
+                <summary style="outline: none; font-weight: bold; color: #a78bfa;">Ver interpretacion</summary>
                 <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 6px; line-height: 1.5;">
                     ${item.lecturaHtml}
                 </div>
             </details>
         </div>
     `).join('');
+}
+
+function abrirHistorial() {
+    if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-historial');
+    }
+    cargarHistorial();
 }
