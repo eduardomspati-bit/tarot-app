@@ -22,9 +22,9 @@ window.mostrarPantalla = function(idPantalla) {
 // 1. Selección de Estilo Automático desde la Portada (Mágico / Filosófico)
 window.seleccionarEstiloAutomatico = function(estilo) {
     window.estiloSeleccionado = estilo; // 'magico' o 'filosofico'
-    window.modoFisicoActivo = false;     // Desactiva el modo físico
+    window.modoFisicoActivo = false; // Desactiva el modo físico
     window.preguntaCustomSeleccionada = "";
-    
+
     console.log(`✨ Modo Automático Activado: ${estilo}`);
     window.mostrarPantalla('screen-selector');
 };
@@ -38,15 +38,15 @@ window.abrirModuloProfesional = function() {
 window.abrirSeleccionFisico = function(submodo) {
     window.modoFisicoActivo = true;
     window.submodoFisicoActual = submodo;
-    
+
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
     }
-    
+
     window.mostrarPantalla('screen-fisico');
 };
 
-// 4. Confirmar Mazo Físico y pasar a los Temas
+// 4. Confirmar Mazo Físico y pasar a los Temas (CORREGIDO: valida cartas únicas)
 window.irAlEjeFisico = function() {
     const c1 = document.getElementById('fisico-carta1')?.value;
     const c2 = document.getElementById('fisico-carta2')?.value;
@@ -55,6 +55,12 @@ window.irAlEjeFisico = function() {
 
     if (!c1 || !c2 || !c3 || !c4) {
         alert("⚠️ Por favor selecciona las 4 cartas de tu mazo físico.");
+        return;
+    }
+
+    const seleccionadas = [c1, c2, c3, c4];
+    if (new Set(seleccionadas).size !== 4) {
+        alert("⚠️ No podés repetir cartas en una misma tirada.");
         return;
     }
 
@@ -71,13 +77,12 @@ window.abrirPantallaPregunta = function() {
 window.confirmarPreguntaYEjecutar = function() {
     const txtArea = document.getElementById('texto-pregunta-usuario');
     window.preguntaCustomSeleccionada = txtArea ? txtArea.value.trim() : "";
-    
+
     if (!window.preguntaCustomSeleccionada) {
         alert("⚠️ Por favor escribe tu pregunta antes de continuar.");
         return;
     }
 
-    // Ejecuta la lectura bajo el tema Personalizado
     window.ejecutarLecturaSegunModo('Pregunta Específica');
 };
 
@@ -109,10 +114,32 @@ window.volverAlModuloProfesional = function() {
 };
 
 window.abrirHistorial = function() {
-    if (typeof window.cargarHistorial === 'function') window.cargarHistorial();
+    if (typeof window.cargarHistorial === 'function') {
+        window.cargarHistorial();
+    } else if (typeof abrirHistorial === 'function') {
+        abrirHistorial();
+    }
     window.mostrarPantalla('screen-historial');
 };
 
 window.pedirEmailAlUsuario = function() {
-    if (typeof window.vincularEmail === 'function') window.vincularEmail();
+    const email = prompt("📧 Ingresá tu correo electrónico para vincular tu cuenta:");
+    if (email && email.includes('@')) {
+        alert(`✅ Correo ${email} vinculado correctamente (modo local).`);
+        localStorage.setItem('tarotia_email_usuario', email);
+    } else if (email) {
+        alert("⚠️ Por favor ingresá un correo válido.");
+    }
+};
+
+// Stub para Carta del Día (evita ReferenceError)
+window.tirarCartaDiaria = function() {
+    const mazo = [
+        "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
+        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
+        "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo",
+        "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"
+    ];
+    const carta = mazo[Math.floor(Math.random() * mazo.length)];
+    alert(`🔮 Tu Carta del Día es: ${carta}\n\nReflexioná sobre su mensaje durante el día.`);
 };
