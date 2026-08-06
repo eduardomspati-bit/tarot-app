@@ -85,7 +85,7 @@ async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
     ultimasCartasElegidasContexto = { a, b, c, d };
 
     try {
-        const endpointUrl = (typeof API_URL !== 'undefined') ? `${API_URL}/tirada` : '/tirada';
+        const endpointUrl = `${window.API_URL}/tirada`;
         const response = await fetch(endpointUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -134,7 +134,6 @@ async function procesarTiradaCompleta(tema, preguntaEspecifica = null) {
         }
     }
 }
-
 // ==========================================
 // ENVÍO DE RE-PREGUNTA PREMIUM
 // ==========================================
