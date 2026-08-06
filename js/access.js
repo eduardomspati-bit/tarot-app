@@ -51,14 +51,37 @@ function verificarAccesoTarotista() {
 }
 
 // ==========================================
-// ACCESO A MAZO FÍSICO
+// ACCESO A MAZO FÍSICO (CORREGIDO)
 // ==========================================
 
 function verificarAccesoFisico() {
-    if (typeof inicializarYMostrarPantallaFisica === 'function') {
-        inicializarYMostrarPantallaFisica();
-    } else if (typeof mostrarPantalla === 'function') {
-        mostrarPantalla('screen-selector');
+    // 1. Si es usuario Premium, abre directamente la carga de cartas físicas
+    if (window.esUsuarioPremium) {
+        if (typeof abrirModoFisico === 'function') {
+            abrirModoFisico();
+        } else if (typeof mostrarPantalla === 'function') {
+            mostrarPantalla('screen-fisico');
+        }
+        return;
+    }
+
+    // 2. Si es usuario gratuito, verificar las muestras restantes
+    const muestrasRestantes = obtenerMuestrasFisicasRestantes();
+
+    if (muestrasRestantes > 0) {
+        if (typeof abrirModoFisico === 'function') {
+            abrirModoFisico();
+        } else if (typeof mostrarPantalla === 'function') {
+            mostrarPantalla('screen-fisico');
+        }
+    } else {
+        // 3. Muestras agotadas: Solicita código Premium o redirige a suscripción
+        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar o adquiere tu Pase Místico:");
+        if (codigo && typeof canjearCodigoPremium === 'function') {
+            canjearCodigoPremium(codigo);
+        } else if (typeof abrirMercadoPago === 'function') {
+            abrirMercadoPago();
+        }
     }
 }
 
@@ -68,3 +91,8 @@ function verificarAccesoFisico() {
 function verificarAccesoTarotistaFisico() {
     verificarAccesoFisico();
 }
+
+// Inicializar el estado de los badges al cargar el módulo
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarBadgeMuestrasFisicas();
+});
