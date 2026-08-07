@@ -71,11 +71,9 @@ function nombreAImagen(nombre) {
         .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
         .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
         .replace(/[^a-z0-9_]/g, '');
-    
-    const ruta = `./cartas/${slug}.jpg`;
-    console.log(`🖼️ Buscando imagen para "${nombre}" → ${ruta}`);
-    return ruta;
+    return `cartas/${slug}.jpg`;
 }
+
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
@@ -105,7 +103,109 @@ window.renderizarMesaDuplas = function(cartas, tema) {
 };
 
 // ==========================================
-// PETICIÓN AL SERVIDOR (RENDER)
+// CONSULTA GRATIS (LANDING PAGE)
+// ==========================================
+
+window.consultaGratis = async function() {
+    const input = document.getElementById('input-pregunta-gratis');
+    const pregunta = input ? input.value.trim() : '';
+
+    if (!pregunta) {
+        alert('✨ Escribí tu pregunta para recibir una respuesta');
+        return;
+    }
+
+    if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-gratis-result');
+    }
+
+    const preguntaMostrar = document.getElementById('gratis-pregunta-mostrar');
+    if (preguntaMostrar) preguntaMostrar.textContent = pregunta;
+
+    const cartas = window.obtenerCuatroCartasAleatorias();
+
+    const contenedorCartas = document.getElementById('gratis-cartas-visuales');
+    if (contenedorCartas) {
+        contenedorCartas.innerHTML = cartas.map(c => `
+            <div class="mini-carta" style="animation:none;">
+                <img src="${nombreAImagen(c)}" alt="${c}" onerror="this.parentElement.innerHTML='🃏'" 
+                     style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+            </div>
+        `).join('');
+    }
+
+    const contenedorRespuesta = document.getElementById('gratis-respuesta-contenedor');
+    if (contenedorRespuesta) {
+        contenedorRespuesta.innerHTML = `
+            <div style="text-align:center; padding:30px;">
+                <div class="spinner"></div>
+                <p style="color:#a78bfa; margin-top:15px;">El Oráculo está consultando las cartas...</p>
+            </div>
+        `;
+    }
+
+    try {
+        const payload = {
+            a: cartas[0],
+            b: cartas[1],
+            c: cartas[2],
+            d: cartas[3],
+            tema: 'Consulta Gratis',
+            pregunta: pregunta,
+            estilo: 'magico',
+            modo: 'gratis'
+        };
+
+        console.log("📤 Consulta gratis:", payload);
+
+        const respuesta = await fetch(window.SERVIDOR_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(data.error || 'Error en el servidor');
+        }
+
+        let texto = data.lectura || data.respuesta || data.texto || '';
+        if (!texto) texto = '<p>El Oráculo no pudo responder en este momento. Intentá de nuevo.</p>';
+
+        if (contenedorRespuesta) {
+            contenedorRespuesta.innerHTML = texto;
+        }
+
+    } catch (error) {
+        console.error('❌ Error consulta gratis:', error);
+        if (contenedorRespuesta) {
+            contenedorRespuesta.innerHTML = `
+                <div style="color: #ff6b6b; text-align: center; padding: 20px;">
+                    ❌ ${error.message}<br><br>
+                    <small>El servidor puede estar despertando. Probá de nuevo en 30 segundos.</small>
+                </div>
+            `;
+        }
+    }
+};
+
+window.nuevaConsultaGratis = function() {
+    const input = document.getElementById('input-pregunta-gratis');
+    if (input) input.value = '';
+    if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-landing');
+    }
+};
+
+window.entrarAppCompleta = function() {
+    if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-portada');
+    }
+};
+
+// ==========================================
+// PETICIÓN AL SERVIDOR (APP COMPLETA)
 // ==========================================
 
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
@@ -160,7 +260,6 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
 
             contenedorTexto.innerHTML = texto;
 
-            // Guardar en historial si existe la función
             if (typeof guardarEnHistorialLocal === 'function') {
                 guardarEnHistorialLocal(tema, 
                     {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, 
