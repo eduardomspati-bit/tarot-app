@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TarotIA - Panel de Administración</title>
-    <!-- Evita el error favicon.ico 404 en la consola -->
     <link rel="icon" href="data:,">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
@@ -26,53 +25,44 @@
         .badge-premium { background: #22c55e; color: #052e16; }
         .badge-gratis { background: #64748b; color: #f8fafc; }
         .txt-ayuda { font-size: 13px; color: #94a3b8; line-height: 1.5; }
-
-        /* Estilos de botones de acción rápida */
         .btn-act-premium { background: #22c55e; color: #052e16; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-act-premium:hover { background: #16a34a; color: white; }
         .btn-act-quitar { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-act-quitar:hover { background: #dc2626; }
-
-        /* CONTROL DE IMÁGENES DENTRO DEL ADMIN */
-        .card-visual img, .img-carta-tarot {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            display: block !important;
-        }
-
-        .card-visual {
-            width: 100px !important;
-            height: 160px !important;
-            overflow: hidden !important;
-            position: relative !important;
-        }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 999; }
+        .auth-box { background: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155; text-align: center; width: 320px; }
+        .auth-input { width: 100%; padding: 10px; margin: 15px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- MODAL DE AUTENTICACIÓN SEGURO EN LUGAR DE PROMPT -->
+<div id="auth-overlay" class="auth-overlay">
+    <div class="auth-box">
+        <h2>🔒 Autenticación Admin</h2>
+        <p class="txt-ayuda">Ingresá la credencial de administración para continuar:</p>
+        <input type="password" id="admin-pass-input" class="auth-input" placeholder="Clave de acceso">
+        <button onclick="autenticarAdmin()" class="btn btn-link">Ingresar</button>
+    </div>
+</div>
+
+<div class="container" id="admin-panel-content" style="display: none;">
     <h1>🔮 Panel de Control General - TarotIA</h1>
     
     <div class="grid">
-        <!-- COLUMNA IZQUIERDA: SIMULADOR DE ENTORNOS -->
         <div class="card">
             <h2>⚙️ Simulador de Modos</h2>
-            <p class="txt-ayuda">Hacé clic en el botón para alternar el estado del sistema. Esto afectará directamente lo que ves en la aplicación del cliente:</p>
-            
+            <p class="txt-ayuda">Hacé clic en el botón para alternar el estado local del cliente:</p>
             <button id="btn-toggle-premium" class="btn btn-status">Cargando estado...</button>
             
             <hr style="border-color: #334155; margin: 20px 0;">
             
             <h2>🛠️ Pruebas de Sistema</h2>
-            <p class="txt-ayuda">Abrí la aplicación en una pestaña nueva para comprobar cómo reacciona según el modo elegido arriba:</p>
             <a href="index.html" target="_blank" class="btn-link">Abrir App de Clientes ↗</a>
 
             <hr style="border-color: #334155; margin: 20px 0;">
 
             <h2>🔑 Códigos Premium Activos</h2>
-            <p class="txt-ayuda">Estos son los cupones que validan el pase premium sin pagar. Podés probarlos directamente en la app:</p>
-
             <div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px dashed #6366f1;">
                 <ul style="margin: 0; padding-left: 20px; color: #a78bfa; font-family: monospace; font-size: 14px;">
                     <li>ADMIN2026</li>
@@ -80,42 +70,52 @@
                     <li>TAROTGRATIS</li>
                 </ul>
             </div>
-            <p style="font-size: 11px; color: #64748b; margin-top: 5px;">* Para cambiarlos o sumar nuevos, edita la lista 'codigosPremiumValidos' en tu js/app.js</p>
-
+            <button onclick="cerrarSesionAdmin()" class="btn btn-act-quitar" style="margin-top: 15px; width: 100%;">Cerrar Sesión Admin</button>
         </div>
 
-        <!-- COLUMNA DERECHA: LISTADO DE CLIENTES -->
         <div class="card">
             <h2>👥 Listado de Clientes y Consumos</h2>
-            <p class="txt-ayuda">Historial real de usuarios registrados en MongoDB Atlas:</p>
+            <p class="txt-ayuda">Historial de usuarios sincronizados en MongoDB Atlas:</p>
             <div id="tabla-clientes-contenedor"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // 1. CONFIGURACIÓN DE SEGURIDAD LOCAL
-    const CLAVE_ACCESO_HTML = "MarinaRabino1995"; 
-    const TOKEN_BACKEND = "MarinaRabino1995"; 
-
-    // Auto-ejecutable para bloquear la vista si la contraseña del prompt es incorrecta
-    (function() {
-        const intentoUsuario = prompt("Acceso Restringido. Introduce la clave de administrador:");
-        if (intentoUsuario !== CLAVE_ACCESO_HTML) {
-            alert("Acceso denegado. Volviendo al inicio.");
-            window.location.href = "index.html";
-        }
-    })();
-
-    document.addEventListener("DOMContentLoaded", () => {
-        actualizarBotonEstado();
-        cargarListaClientesDesdeServidor();
-    });
-
-    // Detecta automáticamente si estás probando en tu PC o en producción (Render)
     const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? 'http://localhost:3000' 
         : 'https://tarot-613b.onrender.com';
+
+    let tokenAdminActual = sessionStorage.getItem('adminToken') || null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        actualizarBotonEstado();
+        if (tokenAdminActual) {
+            mostrarPanel();
+        }
+    });
+
+    function autenticarAdmin() {
+        const inputPass = document.getElementById('admin-pass-input').value;
+        if (!inputPass) return alert("Por favor ingresa una clave.");
+
+        tokenAdminActual = inputPass;
+        sessionStorage.setItem('adminToken', tokenAdminActual);
+        mostrarPanel();
+    }
+
+    function cerrarSesionAdmin() {
+        sessionStorage.removeItem('adminToken');
+        tokenAdminActual = null;
+        document.getElementById('admin-panel-content').style.display = 'none';
+        document.getElementById('auth-overlay').style.display = 'flex';
+    }
+
+    function mostrarPanel() {
+        document.getElementById('auth-overlay').style.display = 'none';
+        document.getElementById('admin-panel-content').style.display = 'block';
+        cargarListaClientesDesdeServidor();
+    }
 
     function actualizarBotonEstado() {
         const btn = document.getElementById('btn-toggle-premium');
@@ -136,25 +136,25 @@
         actualizarBotonEstado();
     });
 
-    // CONEXIÓN EN VIVO AL BACKEND
     async function cargarListaClientesDesdeServidor() {
         const contenedor = document.getElementById('tabla-clientes-contenedor');
-        contenedor.innerHTML = "<p style='color: #94a3b8; font-size: 14px;'>Consultando registros en el plano del servidor...</p>";
+        contenedor.innerHTML = "<p style='color: #94a3b8; font-size: 14px;'>Consultando base de datos en Render...</p>";
 
         try {
             const response = await fetch(`${API_URL}/api/admin/clientes`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-token': TOKEN_BACKEND
+                    'x-admin-token': tokenAdminActual
                 }
             });
 
             if (!response.ok) {
-                if (response.status === 403) {
-                    throw new Error("El servidor rechazó el token de administración (403 Forbidden). Verifica TOKEN_BACKEND.");
+                if (response.status === 403 || response.status === 401) {
+                    cerrarSesionAdmin();
+                    throw new Error("Clave de administrador incorrecta o expirada (403 Forbidden).");
                 }
-                throw new Error(`Error en el servidor: Código ${response.status}`);
+                throw new Error(`Error en el servidor: ${response.status}`);
             }
 
             const data = await response.json();
@@ -165,7 +165,6 @@
                 return;
             }
 
-            // Armamos la tabla con la columna adicional de ACCIONES
             let html = `
                 <table>
                     <thead>
@@ -206,17 +205,15 @@
             contenedor.innerHTML = html;
 
         } catch (error) {
-            console.error("❌ Error al conectar con la API de clientes:", error);
+            console.error("❌ Error API:", error);
             contenedor.innerHTML = `
                 <div style="background: #7f1d1d; border: 1px solid #f87171; padding: 15px; border-radius: 8px; color: #fca5a5; font-size: 14px;">
-                    <strong>Error de conexión:</strong> ${error.message}<br><br>
-                    <span style="font-size: 12px; color: #fca5a5;">Asegúrate de que tu backend esté corriendo en Render y de que las claves coincidan.</span>
+                    <strong>Acceso denegado o error:</strong> ${error.message}
                 </div>
             `;
         }
     }
 
-    // FUNCIÓN PARA CAMBIAR PLAN DESDE LA TABLA
     async function cambiarPlan(userId, nuevoPlan) {
         if (!confirm(`¿Seguro que querés cambiar el plan de este usuario a ${nuevoPlan}?`)) return;
 
@@ -225,7 +222,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-token': TOKEN_BACKEND
+                    'x-admin-token': tokenAdminActual
                 },
                 body: JSON.stringify({ userId, nuevoPlan })
             });
@@ -234,11 +231,11 @@
                 alert(`¡Estado actualizado con éxito a ${nuevoPlan}!`);
                 cargarListaClientesDesdeServidor();
             } else {
-                alert("Ocurrió un error en el servidor al intentar modificar el plan.");
+                alert("No se pudo cambiar el plan. Verifica el token en el servidor.");
             }
         } catch (error) {
             console.error("❌ Error al cambiar el plan:", error);
-            alert("No se pudo conectar con el servidor.");
+            alert("Error de red o conexión.");
         }
     }
 </script>
