@@ -2,12 +2,7 @@
 // CONFIGURACIÓN DE SERVIDOR Y ARCANOS
 // ==========================================
 
-// fallback seguro para API_URL y eliminación de doble slash si fuera necesario
-const apiBase = (typeof window.API_URL !== 'undefined' && window.API_URL) 
-    ? window.API_URL.replace(/\/$/, '') 
-    : 'https://tarot-613b.onrender.com';
-
-window.SERVIDOR_URL = `${apiBase}/tirada`;
+window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com') + '/tirada';
 
 function obtenerMazoActivo() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
@@ -43,17 +38,11 @@ function obtenerMazoActivo() {
 window.obtenerCuatroCartasAleatorias = function() {
     const mazo = obtenerMazoActivo();
     const mezclado = [...mazo];
-    
-    // Algoritmo Fisher-Yates
     for (let i = mezclado.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [mezclado[i], mezclado[j]] = [mezclado[j], mezclado[i]];
     }
-    
-    // Si los elementos son objetos de carta, extraemos el nombre, si son strings los dejamos igual
-    return mezclado.slice(0, 4).map(carta => 
-        typeof carta === 'string' ? carta : (carta.nombre || carta.name)
-    );
+    return mezclado.slice(0, 4);
 };
 
 window.cargarSelectoresFisicos = function() {
@@ -77,11 +66,10 @@ window.cargarSelectoresFisicos = function() {
 };
 
 function nombreAImagen(nombre) {
-    if (!nombre) return '';
     const slug = nombre.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Limpia acentos de forma nativa (á, é, í, ó, ú)
-        .replace(/ñ/g, 'n')
         .replace(/ /g, '_')
+        .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
+        .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
         .replace(/[^a-z0-9_]/g, '');
     return `cartas/${slug}.jpg`;
 }
@@ -92,7 +80,7 @@ window.renderizarMesaDuplas = function(cartas, tema) {
     const tituloTema = document.getElementById('reading-theme-title');
     if (tituloTema) {
         const estiloTxt = (window.estiloSeleccionado || 'Mágico').toUpperCase();
-        tituloTema.textContent = `🔮 Lectura por Duplas (${estiloTxt}): ${tema || 'General'}`;
+        tituloTema.textContent = `🔮 Lectura por Duplas (${estiloTxt}): ${tema}`;
     }
 
     const idsNombres = ['name-a', 'name-b', 'name-c', 'name-d'];
@@ -168,6 +156,8 @@ window.consultaGratis = async function() {
             modo: 'gratis'
         };
 
+        console.log("📤 Consulta gratis:", payload);
+
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -239,6 +229,8 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
             estilo: window.estiloSeleccionado || 'filosofico'
         };
 
+        console.log("📤 Enviando datos al servidor:", payload);
+
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -246,6 +238,7 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         });
 
         const data = await respuesta.json();
+        console.log("📥 Respuesta del servidor:", data);
 
         if (!respuesta.ok) {
             throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
@@ -301,12 +294,6 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
             document.getElementById('fisico-carta3')?.value,
             document.getElementById('fisico-carta4')?.value
         ];
-
-        // Validar que se hayan seleccionado las 4 cartas en modo físico
-        if (cartasElegidas.some(c => !c)) {
-            alert('⚠️ Por favor selecciona las 4 cartas de tu mazo físico para continuar.');
-            return;
-        }
     } else {
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
     }
