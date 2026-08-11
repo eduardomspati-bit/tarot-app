@@ -196,7 +196,32 @@
             margin-bottom: 10px;
         }
         .screen.hidden { display: none !important; }
+        .auth-box {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .auth-input:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+        .auth-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -262,6 +287,40 @@
         </div>
     </div>
 
+    <!-- ========== PANTALLA DE AUTH (LOGIN/REGISTRO) ========== -->
+    <div id="screen-auth" class="screen hidden">
+        <div class="landing-content">
+            <div class="floating">
+                <div class="mini-cartas" style="margin-bottom: 20px;">
+                    <div class="mini-carta">🌙</div>
+                    <div class="mini-carta">⭐</div>
+                    <div class="mini-carta">☀️</div>
+                    <div class="mini-carta">🔮</div>
+                </div>
+            </div>
+            <h2 style="color: #ffd700; margin-bottom: 5px;">✨ Bienvenido a TarotIA</h2>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 30px;">
+                Ingresá tu correo para acceder al Tarot Completo
+            </p>
+
+            <div class="auth-box consulta-gratis-box">
+                <input type="text" id="auth-nombre" class="auth-input" placeholder="Tu nombre (opcional)">
+                <input type="email" id="auth-email" class="auth-input" placeholder="tu@email.com"
+                       onkeypress="if(event.key==='Enter') iniciarSesion()">
+                <button class="btn-consulta-gratis" onclick="iniciarSesion()" style="width: 100%;">
+                    🔮 Entrar al Tarot Completo
+                </button>
+                <p id="auth-error" style="color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; display: none;"></p>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button onclick="volverALanding()" class="btn-entrar-app">
+                    ← Volver a Consulta Gratis
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========== PORTADA PRINCIPAL (APP COMPLETA) ========== -->
     <div id="screen-portada" class="screen hidden">
         <button class="btn-carta-diaria" onclick="if(typeof tirarCartaDiaria==='function') tirarCartaDiaria();">
@@ -303,7 +362,7 @@
             📜 Ver Mis Lecturas Anteriores
         </button>
 
-        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo">
+        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--muted-text); width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem;">
             📧 Vincular mi Correo Electrónico
         </button>
     </div>
@@ -438,16 +497,17 @@
 
         <div class="menu-portada">
             <!-- OPCIÓN 1: MAZO FÍSICO PREDICTIVO -->
-            <div class="opcion-tarjeta" style="border-color: rgba(255,215,0,0.3);" onclick="abrirSeleccionFisico('predictivo_fisico')">
+            <div class="opcion-tarjeta" style="border-color: rgba(255,215,0,0.3);" onclick="verificarAccesoFisico()">
                 <div class="opcion-icono">🃏</div>
                 <div class="opcion-info">
                     <h3>Mazo Físico Predictivo</h3>
                     <p>Carga la Dupla 1 y Dupla 2 de tu mazo real para una lectura fluida.</p>
+                    <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">5 Muestras</span>
                 </div>
             </div>
 
             <!-- OPCIÓN 2: MAZO FÍSICO TAROTISTA -->
-            <div class="opcion-tarjeta" style="border-color: rgba(167, 139, 250, 0.5);" onclick="abrirSeleccionFisico('tarotista_fisico')">
+            <div class="opcion-tarjeta" style="border-color: rgba(167, 139, 250, 0.5);" onclick="verificarAccesoTarotista()">
                 <div class="opcion-icono">🔮🃏</div>
                 <div class="opcion-info">
                     <h3>Mazo Físico (Estructural / Técnico)</h3>
@@ -486,13 +546,14 @@
 
 </div>
 
-<!-- Carga de Scripts (SOLO UNA VEZ) -->
+<!-- Carga de Scripts -->
 <script src="js/arcanos.js"></script>
 <script src="js/config.js"></script>
 <script src="js/navigation.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/access.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/history.js"></script>
-<script src="js/access.js"></script>
 <script src="js/app.js"></script>
 
 </body>
