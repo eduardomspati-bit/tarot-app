@@ -21,10 +21,9 @@ window.mostrarPantalla = function(idPantalla) {
 
 // 1. Selección de Estilo Automático desde la Portada (Mágico / Filosófico)
 window.seleccionarEstiloAutomatico = function(estilo) {
-    window.estiloSeleccionado = estilo; // 'magico' o 'filosofico'
-    window.modoFisicoActivo = false; // Desactiva el modo físico
+    window.estiloSeleccionado = estilo;
+    window.modoFisicoActivo = false;
     window.preguntaCustomSeleccionada = "";
-
     console.log(`✨ Modo Automático Activado: ${estilo}`);
     window.mostrarPantalla('screen-selector');
 };
@@ -46,7 +45,7 @@ window.abrirSeleccionFisico = function(submodo) {
     window.mostrarPantalla('screen-fisico');
 };
 
-// 4. Confirmar Mazo Físico y pasar a los Temas (CORREGIDO: valida cartas únicas)
+// 4. Confirmar Mazo Físico y pasar a los Temas
 window.irAlEjeFisico = function() {
     const c1 = document.getElementById('fisico-carta1')?.value;
     const c2 = document.getElementById('fisico-carta2')?.value;
@@ -122,17 +121,20 @@ window.abrirHistorial = function() {
     window.mostrarPantalla('screen-historial');
 };
 
+// Botón de email en portada - ahora usa el sistema de auth
 window.pedirEmailAlUsuario = function() {
-    const email = prompt("📧 Ingresá tu correo electrónico para vincular tu cuenta:");
-    if (email && email.includes('@')) {
-        alert(`✅ Correo ${email} vinculado correctamente (modo local).`);
-        localStorage.setItem('tarotia_email_usuario', email);
-    } else if (email) {
-        alert("⚠️ Por favor ingresá un correo válido.");
+    if (window.tarotiaUsuario) {
+        // Ya está logueado, mostrar menú
+        if (typeof window.mostrarMenuUsuario === 'function') {
+            window.mostrarMenuUsuario();
+        }
+    } else {
+        // No está logueado, ir a auth
+        window.mostrarPantalla('screen-auth');
     }
 };
 
-// Stub para Carta del Día (evita ReferenceError)
+// Stub para Carta del Día
 window.tirarCartaDiaria = function() {
     const mazo = [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
