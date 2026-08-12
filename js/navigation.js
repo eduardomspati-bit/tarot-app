@@ -66,10 +66,22 @@ window.irAlEjeFisico = function() {
         return;
     }
 
-    // GUARDAR las cartas seleccionadas para usarlas después
+    // Guardar las cartas en variable global
     window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
-    console.log("🃏 Cartas físicas guardadas:", window.cartasFisicoSeleccionadas);
+    console.log("🃏 Cartas guardadas:", window.cartasFisicoSeleccionadas);
 
+    // Si es modo ESTRUCTURAL/TÉCNICO → ir DIRECTO al resultado (sin temas, sin servidor)
+    if (window.submodoFisicoActual === 'tarotista_fisico') {
+        window.mostrarPantalla('screen-result');
+        if (typeof window.procesarTiradaEstructural === 'function') {
+            window.procesarTiradaEstructural();
+        } else {
+            alert("⚠️ Error: no se cargó el módulo estructural.");
+        }
+        return;
+    }
+
+    // Si es PREDICTIVO → ir a selector de temas como siempre
     window.mostrarPantalla('screen-selector');
 };
 
