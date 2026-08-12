@@ -144,4 +144,89 @@ window.tirarCartaDiaria = function() {
     ];
     const carta = mazo[Math.floor(Math.random() * mazo.length)];
     alert(`🔮 Tu Carta del Día es: ${carta}\n\nReflexioná sobre su mensaje durante el día.`);
+};        alert("⚠️ No podés repetir cartas en una misma tirada.");
+        return;
+    }
+
+    window.mostrarPantalla('screen-selector');
+};
+
+// 5. Pregunta Específica
+window.abrirPantallaPregunta = function() {
+    const txtArea = document.getElementById('texto-pregunta-usuario');
+    if (txtArea) txtArea.value = "";
+    window.mostrarPantalla('screen-pregunta');
+};
+
+window.confirmarPreguntaYEjecutar = function() {
+    const txtArea = document.getElementById('texto-pregunta-usuario');
+    window.preguntaCustomSeleccionada = txtArea ? txtArea.value.trim() : "";
+
+    if (!window.preguntaCustomSeleccionada) {
+        alert("⚠️ Por favor escribe tu pregunta antes de continuar.");
+        return;
+    }
+
+    window.ejecutarLecturaSegunModo('Pregunta Específica');
+};
+
+// 6. Ejecución de la lectura según el tema presionado
+window.ejecutarLecturaSegunModo = function(tema) {
+    if (typeof window.procesarTiradaCompleta === 'function') {
+        window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada);
+    } else {
+        console.error("❌ Error: No existe procesarTiradaCompleta en app.js");
+    }
+};
+
+// Navegación de regreso e Historial
+window.volverAPortada = function() {
+    window.modoFisicoActivo = false;
+    window.mostrarPantalla('screen-portada');
+};
+
+window.volverInicio = function() {
+    window.volverAPortada();
+};
+
+window.abrirGuiaLectura = function() {
+    window.mostrarPantalla('screen-guia-lectura');
+};
+
+window.volverAlModuloProfesional = function() {
+    window.mostrarPantalla('screen-modulo-profesional');
+};
+
+window.abrirHistorial = function() {
+    if (typeof window.cargarHistorial === 'function') {
+        window.cargarHistorial();
+    } else if (typeof abrirHistorial === 'function') {
+        abrirHistorial();
+    }
+    window.mostrarPantalla('screen-historial');
+};
+
+// Botón de email en portada - ahora usa el sistema de auth
+window.pedirEmailAlUsuario = function() {
+    if (window.tarotiaUsuario) {
+        // Ya está logueado, mostrar menú
+        if (typeof window.mostrarMenuUsuario === 'function') {
+            window.mostrarMenuUsuario();
+        }
+    } else {
+        // No está logueado, ir a auth
+        window.mostrarPantalla('screen-auth');
+    }
+};
+
+// Stub para Carta del Día
+window.tirarCartaDiaria = function() {
+    const mazo = [
+        "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
+        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
+        "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo",
+        "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"
+    ];
+    const carta = mazo[Math.floor(Math.random() * mazo.length)];
+    alert(`🔮 Tu Carta del Día es: ${carta}\n\nReflexioná sobre su mensaje durante el día.`);
 };
