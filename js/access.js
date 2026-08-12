@@ -1,10 +1,10 @@
 // ==========================================
-// CONTROL DE ACCESOS Y MUESTRAS FÍSICAS (SERVER-SIDE)
+// CONTROL DE ACCESOS Y MUESTRAS FÍSICAS
 // ==========================================
 
 const MAX_MUESTRAS = 5;
 
-// Códigos premium válidos (fallback local si el servidor no responde)
+// Códigos premium válidos (fallback local)
 const CODIGOS_PREMIUM_VALIDOS = [
     'ADMIN2026',
     'PASEMISTICO',
@@ -12,59 +12,134 @@ const CODIGOS_PREMIUM_VALIDOS = [
 ];
 
 // ==========================================
-// VERIFICAR ACCESO A MAZO FÍSICO (SERVER-SIDE)
+// VERIFICAR ACCESO A MAZO FÍSICO
 // ==========================================
 window.verificarAccesoFisico = async function() {
-    // 1. Verificar si hay sesión
+    console.log('🔍 verificarAccesoFisico llamado');
+    console.log('  tarotiaToken:', !!window.tarotiaToken);
+    console.log('  tarotiaUsuario:', window.tarotiaUsuario);
+
+    // 1. Si NO hay sesión de servidor, usar sistema local (fallback)
     if (!window.tarotiaToken) {
-        alert('🔒 Debes iniciar sesión para usar el Mazo Físico.');
-        if (typeof window.mostrarPantalla === 'function') {
-            window.mostrarPantalla('screen-auth');
+        console.log('  → No hay token, usando sistema local');
+        verificarAccesoFisicoLocal();
+        return;
+    }
+
+    // 2. Hay token: intentar verificar en servidor
+    try {
+        console.log('  → Hay token, consultando servidor...');
+        await window.cargarPerfil();
+
+        if (!window.tarotiaUsuario) {
+            console.log('  → Perfil no cargado, fallback local');
+            verificarAccesoFisicoLocal();
+            return;
         }
-        return;
-    }
 
-    // 2. Cargar perfil actualizado
-    await window.cargarPerfil();
+        // Es Premium
+        if (window.tarotiaUsuario.plan === 'Premium') {
+            console.log('  → Usuario Premium, acceso directo');
+            abrirModoFisico();
+            return;
+        }
 
-    if (!window.tarotiaUsuario) {
-        alert('❌ Error al verificar tu cuenta. Intentá de nuevo.');
-        return;
-    }
+        // Es Gratis: verificar muestras
+        const muestras = window.tarotiaUsuario.muestrasFisicasRestantes || 0;
+        console.log('  → Muestras restantes:', muestras);
 
-    // 3. Si es Premium, acceso directo
-    if (window.tarotiaUsuario.plan === 'Premium') {
-        abrirModoFisico();
-        return;
-    }
-
-    // 4. Si es Gratis, verificar muestras restantes
-    const muestras = window.tarotiaUsuario.muestrasFisicasRestantes || 0;
-
-    if (muestras > 0) {
-        abrirModoFisico();
-    } else {
-        // Muestras agotadas
-        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar:");
-        if (codigo) {
-            const ok = await window.canjearCodigoPremiumServer(codigo);
-            if (ok) {
-                abrirModoFisico();
+        if (muestras > 0) {
+            abrirModoFisico();
+        } else {
+            const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium:");
+            if (codigo) {
+                const ok = await window.canjearCodigoPremiumServer(codigo);
+                if (ok) abrirModoFisico();
             }
         }
+    } catch (error) {
+        console.error('  → Error con servidor:', error);
+        console.log('  → Fallback a sistema local');
+        verificarAccesoFisicoLocal();
     }
 };
 
 // ==========================================
-// ABRIR MODO FÍSICO (después de verificar acceso)
+// FALLBACK LOCAL (sin servidor)
+// ==========================================
+function verificarAccesoFisicoLocal() {
+    console.log('🔍 verificarAccesoFisicoLocal');
+
+    // Verificar premium local
+    const esPremiumLocal = localStorage.getItem('simularPremium') === 'true';
+    if (esPremiumLocal) {
+        console.log('  → Premium local activado');
+        abrirModoFisico();
+        return;
+    }
+
+    // Verificar muestras locales
+    const muestras = obtenerMuestrasFisicasRestantes();
+    console.log('  → Muestras locales restantes:', muestras);
+
+    if (muestras > 0) {
+        abrirModoFisico();
+    } else {
+        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium:");
+        if (codigo) {
+            const ok = canjearCodigoPremiumLocal(codigo);
+            if (ok) abrirModoFisico();
+        }
+    }
+}
+
+function obtenerMuestrasFisicasRestantes() {
+    let muestras = localStorage.getItem('muestrasFisicasTarot');
+    if (muestras === null) {
+        localStorage.setItem('muestrasFisicasTarot', MAX_MUESTRAS.toString());
+        return MAX_MUESTRAS;
+    }
+    return parseInt(muestras, 10) || 0;
+}
+
+function registrarUsoTiradaFisicaLocal() {
+    if (localStorage.getItem('simularPremium') === 'true') return;
+    let actuales = obtenerMuestrasFisicasRestantes();
+    if (actuales > 0) {
+        actuales--;
+        localStorage.setItem('muestrasFisicasTarot', actuales.toString());
+        actualizarBadgeMuestrasFisicas();
+    }
+}
+
+function canjearCodigoPremiumLocal(codigo) {
+    if (!codigo) return false;
+    const codigoLimpio = codigo.trim().toUpperCase();
+    if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
+        localStorage.setItem('simularPremium', 'true');
+        alert('✨ ¡Código premium activado con éxito!');
+        actualizarBadgeMuestrasFisicas();
+        return true;
+    } else {
+        alert('❌ Código inválido o expirado.');
+        return false;
+    }
+}
+
+// ==========================================
+// ABRIR MODO FÍSICO
 // ==========================================
 function abrirModoFisico() {
+    console.log('🔍 abrirModoFisico');
     if (typeof window.abrirSeleccionFisico === 'function') {
-        // Determinar submodo según el botón que se clickeó
-        // Por defecto predictivo
+        console.log('  → Llamando abrirSeleccionFisico');
         window.abrirSeleccionFisico('predictivo_fisico');
     } else if (typeof window.mostrarPantalla === 'function') {
+        console.log('  → Llamando mostrarPantalla(screen-fisico)');
         window.mostrarPantalla('screen-fisico');
+    } else {
+        console.error('  → ERROR: No existe mostrarPantalla ni abrirSeleccionFisico');
+        alert('Error: No se pudo abrir el mazo físico. Recargá la página.');
     }
 }
 
@@ -72,21 +147,24 @@ function abrirModoFisico() {
 // REGISTRAR USO DE TIRADA FÍSICA
 // ==========================================
 window.registrarUsoTiradaFisica = async function() {
-    if (!window.tarotiaToken) return;
-    if (window.tarotiaUsuario && window.tarotiaUsuario.plan === 'Premium') return;
-
-    try {
-        const data = await window.usarMuestraFisicaServer();
-        if (window.tarotiaUsuario && data.muestrasRestantes !== undefined) {
-            window.tarotiaUsuario.muestrasFisicasRestantes = data.muestrasRestantes;
+    // Intentar servidor primero
+    if (window.tarotiaToken && window.tarotiaUsuario && window.tarotiaUsuario.plan !== 'Premium') {
+        try {
+            const data = await window.usarMuestraFisicaServer();
+            if (window.tarotiaUsuario && data.muestrasRestantes !== undefined) {
+                window.tarotiaUsuario.muestrasFisicasRestantes = data.muestrasRestantes;
+            }
+            return;
+        } catch (e) {
+            console.log('Error servidor, usando local:', e);
         }
-    } catch (e) {
-        console.error('Error registrando uso:', e);
     }
+    // Fallback local
+    registrarUsoTiradaFisicaLocal();
 };
 
 // ==========================================
-// ACTUALIZAR BADGE DE MUESTRAS
+// ACTUALIZAR BADGE
 // ==========================================
 window.actualizarBadgeMuestrasFisicas = function() {
     const badge = document.getElementById('badge-physic-muestra-prof')
@@ -95,191 +173,79 @@ window.actualizarBadgeMuestrasFisicas = function() {
 
     if (!badge) return;
 
-    if (window.tarotiaUsuario && window.tarotiaUsuario.plan === 'Premium') {
+    // Prioridad: servidor
+    if (window.tarotiaUsuario) {
+        if (window.tarotiaUsuario.plan === 'Premium') {
+            badge.innerText = "Ilimitado ✨";
+            badge.style.borderColor = "#a78bfa";
+        } else {
+            const restantes = window.tarotiaUsuario.muestrasFisicasRestantes || 0;
+            badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
+        }
+        return;
+    }
+
+    // Fallback local
+    if (localStorage.getItem('simularPremium') === 'true') {
         badge.innerText = "Ilimitado ✨";
         badge.style.borderColor = "#a78bfa";
-    } else if (window.tarotiaUsuario) {
-        const restantes = window.tarotiaUsuario.muestrasFisicasRestantes || 0;
-        badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
     } else {
-        badge.innerText = "5 Muestras";
+        const restantes = obtenerMuestrasFisicasRestantes();
+        badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
     }
 };
 
 // ==========================================
-// CANJEAR CÓDIGO PREMIUM (wrapper compatible)
+// CANJEAR CÓDIGO PREMIUM (unificado)
 // ==========================================
 window.canjearCodigoPremium = async function(codigo) {
-    if (!codigo) return;
+    if (!codigo) return false;
 
-    // Si hay sesión, usar servidor
+    // Si hay sesión de servidor, intentar ahí primero
     if (window.tarotiaToken) {
         return await window.canjearCodigoPremiumServer(codigo);
     }
 
-    // Fallback local (sin servidor)
-    const codigoLimpio = codigo.trim().toUpperCase();
-    if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
-        localStorage.setItem('simularPremium', 'true');
-        alert('✨ ¡Código premium activado! (modo local)');
-        return true;
-    } else {
-        alert('❌ Código inválido.');
-        return false;
-    }
+    // Fallback local
+    return canjearCodigoPremiumLocal(codigo);
 };
 
 // ==========================================
-// MERCADO PAGO (STUB)
+// MERCADO PAGO
 // ==========================================
 window.abrirMercadoPago = function() {
     alert('🛒 Próximamente: enlace de pago por Mercado Pago.\n\nContactá al administrador para adquirir tu Pase Místico.');
 };
 
 // ==========================================
-// IR AL EJE CONSULTA
-// ==========================================
-window.irAlEjeConsulta = function(modo) {
-    window.modoFisicoActivo = (modo === 'manual');
-    if (typeof window.mostrarPantalla === 'function') {
-        window.mostrarPantalla('screen-selector');
-    }
-};
-
-// ==========================================
-// PUENTE / ALIAS PARA EVITAR EL REFERENCE ERROR
+// PUENTES / ALIAS
 // ==========================================
 window.verificarAccesoTarotistaFisico = function() {
     window.verificarAccesoFisico();
 };
 
 window.verificarAccesoTarotista = async function() {
+    // Si hay sesión premium en servidor
     if (window.tarotiaUsuario && window.tarotiaUsuario.plan === 'Premium') {
         if (typeof window.irAlEjeConsulta === 'function') window.irAlEjeConsulta('manual');
-    } else {
-        const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
-        if (codigo) {
-            const ok = await window.canjearCodigoPremium(codigo);
-            if (ok && typeof window.irAlEjeConsulta === 'function') {
-                window.irAlEjeConsulta('manual');
-            }
+        return;
+    }
+    // Fallback local
+    if (localStorage.getItem('simularPremium') === 'true') {
+        if (typeof window.irAlEjeConsulta === 'function') window.irAlEjeConsulta('manual');
+        return;
+    }
+
+    const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
+    if (codigo) {
+        const ok = await window.canjearCodigoPremium(codigo);
+        if (ok && typeof window.irAlEjeConsulta === 'function') {
+            window.irAlEjeConsulta('manual');
         }
     }
 };
 
 // Inicializar badges al cargar
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.tarotiaUsuario) {
-        actualizarBadgeMuestrasFisicas();
-    }
-});        localStorage.setItem('muestrasFisicasTarot', actuales.toString());
-        actualizarBadgeMuestrasFisicas();
-    }
-}
-
-function actualizarBadgeMuestrasFisicas() {
-    const badge = document.getElementById('badge-physic-muestra-prof')
-               || document.getElementById('badge-fisico-muestra-prof')
-               || document.getElementById('badge-fisico-muestra');
-
-    if (badge) {
-        if (window.esUsuarioPremium) {
-            badge.innerText = "Ilimitado ✨";
-            badge.style.borderColor = "#a78bfa";
-        } else {
-            const restantes = obtenerMuestrasFisicasRestantes();
-            badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
-        }
-    }
-}
-
-// ==========================================
-// CANJEAR CÓDIGO PREMIUM
-// ==========================================
-function canjearCodigoPremium(codigo) {
-    if (!codigo) return;
-    const codigoLimpio = codigo.trim().toUpperCase();
-
-    if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
-        window.esUsuarioPremium = true;
-        localStorage.setItem('simularPremium', 'true');
-        alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
-        actualizarBadgeMuestrasFisicas();
-    } else {
-        alert('❌ Código inválido o expirado. Probá con otro o contactá al administrador.');
-    }
-}
-
-// ==========================================
-// MERCADO PAGO (STUB)
-// ==========================================
-function abrirMercadoPago() {
-    alert('🛒 Próximamente: enlace de pago por Mercado Pago.\n\nContactá al administrador para adquirir tu Pase Místico.');
-}
-
-// ==========================================
-// IR AL EJE CONSULTA (STUB)
-// ==========================================
-function irAlEjeConsulta(modo) {
-    window.modoFisicoActivo = (modo === 'manual');
-    if (typeof mostrarPantalla === 'function') {
-        mostrarPantalla('screen-selector');
-    }
-}
-
-// ==========================================
-// ACCESO A MAZO FÍSICO (CORREGIDO)
-// ==========================================
-function verificarAccesoFisico() {
-    // 1. Si es usuario Premium, abre directamente la carga de cartas físicas
-    if (window.esUsuarioPremium) {
-        if (typeof abrirModoFisico === 'function') {
-            abrirModoFisico();
-        } else if (typeof mostrarPantalla === 'function') {
-            mostrarPantalla('screen-fisico');
-        }
-        return;
-    }
-
-    // 2. Si es usuario gratuito, verificar las muestras restantes
-    const muestrasRestantes = obtenerMuestrasFisicasRestantes();
-
-    if (muestrasRestantes > 0) {
-        if (typeof abrirModoFisico === 'function') {
-            abrirModoFisico();
-        } else if (typeof mostrarPantalla === 'function') {
-            mostrarPantalla('screen-fisico');
-        }
-    } else {
-        // 3. Muestras agotadas: Solicita código Premium o redirige a suscripción
-        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar o adquiere tu Pase Místico:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
-        } else if (typeof abrirMercadoPago === 'function') {
-            abrirMercadoPago();
-        }
-    }
-}
-
-// ==========================================
-// PUENTE / ALIAS PARA EVITAR EL REFERENCE ERROR
-// ==========================================
-function verificarAccesoTarotistaFisico() {
-    verificarAccesoFisico();
-}
-
-function verificarAccesoTarotista() {
-    if (window.esUsuarioPremium) {
-        if (typeof irAlEjeConsulta === 'function') irAlEjeConsulta('manual');
-    } else {
-        const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
-        }
-    }
-}
-
-// Inicializar el estado de los badges al cargar el módulo
 document.addEventListener('DOMContentLoaded', () => {
     actualizarBadgeMuestrasFisicas();
 });
