@@ -21,9 +21,10 @@ window.mostrarPantalla = function(idPantalla) {
 
 // 1. Selección de Estilo Automático desde la Portada (Mágico / Filosófico)
 window.seleccionarEstiloAutomatico = function(estilo) {
-    window.estiloSeleccionado = estilo; // 'magico' o 'filosofico'
-    window.modoFisicoActivo = false; // Desactiva el modo físico
+    window.estiloSeleccionado = estilo;
+    window.modoFisicoActivo = false;
     window.preguntaCustomSeleccionada = "";
+    window.cartasFisicoSeleccionadas = null; // Limpiar cartas físicas previas
 
     console.log(`✨ Modo Automático Activado: ${estilo}`);
     window.mostrarPantalla('screen-selector');
@@ -38,6 +39,7 @@ window.abrirModuloProfesional = function() {
 window.abrirSeleccionFisico = function(submodo) {
     window.modoFisicoActivo = true;
     window.submodoFisicoActual = submodo;
+    window.cartasFisicoSeleccionadas = null; // Resetear por si acaso
 
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
@@ -46,7 +48,7 @@ window.abrirSeleccionFisico = function(submodo) {
     window.mostrarPantalla('screen-fisico');
 };
 
-// 4. Confirmar Mazo Físico y pasar a los Temas (CORREGIDO: valida cartas únicas)
+// 4. Confirmar Mazo Físico y pasar a los Temas (CORREGIDO: guarda cartas en variable global)
 window.irAlEjeFisico = function() {
     const c1 = document.getElementById('fisico-carta1')?.value;
     const c2 = document.getElementById('fisico-carta2')?.value;
@@ -63,6 +65,10 @@ window.irAlEjeFisico = function() {
         alert("⚠️ No podés repetir cartas en una misma tirada.");
         return;
     }
+
+    // GUARDAR las cartas seleccionadas para usarlas después
+    window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
+    console.log("🃏 Cartas físicas guardadas:", window.cartasFisicoSeleccionadas);
 
     window.mostrarPantalla('screen-selector');
 };
@@ -98,6 +104,8 @@ window.ejecutarLecturaSegunModo = function(tema) {
 // Navegación de regreso e Historial
 window.volverAPortada = function() {
     window.modoFisicoActivo = false;
+    window.cartasFisicoSeleccionadas = null;
+    window.preguntaCustomSeleccionada = "";
     window.mostrarPantalla('screen-portada');
 };
 
@@ -116,8 +124,8 @@ window.volverAlModuloProfesional = function() {
 window.abrirHistorial = function() {
     if (typeof window.cargarHistorial === 'function') {
         window.cargarHistorial();
-    } else if (typeof abrirHistorial === 'function') {
-        abrirHistorial();
+    } else if (typeof cargarHistorial === 'function') {
+        cargarHistorial();
     }
     window.mostrarPantalla('screen-historial');
 };
