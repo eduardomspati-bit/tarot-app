@@ -41,10 +41,9 @@ function reproducirVoz(tipo = 'todo') {
 
     const mensaje = new SpeechSynthesisUtterance(textoALeer);
     mensaje.lang = 'es-ES';
-    mensaje.rate = 0.95; // Velocidad ligeramente pausada para dar tono místico
+    mensaje.rate = 0.95;
     mensaje.pitch = 1.0;
 
-    // Intentar seleccionar una voz en español si está disponible en el sistema
     const voces = window.speechSynthesis.getVoices();
     const vozEspanol = voces.find(v => v.lang.startsWith('es'));
     if (vozEspanol) mensaje.voice = vozEspanol;
