@@ -232,4 +232,194 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         console.log("📤 Enviando datos al servidor:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
-            method: 'POST
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await respuesta.json();
+        console.log("📥 Respuesta del servidor:", data);
+
+        if (!respuesta.ok) {
+            throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
+        }
+
+        if (contenedorTexto) {
+            let texto = data.lectura ||
+                data.resultado ||
+                data.interpretacion ||
+                data.respuesta ||
+                data.texto ||
+                data.mensaje ||
+                data.reading ||
+                (data.choices && data.choices[0]?.message?.content);
+
+            if (!texto) {
+                texto = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            }
+
+            contenedorTexto.innerHTML = texto;
+
+            if (typeof guardarEnHistorialLocal === 'function') {
+                guardarEnHistorialLocal(tema, 
+                    {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, 
+                    texto);
+            }
+        }
+
+    } catch (error) {
+        console.error("❌ Error en la llamada al servidor:", error);
+        if (contenedorTexto) {
+            contenedorTexto.innerHTML = `
+                <div style="color: #ff6b6b; text-align: center; padding: 20px;">
+                    ❌ Error: ${error.message}<br><br>
+                    <small>Si el servidor está dormido en Render, esperá 30 segundos y probá de nuevo.</small>
+                </div>
+            `;
+        }
+    }
+};
+
+// ==========================================
+// FLUJO PRINCIPAL DE LA TIRADA (CORREGIDO)
+// ==========================================
+
+window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
+    let cartasElegidas = [];
+
+    if (window.modoFisicoActivo) {
+        // Prioridad 1: usar cartas guardadas al confirmar (más confiable)
+        if (window.cartasFisicoSeleccionadas && window.cartasFisicoSeleccionadas.length === 4
+            && window.cartasFisicoSeleccionadas.every(c => c && c.trim() !== '')) {
+            
+            cartasElegidas = window.cartasFisicoSeleccionadas;
+            console.log("🃏 Usando cartas físicas guardadas:", cartasElegidas);
+        
+        } else {
+            // Fallback: leer del DOM (puede fallar si la pantalla está oculta)
+            cartasElegidas = [
+                document.getElementById('fisico-carta1')?.value,
+                document.getElementById('fisico-carta2')?.value,
+                document.getElementById('fisico-carta3')?.value,
+                document.getElementById('fisico-carta4')?.value
+            ];
+            console.log("🃏 Leyendo cartas físicas del DOM (fallback):", cartasElegidas);
+        }
+    } else {
+        cartasElegidas = window.obtenerCuatroCartasAleatorias();
+    }
+
+    // Validación de seguridad
+    if (!cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
+        console.error("❌ Cartas incompletas:", cartasElegidas);
+        
+        if (window.modoFisicoActivo) {
+            alert("⚠️ No se detectaron las cartas físicas. Volvé a seleccionarlas.");
+            if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-fisico');
+        } else {
+            alert("⚠️ Error al obtener las cartas. Intentá de nuevo.");
+        }
+        return;
+    }
+
+    if (typeof window.mostrarPantalla === 'function') {
+        window.mostrarPantalla('screen-result');
+    }
+
+    window.renderizarMesaDuplas(cartasElegidas, tema);
+    await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
+};
+
+// ==========================================
+// TIRADA ESTRUCTURAL / TÉCNICA (BASE DE DATOS EN SERVIDOR)
+// ==========================================
+
+window.procesarTiradaEstructural = async function() {
+    const cartas = window.cartasFisicoSeleccionadas;
+
+    if (!cartas || cartas.length !== 4) {
+        alert("⚠️ Error: no se encontraron las cartas seleccionadas.");
+        return;
+    }
+
+    const [c1, c2, c3, c4] = cartas;
+
+    // Renderizar las cartas en la mesa
+    window.renderizarMesaDuplas(cartas, 'Análisis Estructural');
+
+    const contenedorTexto = document.getElementById('interpretation-text');
+    if (contenedorTexto) {
+        contenedorTexto.innerHTML = `
+            <div style="text-align:center; padding:30px;">
+                <div class="spinner"></div>
+                <p style="color:#a78bfa; margin-top:15px;">Consultando la base de duplas...</p>
+            </div>
+        `;
+    }
+
+    try {
+        const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
+
+        // Consultar ambas duplas al servidor (orden IMPORTA)
+        const [resp1, resp2] = await Promise.all([
+            fetch(`${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`),
+            fetch(`${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c3)}&b=${encodeURIComponent(c4)}`)
+        ]);
+
+        const data1 = await resp1.json();
+        const data2 = await resp2.json();
+
+        let html = '';
+
+        // Dupla 1
+        html += `<div class="reading-section resaltado-místico">`;
+        html += `<h3>🔮 Dupla 1: ${c1} + ${c2}</h3>`;
+        if (data1.encontrada) {
+            html += data1.significado;
+            if (data1.keywords && data1.keywords.length > 0) {
+                html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${data1.keywords.join(', ')}</p>`;
+            }
+        } else {
+            html += `<p style="color:#ff6b6b;">⚠️ Esta combinación aún no tiene interpretación cargada.<br><small style="color:#aaa;">${c1} | ${c2}</small></p>`;
+        }
+        html += `</div>`;
+
+        // Dupla 2
+        html += `<div class="reading-section resaltado-místico">`;
+        html += `<h3>🔮 Dupla 2: ${c3} + ${c4}</h3>`;
+        if (data2.encontrada) {
+            html += data2.significado;
+            if (data2.keywords && data2.keywords.length > 0) {
+                html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${data2.keywords.join(', ')}</p>`;
+            }
+        } else {
+            html += `<p style="color:#ff6b6b;">⚠️ Esta combinación aún no tiene interpretación cargada.<br><small style="color:#aaa;">${c3} | ${c4}</small></p>`;
+        }
+        html += `</div>`;
+
+        if (contenedorTexto) contenedorTexto.innerHTML = html;
+
+        // Guardar en historial local
+        if (typeof guardarEnHistorialLocal === 'function') {
+            const textoResumen = `Dupla 1 (${c1}+${c2}): ${data1.encontrada ? 'OK' : 'Sin datos'} | Dupla 2 (${c3}+${c4}): ${data2.encontrada ? 'OK' : 'Sin datos'}`;
+            guardarEnHistorialLocal('Análisis Estructural', 
+                {a: c1, b: c2, c: c3, d: c4}, 
+                textoResumen);
+        }
+
+    } catch (error) {
+        console.error("❌ Error al consultar duplas:", error);
+        if (contenedorTexto) {
+            contenedorTexto.innerHTML = `
+                <div style="color: #ff6b6b; text-align: center; padding: 20px;">
+                    ❌ Error de conexión con la base de duplas.<br>
+                    <small>${error.message}</small>
+                </div>
+            `;
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.cargarSelectoresFisicos();
+});
