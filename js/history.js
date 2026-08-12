@@ -68,10 +68,3 @@ function cargarHistorial() {
         </div>
     `).join('');
 }
-
-function abrirHistorial() {
-    if (typeof mostrarPantalla === 'function') {
-        mostrarPantalla('screen-historial');
-    }
-    cargarHistorial();
-}
