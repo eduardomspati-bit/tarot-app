@@ -178,7 +178,5 @@ window.tirarCartaDiaria = function() {
         "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"
     ];
     var carta = mazo[Math.floor(Math.random() * mazo.length)];
-    alert("Tu Carta del Dia es: " + carta + "
-
-Reflexiona sobre su mensaje durante el dia.");
+    alert("Tu Carta del Dia es: " + carta + "\n\nReflexiona sobre su mensaje durante el dia.");
 };
