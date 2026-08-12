@@ -29,9 +29,7 @@ window.verificarAccesoFisico = function() {
         console.log('Muestras restantes: ' + muestras);
         abrirModoFisico();
     } else {
-        var codigo = prompt("Has agotado tus 5 muestras gratuitas de Mazo Fisico.
-
-Ingresa tu codigo de acceso Premium:");
+        var codigo = prompt("Has agotado tus 5 muestras gratuitas de Mazo Fisico.\n\nIngresa tu codigo de acceso Premium:");
         if (codigo) {
             var ok = canjearCodigoPremium(codigo);
             if (ok) abrirModoFisico();
@@ -106,9 +104,7 @@ window.actualizarBadgeMuestrasFisicas = function() {
 // MERCADO PAGO
 // ==========================================
 window.abrirMercadoPago = function() {
-    alert('Proximamente: enlace de pago por Mercado Pago.
-
-Contacta al administrador para adquirir tu Pase Mistico.');
+    alert('Proximamente: enlace de pago por Mercado Pago.\n\nContacta al administrador para adquirir tu Pase Mistico.');
 };
 
 // ==========================================
@@ -122,8 +118,7 @@ window.verificarAccesoTarotista = function() {
     if (localStorage.getItem('simularPremium') === 'true') {
         if (typeof window.irAlEjeConsulta === 'function') window.irAlEjeConsulta('manual');
     } else {
-        var codigo = prompt("El Modo Tarotista es exclusivo de TarotIA Premium.
-Por favor, ingresa tu codigo de acceso:");
+        var codigo = prompt("El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu codigo de acceso:");
         if (codigo) {
             var ok = canjearCodigoPremium(codigo);
             if (ok && typeof window.irAlEjeConsulta === 'function') {
