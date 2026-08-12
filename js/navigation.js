@@ -1,39 +1,53 @@
-// Variable global para capturar la pregunta personalizada si la hay
+// Variable global para capturar la pregunta personalizada
 window.preguntaCustomSeleccionada = "";
 
-// Función principal para cambiar de pantalla
+// Funcion principal para cambiar de pantalla
 window.mostrarPantalla = function(idPantalla) {
-    const pantallas = document.querySelectorAll('.screen');
-    pantallas.forEach(p => {
+    var pantallas = document.querySelectorAll('.screen');
+    pantallas.forEach(function(p) {
         p.style.display = 'none';
         p.classList.add('hidden');
     });
 
-    const destino = document.getElementById(idPantalla);
+    var destino = document.getElementById(idPantalla);
     if (destino) {
         destino.style.display = 'block';
         destino.classList.remove('hidden');
         window.scrollTo(0, 0);
     } else {
-        console.error(`❌ No se encontró la pantalla: ${idPantalla}`);
+        console.error("Pantalla no encontrada: " + idPantalla);
     }
 };
 
-// 1. Selección de Estilo Automático desde la Portada (Mágico / Filosófico)
+// Entrar a la app completa (desde landing)
+window.entrarAppCompleta = function() {
+    if (document.getElementById('screen-auth')) {
+        window.mostrarPantalla('screen-auth');
+    } else {
+        window.mostrarPantalla('screen-portada');
+    }
+};
+
+// Volver a landing
+window.volverALanding = function() {
+    window.mostrarPantalla('screen-landing');
+};
+
+// Seleccion de Estilo Automatico
 window.seleccionarEstiloAutomatico = function(estilo) {
     window.estiloSeleccionado = estilo;
     window.modoFisicoActivo = false;
     window.preguntaCustomSeleccionada = "";
-    console.log(`✨ Modo Automático Activado: ${estilo}`);
+    console.log("Modo Automatico Activado: " + estilo);
     window.mostrarPantalla('screen-selector');
 };
 
-// 2. Módulo Profesional
+// Modulo Profesional
 window.abrirModuloProfesional = function() {
     window.mostrarPantalla('screen-modulo-profesional');
 };
 
-// 3. Abrir Mazo Físico desde Módulo Profesional
+// Abrir Mazo Fisico desde Modulo Profesional
 window.abrirSeleccionFisico = function(submodo) {
     window.modoFisicoActivo = true;
     window.submodoFisicoActual = submodo;
@@ -45,56 +59,76 @@ window.abrirSeleccionFisico = function(submodo) {
     window.mostrarPantalla('screen-fisico');
 };
 
-// 4. Confirmar Mazo Físico y pasar a los Temas
+// Confirmar Mazo Fisico y pasar a los Temas
 window.irAlEjeFisico = function() {
-    const c1 = document.getElementById('fisico-carta1')?.value;
-    const c2 = document.getElementById('fisico-carta2')?.value;
-    const c3 = document.getElementById('fisico-carta3')?.value;
-    const c4 = document.getElementById('fisico-carta4')?.value;
+    var c1 = document.getElementById('fisico-carta1');
+    var c2 = document.getElementById('fisico-carta2');
+    var c3 = document.getElementById('fisico-carta3');
+    var c4 = document.getElementById('fisico-carta4');
 
     if (!c1 || !c2 || !c3 || !c4) {
-        alert("⚠️ Por favor selecciona las 4 cartas de tu mazo físico.");
+        alert("Por favor selecciona las 4 cartas de tu mazo fisico.");
         return;
     }
 
-    const seleccionadas = [c1, c2, c3, c4];
-    if (new Set(seleccionadas).size !== 4) {
-        alert("⚠️ No podés repetir cartas en una misma tirada.");
+    var v1 = c1.value;
+    var v2 = c2.value;
+    var v3 = c3.value;
+    var v4 = c4.value;
+
+    if (!v1 || !v2 || !v3 || !v4) {
+        alert("Por favor selecciona las 4 cartas de tu mazo fisico.");
+        return;
+    }
+
+    var seleccionadas = [v1, v2, v3, v4];
+    var unicas = {};
+    var todasUnicas = true;
+    for (var i = 0; i < seleccionadas.length; i++) {
+        if (unicas[seleccionadas[i]]) {
+            todasUnicas = false;
+            break;
+        }
+        unicas[seleccionadas[i]] = true;
+    }
+
+    if (!todasUnicas) {
+        alert("No podes repetir cartas en una misma tirada.");
         return;
     }
 
     window.mostrarPantalla('screen-selector');
 };
 
-// 5. Pregunta Específica
+// Pregunta Especifica
 window.abrirPantallaPregunta = function() {
-    const txtArea = document.getElementById('texto-pregunta-usuario');
+    var txtArea = document.getElementById('texto-pregunta-usuario');
     if (txtArea) txtArea.value = "";
     window.mostrarPantalla('screen-pregunta');
 };
 
 window.confirmarPreguntaYEjecutar = function() {
-    const txtArea = document.getElementById('texto-pregunta-usuario');
+    var txtArea = document.getElementById('texto-pregunta-usuario');
     window.preguntaCustomSeleccionada = txtArea ? txtArea.value.trim() : "";
 
     if (!window.preguntaCustomSeleccionada) {
-        alert("⚠️ Por favor escribe tu pregunta antes de continuar.");
+        alert("Por favor escribe tu pregunta antes de continuar.");
         return;
     }
 
-    window.ejecutarLecturaSegunModo('Pregunta Específica');
+    window.ejecutarLecturaSegunModo('Pregunta Especifica');
 };
 
-// 6. Ejecución de la lectura según el tema presionado
+// Ejecucion de la lectura
 window.ejecutarLecturaSegunModo = function(tema) {
     if (typeof window.procesarTiradaCompleta === 'function') {
         window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada);
     } else {
-        console.error("❌ Error: No existe procesarTiradaCompleta en app.js");
+        console.error("Error: No existe procesarTiradaCompleta");
     }
 };
 
-// Navegación de regreso e Historial
+// Navegacion de regreso
 window.volverAPortada = function() {
     window.modoFisicoActivo = false;
     window.mostrarPantalla('screen-portada');
@@ -112,36 +146,39 @@ window.volverAlModuloProfesional = function() {
     window.mostrarPantalla('screen-modulo-profesional');
 };
 
+// Historial
 window.abrirHistorial = function() {
     if (typeof window.cargarHistorial === 'function') {
         window.cargarHistorial();
-    } else if (typeof abrirHistorial === 'function') {
-        abrirHistorial();
     }
     window.mostrarPantalla('screen-historial');
 };
 
-// Botón de email en portada - ahora usa el sistema de auth
+// Boton de email / usuario
 window.pedirEmailAlUsuario = function() {
-    if (window.tarotiaUsuario) {
-        // Ya está logueado, mostrar menú
-        if (typeof window.mostrarMenuUsuario === 'function') {
-            window.mostrarMenuUsuario();
-        }
-    } else {
-        // No está logueado, ir a auth
+    if (typeof window.mostrarMenuUsuario === 'function') {
+        window.mostrarMenuUsuario();
+    } else if (document.getElementById('screen-auth')) {
         window.mostrarPantalla('screen-auth');
+    } else {
+        var email = prompt("Ingresa tu correo electronico para vincular tu cuenta:");
+        if (email && email.includes('@')) {
+            localStorage.setItem('tarotia_email_usuario', email);
+            alert("Correo " + email + " vinculado correctamente.");
+        }
     }
 };
 
-// Stub para Carta del Día
+// Carta del Dia
 window.tirarCartaDiaria = function() {
-    const mazo = [
+    var mazo = [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
-        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
+        "Los Enamorados", "El Carro", "La Justicia", "El Ermitanio", "La Rueda de la Fortuna",
         "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo",
         "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"
     ];
-    const carta = mazo[Math.floor(Math.random() * mazo.length)];
-    alert(`🔮 Tu Carta del Día es: ${carta}\n\nReflexioná sobre su mensaje durante el día.`);
+    var carta = mazo[Math.floor(Math.random() * mazo.length)];
+    alert("Tu Carta del Dia es: " + carta + "
+
+Reflexiona sobre su mensaje durante el dia.");
 };
