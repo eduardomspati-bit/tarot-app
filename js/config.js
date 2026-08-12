@@ -1,16 +1,8 @@
 // ==========================================
-// CONFIGURACIÓN DE SERVIDOR Y ARCANOS
+// CONFIGURACION DE SERVIDOR Y ARCANOS
 // ==========================================
 
 window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com') + '/tirada';
-
-function obtenerHeadersAuth() {
-    const headers = { 'Content-Type': 'application/json' };
-    if (window.tarotiaToken) {
-        headers['Authorization'] = `Bearer ${window.tarotiaToken}`;
-    }
-    return headers;
-}
 
 function obtenerMazoActivo() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
@@ -21,7 +13,7 @@ function obtenerMazoActivo() {
     }
     return [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa",
-        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
+        "Los Enamorados", "El Carro", "La Justicia", "El Ermita\u00f1o", "La Rueda de la Fortuna",
         "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre",
         "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo",
         "As de Bastos", "2 de Bastos", "3 de Bastos", "4 de Bastos", "5 de Bastos",
@@ -44,28 +36,30 @@ function obtenerMazoActivo() {
 // ==========================================
 
 window.obtenerCuatroCartasAleatorias = function() {
-    const mazo = obtenerMazoActivo();
-    const mezclado = [...mazo];
-    for (let i = mezclado.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [mezclado[i], mezclado[j]] = [mezclado[j], mezclado[i]];
+    var mazo = obtenerMazoActivo();
+    var mezclado = mazo.slice();
+    for (var i = mezclado.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = mezclado[i];
+        mezclado[i] = mezclado[j];
+        mezclado[j] = temp;
     }
     return mezclado.slice(0, 4);
 };
 
 window.cargarSelectoresFisicos = function() {
-    const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
-    const mazo = obtenerMazoActivo();
+    var idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
+    var mazo = obtenerMazoActivo();
 
-    idsSelects.forEach((id, index) => {
-        const select = document.getElementById(id);
+    idsSelects.forEach(function(id, index) {
+        var select = document.getElementById(id);
         if (!select) return;
 
-        select.innerHTML = `<option value="">-- Selecciona Carta ${index + 1} --</option>`;
+        select.innerHTML = '<option value="">-- Selecciona Carta ' + (index + 1) + ' --</option>';
 
-        mazo.forEach(carta => {
-            const nombreCarta = typeof carta === 'string' ? carta : (carta.nombre || carta.name);
-            const option = document.createElement('option');
+        mazo.forEach(function(carta) {
+            var nombreCarta = typeof carta === 'string' ? carta : (carta.nombre || carta.name);
+            var option = document.createElement('option');
             option.value = nombreCarta;
             option.textContent = nombreCarta;
             select.appendChild(option);
@@ -74,29 +68,29 @@ window.cargarSelectoresFisicos = function() {
 };
 
 function nombreAImagen(nombre) {
-    const slug = nombre.toLowerCase()
+    var slug = nombre.toLowerCase()
         .replace(/ /g, '_')
-        .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
-        .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
+        .replace(/\u00e1/g, 'a').replace(/\u00e9/g, 'e').replace(/\u00ed/g, 'i')
+        .replace(/\u00f3/g, 'o').replace(/\u00fa/g, 'u').replace(/\u00f1/g, 'n')
         .replace(/[^a-z0-9_]/g, '');
-    return `cartas/${slug}.jpg`;
+    return 'cartas/' + slug + '.jpg';
 }
 
 window.renderizarMesaDuplas = function(cartas, tema) {
     if (!cartas || cartas.length < 4) return;
 
-    const tituloTema = document.getElementById('reading-theme-title');
+    var tituloTema = document.getElementById('reading-theme-title');
     if (tituloTema) {
-        const estiloTxt = (window.estiloSeleccionado || 'Mágico').toUpperCase();
-        tituloTema.textContent = `🔮 Lectura por Duplas (${estiloTxt}): ${tema}`;
+        var estiloTxt = (window.estiloSeleccionado || 'Magico').toUpperCase();
+        tituloTema.textContent = 'Lectura por Duplas (' + estiloTxt + '): ' + tema;
     }
 
-    const idsNombres = ['name-a', 'name-b', 'name-c', 'name-d'];
-    const idsImagenes = ['img-a', 'img-b', 'img-c', 'img-d'];
+    var idsNombres = ['name-a', 'name-b', 'name-c', 'name-d'];
+    var idsImagenes = ['img-a', 'img-b', 'img-c', 'img-d'];
 
-    cartas.forEach((cartaNombre, i) => {
-        const elNombre = document.getElementById(idsNombres[i]);
-        const elImg = document.getElementById(idsImagenes[i]);
+    cartas.forEach(function(cartaNombre, i) {
+        var elNombre = document.getElementById(idsNombres[i]);
+        var elImg = document.getElementById(idsImagenes[i]);
 
         if (elNombre) {
             elNombre.textContent = cartaNombre;
@@ -104,22 +98,22 @@ window.renderizarMesaDuplas = function(cartas, tema) {
         }
 
         if (elImg) {
-            const imgUrl = nombreAImagen(cartaNombre);
-            elImg.innerHTML = `<img src="${imgUrl}" alt="${cartaNombre}" onerror="this.parentElement.innerHTML='🃏'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+            var imgUrl = nombreAImagen(cartaNombre);
+            elImg.innerHTML = '<img src="' + imgUrl + '" alt="' + cartaNombre + '" onerror="this.parentElement.innerHTML=\'CARTA\'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
         }
     });
 };
 
 // ==========================================
-// CONSULTA GRATIS (LANDING PAGE) - SIN AUTH
+// CONSULTA GRATIS (LANDING PAGE)
 // ==========================================
 
 window.consultaGratis = async function() {
-    const input = document.getElementById('input-pregunta-gratis');
-    const pregunta = input ? input.value.trim() : '';
+    var input = document.getElementById('input-pregunta-gratis');
+    var pregunta = input ? input.value.trim() : '';
 
     if (!pregunta) {
-        alert('✨ Escribí tu pregunta para recibir una respuesta');
+        alert('Escribi tu pregunta para recibir una respuesta');
         return;
     }
 
@@ -127,33 +121,25 @@ window.consultaGratis = async function() {
         mostrarPantalla('screen-gratis-result');
     }
 
-    const preguntaMostrar = document.getElementById('gratis-pregunta-mostrar');
+    var preguntaMostrar = document.getElementById('gratis-pregunta-mostrar');
     if (preguntaMostrar) preguntaMostrar.textContent = pregunta;
 
-    const cartas = window.obtenerCuatroCartasAleatorias();
+    var cartas = window.obtenerCuatroCartasAleatorias();
 
-    const contenedorCartas = document.getElementById('gratis-cartas-visuales');
+    var contenedorCartas = document.getElementById('gratis-cartas-visuales');
     if (contenedorCartas) {
-        contenedorCartas.innerHTML = cartas.map(c => `
-            <div class="mini-carta" style="animation:none;">
-                <img src="${nombreAImagen(c)}" alt="${c}" onerror="this.parentElement.innerHTML='🃏'" 
-                     style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
-            </div>
-        `).join('');
+        contenedorCartas.innerHTML = cartas.map(function(c) {
+            return '<div class="mini-carta" style="animation:none;"><img src="' + nombreAImagen(c) + '" alt="' + c + '" onerror="this.parentElement.innerHTML=\'CARTA\'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"></div>';
+        }).join('');
     }
 
-    const contenedorRespuesta = document.getElementById('gratis-respuesta-contenedor');
+    var contenedorRespuesta = document.getElementById('gratis-respuesta-contenedor');
     if (contenedorRespuesta) {
-        contenedorRespuesta.innerHTML = `
-            <div style="text-align:center; padding:30px;">
-                <div class="spinner"></div>
-                <p style="color:#a78bfa; margin-top:15px;">El Oráculo está consultando las cartas...</p>
-            </div>
-        `;
+        contenedorRespuesta.innerHTML = '<div style="text-align:center; padding:30px;"><div class="spinner"></div><p style="color:#a78bfa; margin-top:15px;">El Oraculo esta consultando las cartas...</p></div>';
     }
 
     try {
-        const payload = {
+        var payload = {
             a: cartas[0],
             b: cartas[1],
             c: cartas[2],
@@ -164,64 +150,61 @@ window.consultaGratis = async function() {
             modo: 'gratis'
         };
 
-        console.log("📤 Consulta gratis:", payload);
+        console.log("Consulta gratis:", payload);
 
-        const respuesta = await fetch(window.SERVIDOR_URL, {
+        var respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        const data = await respuesta.json();
+        var data = await respuesta.json();
 
         if (!respuesta.ok) {
             throw new Error(data.error || 'Error en el servidor');
         }
 
-        let texto = data.lectura || data.respuesta || data.texto || '';
-        if (!texto) texto = '<p>El Oráculo no pudo responder en este momento. Intentá de nuevo.</p>';
+        var texto = data.lectura || data.respuesta || data.texto || '';
+        if (!texto) texto = '<p>El Oraculo no pudo responder en este momento. Intenta de nuevo.</p>';
 
         if (contenedorRespuesta) {
             contenedorRespuesta.innerHTML = texto;
         }
 
     } catch (error) {
-        console.error('❌ Error consulta gratis:', error);
+        console.error('Error consulta gratis:', error);
         if (contenedorRespuesta) {
-            contenedorRespuesta.innerHTML = `
-                <div style="color: #ff6b6b; text-align: center; padding: 20px;">
-                    ❌ ${error.message}<br><br>
-                    <small>El servidor puede estar despertando. Probá de nuevo en 30 segundos.</small>
-                </div>
-            `;
+            contenedorRespuesta.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 20px;">' + error.message + '<br><br><small>El servidor puede estar despertando. Proba de nuevo en 30 segundos.</small></div>';
         }
     }
 };
 
 window.nuevaConsultaGratis = function() {
-    const input = document.getElementById('input-pregunta-gratis');
+    var input = document.getElementById('input-pregunta-gratis');
     if (input) input.value = '';
     if (typeof mostrarPantalla === 'function') {
         mostrarPantalla('screen-landing');
     }
 };
 
+window.entrarAppCompleta = function() {
+    if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-portada');
+    }
+};
+
 // ==========================================
-// PETICIÓN AL SERVIDOR (APP COMPLETA) - CON AUTH
+// PETICION AL SERVIDOR (APP COMPLETA)
 // ==========================================
 
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
-    const contenedorTexto = document.getElementById('interpretation-text');
+    var contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
-        contenedorTexto.innerHTML = `
-            <div style="text-align:center; padding:20px; color:#a78bfa;">
-                ✨ Conectando con el Oráculo... Generando lectura por Duplas (${window.estiloSeleccionado || 'filosofico'})...
-            </div>
-        `;
+        contenedorTexto.innerHTML = '<div style="text-align:center; padding:20px; color:#a78bfa;">Conectando con el Oraculo... Generando lectura por Duplas (' + (window.estiloSeleccionado || 'filosofico') + ')...</div>';
     }
 
     try {
-        const payload = {
+        var payload = {
             a: cartas[0],
             b: cartas[1],
             c: cartas[2],
@@ -231,25 +214,23 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
             estilo: window.estiloSeleccionado || 'filosofico'
         };
 
-        console.log("📤 Enviando datos al servidor:", payload);
+        console.log("Enviando datos al servidor:", payload);
 
-        const respuesta = await fetch(window.SERVIDOR_URL, {
+        var respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
-            headers: obtenerHeadersAuth(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
-        const data = await respuesta.json();
-        console.log("📥 Respuesta del servidor:", data);
+        var data = await respuesta.json();
+        console.log("Respuesta del servidor:", data);
 
         if (!respuesta.ok) {
-            throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
+            throw new Error(data.error || data.mensaje || 'Error HTTP ' + respuesta.status);
         }
 
         if (contenedorTexto) {
-            let texto = data.lectura || data.resultado || data.interpretacion ||
-                data.respuesta || data.texto || data.mensaje || data.reading ||
-                (data.choices && data.choices[0]?.message?.content);
+            var texto = data.lectura || data.resultado || data.interpretacion || data.respuesta || data.texto || data.mensaje || data.reading || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content);
 
             if (!texto) {
                 texto = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
@@ -257,34 +238,15 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
 
             contenedorTexto.innerHTML = texto;
 
-            // Registrar tirada en el servidor
-            if (window.tarotiaToken) {
-                try {
-                    await fetch(`${window.API_URL_BASE || window.SERVIDOR_URL.replace('/tirada', '')}/api/tiradas/registrar`, {
-                        method: 'POST',
-                        headers: obtenerHeadersAuth()
-                    });
-                } catch (e) {
-                    // Silencioso
-                }
-            }
-
             if (typeof guardarEnHistorialLocal === 'function') {
-                guardarEnHistorialLocal(tema, 
-                    {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, 
-                    texto);
+                guardarEnHistorialLocal(tema, {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, texto);
             }
         }
 
     } catch (error) {
-        console.error("❌ Error en la llamada al servidor:", error);
+        console.error("Error en la llamada al servidor:", error);
         if (contenedorTexto) {
-            contenedorTexto.innerHTML = `
-                <div style="color: #ff6b6b; text-align: center; padding: 20px;">
-                    ❌ Error: ${error.message}<br><br>
-                    <small>Si el servidor está dormido en Render, esperá 30 segundos y probá de nuevo.</small>
-                </div>
-            `;
+            contenedorTexto.innerHTML = '<div style="color: #ff6b6b; text-align: center; padding: 20px;">Error: ' + error.message + '<br><br><small>Si el servidor esta dormido en Render, espera 30 segundos y proba de nuevo.</small></div>';
         }
     }
 };
@@ -294,19 +256,23 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
 // ==========================================
 
 window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
-    let cartasElegidas = [];
+    var cartasElegidas = [];
 
     if (window.modoFisicoActivo) {
         cartasElegidas = [
-            document.getElementById('fisico-carta1')?.value,
-            document.getElementById('fisico-carta2')?.value,
-            document.getElementById('fisico-carta3')?.value,
-            document.getElementById('fisico-carta4')?.value
+            document.getElementById('fisico-carta1') ? document.getElementById('fisico-carta1').value : '',
+            document.getElementById('fisico-carta2') ? document.getElementById('fisico-carta2').value : '',
+            document.getElementById('fisico-carta3') ? document.getElementById('fisico-carta3').value : '',
+            document.getElementById('fisico-carta4') ? document.getElementById('fisico-carta4').value : ''
         ];
 
-        // Registrar uso de muestra física si no es premium
-        if (window.tarotiaUsuario && window.tarotiaUsuario.plan !== 'Premium') {
-            await window.registrarUsoTiradaFisica();
+        // Setear estilo segun submodo fisico
+        if (window.submodoFisicoActual === 'tarotista_fisico') {
+            window.estiloSeleccionado = 'manual';
+            console.log('Submodo tarotista, estilo = manual');
+        } else {
+            window.estiloSeleccionado = 'magico';
+            console.log('Submodo predictivo, estilo = magico');
         }
     } else {
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
@@ -320,6 +286,6 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
     window.cargarSelectoresFisicos();
 });
