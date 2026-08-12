@@ -17,4 +17,7 @@ const arcanosCompleto = [
     "Sota de Oros", "Caballero de Oros", "Reina de Oros", "Rey de Oros"
 ];
 
-const SERVIDOR_URL = "https://tarot-613b.onrender.com/tirada";
+// Usa la URL global del proyecto, no una variable local
+window.SERVIDOR_URL_ARCANOS = (typeof window.SERVIDOR_URL !== 'undefined') 
+    ? window.SERVIDOR_URL 
+    : 'https://tarot-613b.onrender.com/tirada';
