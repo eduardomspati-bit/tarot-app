@@ -1,7 +1,7 @@
 // ==========================================
 // NAVEGACIÓN Y CONTROL DE FLUJO
 // ==========================================
-console.log("✅ [navigation.js] Cargado - versión corregida v2");
+console.log("✅ [navigation.js] Cargado - versión v3 localStorage");
 
 // Variable global para capturar la pregunta personalizada si la hay
 window.preguntaCustomSeleccionada = "";
@@ -30,7 +30,7 @@ window.seleccionarEstiloAutomatico = function(estilo) {
     window.modoFisicoActivo = false;
     window.preguntaCustomSeleccionada = "";
     window.cartasFisicoSeleccionadas = null;
-    window.submodoFisicoActual = null;
+    localStorage.removeItem('tarotia_submodo_fisico');
 
     console.log(`✨ Modo Automático Activado: ${estilo}`);
     window.mostrarPantalla('screen-selector');
@@ -44,11 +44,13 @@ window.abrirModuloProfesional = function() {
 // 3. Abrir Mazo Físico desde Módulo Profesional
 window.abrirSeleccionFisico = function(submodo) {
     window.modoFisicoActivo = true;
-    window.submodoFisicoActual = submodo; // 'predictivo_fisico' o 'tarotista_fisico'
+    window.submodoFisicoActual = submodo;
+    // GUARDAR en localStorage para que no se pierda por caché/recarga
+    localStorage.setItem('tarotia_submodo_fisico', submodo);
     window.cartasFisicoSeleccionadas = null;
     window.preguntaCustomSeleccionada = "";
 
-    console.log("🔧 Submodo físico activado:", submodo);
+    console.log("🔧 Submodo físico activado:", submodo, "| Guardado en localStorage");
 
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
@@ -77,27 +79,35 @@ window.irAlEjeFisico = function() {
 
     // Guardar las cartas en variable global ANTES de cambiar de pantalla
     window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
-    console.log("🃏 Cartas físicas guardadas:", window.cartasFisicoSeleccionadas);
-    console.log("🔧 Submodo actual:", window.submodoFisicoActual);
+    console.log("🃏 Cartas guardadas:", c1, c2, c3, c4);
+
+    // Recuperar submodo de localStorage como respaldo (por si window se perdió)
+    const submodo = window.submodoFisicoActual || localStorage.getItem('tarotia_submodo_fisico');
+    console.log("🔧 Submodo detectado:", submodo);
 
     // ==========================================
     // MODO ESTRUCTURAL/TÉCNICO: va DIRECTO al resultado
     // ==========================================
-    if (window.submodoFisicoActual === 'tarotista_fisico') {
-        console.log("➡️ Modo ESTRUCTURAL detectado → yendo DIRECTO a resultado");
+    if (submodo === 'tarotista_fisico') {
+        console.log("➡️ Modo ESTRUCTURAL → yendo DIRECTO a resultado");
         window.mostrarPantalla('screen-result');
-        if (typeof window.procesarTiradaEstructural === 'function') {
-            window.procesarTiradaEstructural();
-        } else {
-            alert("⚠️ Error: no se cargó el módulo estructural (app.js no tiene procesarTiradaEstructural).");
-        }
+        
+        // Pequeña espera para que el DOM de screen-result esté listo
+        setTimeout(() => {
+            if (typeof window.procesarTiradaEstructural === 'function') {
+                window.procesarTiradaEstructural();
+            } else {
+                document.getElementById('interpretation-text').innerHTML = 
+                    '<p style="color:#ff6b6b;">⚠️ Error: no se cargó procesarTiradaEstructural. Verificá que app.js esté actualizado.</p>';
+            }
+        }, 100);
         return;
     }
 
     // ==========================================
-    // MODO PREDICTIVO: va a elegir tema como siempre
+    // MODO PREDICTIVO (o cualquier otro): va a elegir tema
     // ==========================================
-    console.log("➡️ Modo PREDICTIVO detectado → yendo a selector de temas");
+    console.log("➡️ Modo PREDICTIVO → yendo a selector de temas");
     window.mostrarPantalla('screen-selector');
 };
 
@@ -135,6 +145,7 @@ window.volverAPortada = function() {
     window.submodoFisicoActual = null;
     window.cartasFisicoSeleccionadas = null;
     window.preguntaCustomSeleccionada = "";
+    localStorage.removeItem('tarotia_submodo_fisico');
     window.mostrarPantalla('screen-portada');
 };
 
