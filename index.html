@@ -1,11 +1,10 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TarotIA - Descubre tu Futuro</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
-    <link rel="stylesheet" href="./css/estilos.css?v=5">
+    <link rel="stylesheet" href="./css/estilos.css">
     <style>
         .landing-bg {
             position: fixed;
@@ -196,7 +195,33 @@
             margin-bottom: 10px;
         }
         .screen.hidden { display: none !important; }
+        .auth-box {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .auth-input:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+        .auth-input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
     </style>
+<base target="_blank">
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -262,6 +287,40 @@
         </div>
     </div>
 
+    <!-- ========== PANTALLA DE AUTH (LOGIN/REGISTRO) ========== -->
+    <div id="screen-auth" class="screen hidden">
+        <div class="landing-content">
+            <div class="floating">
+                <div class="mini-cartas" style="margin-bottom: 20px;">
+                    <div class="mini-carta">🌙</div>
+                    <div class="mini-carta">⭐</div>
+                    <div class="mini-carta">☀️</div>
+                    <div class="mini-carta">🔮</div>
+                </div>
+            </div>
+            <h2 style="color: #ffd700; margin-bottom: 5px;">✨ Bienvenido a TarotIA</h2>
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 30px;">
+                Ingresá tu correo para acceder al Tarot Completo
+            </p>
+
+            <div class="auth-box consulta-gratis-box">
+                <input type="text" id="auth-nombre" class="auth-input" placeholder="Tu nombre (opcional)">
+                <input type="email" id="auth-email" class="auth-input" placeholder="tu@email.com"
+                       onkeypress="if(event.key==='Enter') iniciarSesion()">
+                <button class="btn-consulta-gratis" onclick="iniciarSesion()" style="width: 100%;">
+                    🔮 Entrar al Tarot Completo
+                </button>
+                <p id="auth-error" style="color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; display: none;"></p>
+            </div>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <button onclick="volverALanding()" class="btn-entrar-app">
+                    ← Volver a Consulta Gratis
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========== PORTADA PRINCIPAL (APP COMPLETA) ========== -->
     <div id="screen-portada" class="screen hidden">
         <button class="btn-carta-diaria" onclick="if(typeof tirarCartaDiaria==='function') tirarCartaDiaria();">
@@ -303,7 +362,7 @@
             📜 Ver Mis Lecturas Anteriores
         </button>
 
-        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo">
+        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--muted-text); width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem;">
             📧 Vincular mi Correo Electrónico
         </button>
     </div>
@@ -345,7 +404,7 @@
             </div>
         </div>
 
-        <button id="btn-confirmar-fisico" class="btn-carta-diaria" onclick="irAlEjeFisico()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #111; font-weight: bold; width: 100%;">
+        <button class="btn-carta-diaria" onclick="irAlEjeFisico()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #111; font-weight: bold; width: 100%;">
             Confirmar Duplas y Elegir Eje ✨
         </button>
 
@@ -443,6 +502,7 @@
                 <div class="opcion-info">
                     <h3>Mazo Físico Predictivo</h3>
                     <p>Carga la Dupla 1 y Dupla 2 de tu mazo real para una lectura fluida.</p>
+                    <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">5 Muestras</span>
                 </div>
             </div>
 
@@ -486,38 +546,45 @@
 
 </div>
 
-<!-- Carga de Scripts (SOLO UNA VEZ) -->
-<!-- Cache-busting v5: cambiar el número cada deploy para forzar recarga -->
-<script src="js/config.js?v=5"></script>
-<script src="js/arcanos.js?v=5"></script>
-<script src="js/duplas_db.js?v=5"></script>
-<script src="js/history.js?v=5"></script>
-<script src="js/voice.js?v=5"></script>
-<script src="js/access.js?v=5"></script>
-<script src="js/app.js?v=6"></script>
+<!-- Carga de Scripts con cache-busting -->
+<script src="js/arcanos.js?v=7"></script>
+<script src="js/config.js?v=7"></script>
+<script src="js/auth.js?v=7"></script>
+<script src="js/access.js?v=7"></script>
+<script src="js/voice.js?v=7"></script>
+<script src="js/history.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
+
+<!-- NAVEGACIÓN INLINE v7 - Flujo corregido -->
 <script>
-// NAVEGACIÓN INLINE - v5 (no depende de archivo externo)
 window.preguntaCustomSeleccionada = "";
+
 window.mostrarPantalla = function(id) {
     document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
     const d = document.getElementById(id);
     if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
 };
+
 window.seleccionarEstiloAutomatico = function(estilo){
     window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
     window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
     window.submodoFisicoActual=null; localStorage.removeItem('tarotia_submodo_fisico');
     window.mostrarPantalla('screen-selector');
 };
+
 window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
+
+// >>> FUNCIÓN CLAVE: abre selección de cartas físicas <<<
 window.abrirSeleccionFisico = function(submodo){
     console.log(">>> abrirSeleccionFisico:", submodo);
     window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
     localStorage.setItem('tarotia_submodo_fisico',submodo);
     window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
     if(typeof window.cargarSelectoresFisicos==='function') window.cargarSelectoresFisicos();
-    window.mostrarPantalla('screen-fisico'); // <<< VA A SELECCIONAR CARTAS
+    window.mostrarPantalla('screen-fisico');
 };
+
+// >>> FUNCIÓN CLAVE: confirma cartas y decide a dónde ir <<<
 window.irAlEjeFisico = function(){
     const c1=document.getElementById('fisico-carta1')?.value;
     const c2=document.getElementById('fisico-carta2')?.value;
@@ -527,13 +594,16 @@ window.irAlEjeFisico = function(){
     if(new Set([c1,c2,c3,c4]).size!==4){alert("⚠️ No repetir cartas.");return;}
     window.cartasFisicoSeleccionadas=[c1,c2,c3,c4];
     const submodo=window.submodoFisicoActual||localStorage.getItem('tarotia_submodo_fisico');
+    // ESTRUCTURAL: DIRECTO A RESULTADO
     if(submodo==='tarotista_fisico'){
         window.mostrarPantalla('screen-result');
         setTimeout(()=>{ if(typeof window.procesarTiradaEstructural==='function') window.procesarTiradaEstructural(); },150);
         return;
     }
+    // PREDICTIVO: va a elegir tema
     window.mostrarPantalla('screen-selector');
 };
+
 window.abrirPantallaPregunta=function(){document.getElementById('texto-pregunta-usuario').value="";window.mostrarPantalla('screen-pregunta');};
 window.confirmarPreguntaYEjecutar=function(){
     window.preguntaCustomSeleccionada=document.getElementById('texto-pregunta-usuario').value.trim();
@@ -563,7 +633,11 @@ window.tirarCartaDiaria=function(){
     const mazo=window.obtenerMazoActivo?window.obtenerMazoActivo():["El Loco","El Mago","La Sacerdotisa"];
     alert("🔮 Carta del Día: "+mazo[Math.floor(Math.random()*mazo.length)]);
 };
-console.log("✅ Navegación inline cargada");
+window.volverALanding=function(){
+    window.mostrarPantalla('screen-landing');
+};
+console.log("✅ Navegación inline v7 cargada");
 </script>
+
 </body>
 </html>
