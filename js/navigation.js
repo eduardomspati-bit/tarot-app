@@ -1,6 +1,7 @@
 // ==========================================
 // NAVEGACIÓN Y CONTROL DE FLUJO
 // ==========================================
+console.log("✅ [navigation.js] Cargado - versión corregida v2");
 
 // Variable global para capturar la pregunta personalizada si la hay
 window.preguntaCustomSeleccionada = "";
@@ -47,6 +48,8 @@ window.abrirSeleccionFisico = function(submodo) {
     window.cartasFisicoSeleccionadas = null;
     window.preguntaCustomSeleccionada = "";
 
+    console.log("🔧 Submodo físico activado:", submodo);
+
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
     }
@@ -75,16 +78,18 @@ window.irAlEjeFisico = function() {
     // Guardar las cartas en variable global ANTES de cambiar de pantalla
     window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
     console.log("🃏 Cartas físicas guardadas:", window.cartasFisicoSeleccionadas);
+    console.log("🔧 Submodo actual:", window.submodoFisicoActual);
 
     // ==========================================
     // MODO ESTRUCTURAL/TÉCNICO: va DIRECTO al resultado
     // ==========================================
     if (window.submodoFisicoActual === 'tarotista_fisico') {
+        console.log("➡️ Modo ESTRUCTURAL detectado → yendo DIRECTO a resultado");
         window.mostrarPantalla('screen-result');
         if (typeof window.procesarTiradaEstructural === 'function') {
             window.procesarTiradaEstructural();
         } else {
-            alert("⚠️ Error: no se cargó el módulo estructural.");
+            alert("⚠️ Error: no se cargó el módulo estructural (app.js no tiene procesarTiradaEstructural).");
         }
         return;
     }
@@ -92,6 +97,7 @@ window.irAlEjeFisico = function() {
     // ==========================================
     // MODO PREDICTIVO: va a elegir tema como siempre
     // ==========================================
+    console.log("➡️ Modo PREDICTIVO detectado → yendo a selector de temas");
     window.mostrarPantalla('screen-selector');
 };
 
