@@ -1,7 +1,7 @@
 // ==========================================
 // NAVEGACIÓN Y CONTROL DE FLUJO
 // ==========================================
-console.log("✅ [navigation.js] Cargado - versión v4 integrada");
+console.log("✅ [navigation.js] Cargado - versión v5 corregida");
 
 // Variable global para capturar la pregunta personalizada si la hay
 window.preguntaCustomSeleccionada = "";
@@ -20,7 +20,7 @@ window.mostrarPantalla = function(idPantalla) {
         destino.classList.remove('hidden');
         window.scrollTo(0, 0);
     } else {
-        console.error(`❌ No se encontró la pantalla: ${idPantalla}`);
+        console.error("❌ No se encontró la pantalla: " + idPantalla);
     }
 };
 
@@ -35,7 +35,7 @@ window.seleccionarEstiloAutomatico = function(estilo) {
     window.submodoFisicoActual = null;
     localStorage.removeItem('tarotia_submodo_fisico');
 
-    console.log(`✨ Modo Automático Activado: ${estilo}`);
+    console.log("✨ Modo Automático Activado: " + estilo);
     window.mostrarPantalla('screen-selector');
 };
 
@@ -47,23 +47,10 @@ window.abrirModuloProfesional = function() {
 };
 
 // ==========================================
-// 3. Abrir Mazo Físico desde Módulo Profesional (con verificación de acceso)
+// 3. Abrir Mazo Físico desde Módulo Profesional
 // ==========================================
 window.abrirSeleccionFisico = function(submodo) {
-    // Verificar acceso (premium o muestras disponibles)
-    const tieneAcceso = window.esUsuarioPremium || (typeof obtenerMuestrasFisicasRestantes === 'function' && obtenerMuestrasFisicasRestantes() > 0);
-
-    if (!tieneAcceso) {
-        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
-            // Reintentar después de canjear
-            if (window.esUsuarioPremium) {
-                window.abrirSeleccionFisico(submodo);
-            }
-        }
-        return;
-    }
+    console.log(">>> abrirSeleccionFisico llamado con submodo:", submodo);
 
     window.modoFisicoActivo = true;
     window.submodoFisicoActual = submodo;
@@ -71,23 +58,13 @@ window.abrirSeleccionFisico = function(submodo) {
     window.cartasFisicoSeleccionadas = null;
     window.preguntaCustomSeleccionada = "";
 
-    console.log("🔧 Submodo físico activado:", submodo, "| Guardado en localStorage");
-
-    // Actualizar texto del botón según el submodo
-    const btnConfirmar = document.getElementById('btn-confirmar-fisico');
-    if (btnConfirmar) {
-        if (submodo === 'tarotista_fisico') {
-            btnConfirmar.innerHTML = '🔬 Confirmar Duplas y Ver Análisis Técnico';
-        } else {
-            btnConfirmar.innerHTML = '✨ Confirmar Duplas y Elegir Eje';
-        }
-    }
-
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
     }
 
+    // >>> ESTA ES LA LÍNEA CLAVE: va a screen-fisico (selección de cartas)
     window.mostrarPantalla('screen-fisico');
+    console.log(">>> Pantalla cambiada a screen-fisico");
 };
 
 // ==========================================
@@ -110,34 +87,23 @@ window.irAlEjeFisico = function() {
         return;
     }
 
-    // Guardar las cartas en variable global ANTES de cambiar de pantalla
     window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
-    console.log("🃏 Cartas guardadas:", c1, c2, c3, c4);
-
-    // Registrar uso de muestra (si no es premium)
-    if (typeof registrarUsoTiradaFisica === 'function' && !window.esUsuarioPremium) {
-        registrarUsoTiradaFisica();
-    }
-
-    // Recuperar submodo de localStorage como respaldo
     const submodo = window.submodoFisicoActual || localStorage.getItem('tarotia_submodo_fisico');
-    console.log("🔧 Submodo detectado:", submodo);
 
     // ==========================================
     // MODO ESTRUCTURAL/TÉCNICO: va DIRECTO al resultado (SIN elegir tema)
     // ==========================================
     if (submodo === 'tarotista_fisico') {
-        console.log("➡️ Modo ESTRUCTURAL → yendo DIRECTO a resultado (sin selector de temas)");
+        console.log(">>> Modo ESTRUCTURAL → yendo DIRECTO a resultado");
         window.mostrarPantalla('screen-result');
 
-        // Pequeña espera para que el DOM de screen-result esté listo
         setTimeout(() => {
             if (typeof window.procesarTiradaEstructural === 'function') {
                 window.procesarTiradaEstructural();
             } else {
                 const txt = document.getElementById('interpretation-text');
                 if (txt) {
-                    txt.innerHTML = '<p style="color:#ff6b6b;">⚠️ Error: no se cargó procesarTiradaEstructural. Verificá que app.js esté actualizado.</p>';
+                    txt.innerHTML = '<p style="color:#ff6b6b;">⚠️ Error: no se cargó procesarTiradaEstructural.</p>';
                 }
             }
         }, 150);
@@ -145,9 +111,9 @@ window.irAlEjeFisico = function() {
     }
 
     // ==========================================
-    // MODO PREDICTIVO (o cualquier otro): va a elegir tema
+    // MODO PREDICTIVO: va a elegir tema
     // ==========================================
-    console.log("➡️ Modo PREDICTIVO → yendo a selector de temas");
+    console.log(">>> Modo PREDICTIVO → yendo a selector de temas");
     window.mostrarPantalla('screen-selector');
 };
 
@@ -217,7 +183,7 @@ window.abrirHistorial = function() {
 window.pedirEmailAlUsuario = function() {
     const email = prompt("📧 Ingresá tu correo electrónico para vincular tu cuenta:");
     if (email && email.includes('@')) {
-        alert(`✅ Correo ${email} vinculado correctamente (modo local).`);
+        alert("✅ Correo " + email + " vinculado correctamente (modo local).");
         localStorage.setItem('tarotia_email_usuario', email);
     } else if (email) {
         alert("⚠️ Por favor ingresá un correo válido.");
@@ -233,5 +199,5 @@ window.tirarCartaDiaria = function() {
         "La Torre", "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo"
     ];
     const carta = mazo[Math.floor(Math.random() * mazo.length)];
-    alert(`🔮 Tu Carta del Día es: ${carta}\n\nReflexioná sobre su mensaje durante el día.`);
+    alert("🔮 Tu Carta del Día es: " + carta + "\n\nReflexioná sobre su mensaje durante el día.");
 };
