@@ -494,7 +494,76 @@
 <script src="js/history.js?v=5"></script>
 <script src="js/voice.js?v=5"></script>
 <script src="js/access.js?v=5"></script>
-<script src="js/navigation.js?v=6"></script>
 <script src="js/app.js?v=5"></script>
+<script>
+// NAVEGACIÓN INLINE - v5 (no depende de archivo externo)
+window.preguntaCustomSeleccionada = "";
+window.mostrarPantalla = function(id) {
+    document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
+    const d = document.getElementById(id);
+    if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
+};
+window.seleccionarEstiloAutomatico = function(estilo){
+    window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
+    window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
+    window.submodoFisicoActual=null; localStorage.removeItem('tarotia_submodo_fisico');
+    window.mostrarPantalla('screen-selector');
+};
+window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
+window.abrirSeleccionFisico = function(submodo){
+    console.log(">>> abrirSeleccionFisico:", submodo);
+    window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
+    localStorage.setItem('tarotia_submodo_fisico',submodo);
+    window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
+    if(typeof window.cargarSelectoresFisicos==='function') window.cargarSelectoresFisicos();
+    window.mostrarPantalla('screen-fisico'); // <<< VA A SELECCIONAR CARTAS
+};
+window.irAlEjeFisico = function(){
+    const c1=document.getElementById('fisico-carta1')?.value;
+    const c2=document.getElementById('fisico-carta2')?.value;
+    const c3=document.getElementById('fisico-carta3')?.value;
+    const c4=document.getElementById('fisico-carta4')?.value;
+    if(!c1||!c2||!c3||!c4){alert("⚠️ Seleccioná las 4 cartas.");return;}
+    if(new Set([c1,c2,c3,c4]).size!==4){alert("⚠️ No repetir cartas.");return;}
+    window.cartasFisicoSeleccionadas=[c1,c2,c3,c4];
+    const submodo=window.submodoFisicoActual||localStorage.getItem('tarotia_submodo_fisico');
+    if(submodo==='tarotista_fisico'){
+        window.mostrarPantalla('screen-result');
+        setTimeout(()=>{ if(typeof window.procesarTiradaEstructural==='function') window.procesarTiradaEstructural(); },150);
+        return;
+    }
+    window.mostrarPantalla('screen-selector');
+};
+window.abrirPantallaPregunta=function(){document.getElementById('texto-pregunta-usuario').value="";window.mostrarPantalla('screen-pregunta');};
+window.confirmarPreguntaYEjecutar=function(){
+    window.preguntaCustomSeleccionada=document.getElementById('texto-pregunta-usuario').value.trim();
+    if(!window.preguntaCustomSeleccionada){alert("⚠️ Escribí tu pregunta.");return;}
+    window.ejecutarLecturaSegunModo('Pregunta Específica');
+};
+window.ejecutarLecturaSegunModo=function(tema){
+    if(typeof window.procesarTiradaCompleta==='function') window.procesarTiradaCompleta(tema,window.preguntaCustomSeleccionada);
+};
+window.volverAPortada=function(){
+    window.modoFisicoActivo=false;window.submodoFisicoActual=null;
+    window.cartasFisicoSeleccionadas=null;window.preguntaCustomSeleccionada="";
+    localStorage.removeItem('tarotia_submodo_fisico');window.mostrarPantalla('screen-portada');
+};
+window.volverInicio=function(){window.volverAPortada();};
+window.abrirGuiaLectura=function(){window.mostrarPantalla('screen-guia-lectura');};
+window.volverAlModuloProfesional=function(){window.mostrarPantalla('screen-modulo-profesional');};
+window.abrirHistorial=function(){
+    if(typeof window.cargarHistorial==='function')window.cargarHistorial();
+    window.mostrarPantalla('screen-historial');
+};
+window.pedirEmailAlUsuario=function(){
+    const email=prompt("📧 Ingresá tu correo:");
+    if(email&&email.includes('@')){alert("✅ Correo vinculado: "+email);localStorage.setItem('tarotia_email_usuario',email);}
+};
+window.tirarCartaDiaria=function(){
+    const mazo=window.obtenerMazoActivo?window.obtenerMazoActivo():["El Loco","El Mago","La Sacerdotisa"];
+    alert("🔮 Carta del Día: "+mazo[Math.floor(Math.random()*mazo.length)]);
+};
+console.log("✅ Navegación inline cargada");
+</script>
 </body>
 </html>
