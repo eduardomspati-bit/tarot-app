@@ -8,24 +8,29 @@
 
 window.obtenerCuatroCartasAleatorias = function() {
     const mazo = window.obtenerMazoActivo ? window.obtenerMazoActivo() : [];
-    if (!mazo.length) {
-        console.error("❌ No se pudo obtener el mazo. Verificá que arcanos.js esté cargado.");
+    console.log("[app.js] obtenerCuatroCartasAleatorias - mazo length:", mazo ? mazo.length : 0);
+
+    if (!mazo || !mazo.length) {
+        console.error("❌ [app.js] No se pudo obtener el mazo. Verificá que arcanos.js esté cargado.");
         return [];
     }
+
     const mezclado = [...mazo];
     for (let i = mezclado.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [mezclado[i], mezclado[j]] = [mezclado[j], mezclado[i]];
     }
-    return mezclado.slice(0, 4);
+    const resultado = mezclado.slice(0, 4);
+    console.log("[app.js] Cartas aleatorias:", resultado);
+    return resultado;
 };
 
 window.cargarSelectoresFisicos = function() {
     const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
     const mazo = window.obtenerMazoActivo ? window.obtenerMazoActivo() : [];
 
-    if (!mazo.length) {
-        console.warn("⚠️ Mazo no disponible para cargar selectores.");
+    if (!mazo || !mazo.length) {
+        console.warn("⚠️ [app.js] Mazo no disponible para cargar selectores.");
         return;
     }
 
@@ -36,27 +41,39 @@ window.cargarSelectoresFisicos = function() {
         select.innerHTML = `<option value="">-- Selecciona Carta ${index + 1} --</option>`;
 
         mazo.forEach(carta => {
-            const nombreCarta = typeof carta === 'string' ? carta : (carta.nombre || carta.name);
+            const nombreCarta = typeof carta === 'string' ? carta : (carta.nombre || carta.name || String(carta));
             const option = document.createElement('option');
             option.value = nombreCarta;
             option.textContent = nombreCarta;
             select.appendChild(option);
         });
     });
+    console.log("[app.js] Selectores físicos cargados con", mazo.length, "cartas");
 };
 
 function nombreAImagen(nombre) {
-    if (!nombre || typeof nombre !== 'string') return 'cartas/desconocida.jpg';
+    if (!nombre || typeof nombre !== 'string') {
+        console.warn("[app.js] nombreAImagen recibió valor inválido:", nombre);
+        return 'cartas/desconocida.jpg';
+    }
     const slug = nombre.toLowerCase()
         .replace(/ /g, '_')
         .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
         .replace(/ó/g, 'o').replace(/ú/g, 'u').replace(/ñ/g, 'n')
         .replace(/[^a-z0-9_]/g, '');
+    if (!slug) {
+        console.warn("[app.js] slug vacío para nombre:", nombre);
+        return 'cartas/desconocida.jpg';
+    }
     return `cartas/${slug}.jpg`;
 }
 
 window.renderizarMesaDuplas = function(cartas, tema) {
-    if (!cartas || cartas.length < 4) return;
+    console.log("[app.js] renderizarMesaDuplas:", cartas, "tema:", tema);
+    if (!cartas || cartas.length < 4) {
+        console.error("❌ [app.js] Cartas insuficientes para renderizar:", cartas);
+        return;
+    }
 
     const tituloTema = document.getElementById('reading-theme-title');
     if (tituloTema) {
@@ -73,13 +90,13 @@ window.renderizarMesaDuplas = function(cartas, tema) {
         const elImg = document.getElementById(idsImagenes[i]);
 
         if (elNombre) {
-            elNombre.textContent = cartaNombre;
+            elNombre.textContent = cartaNombre || '???';
             elNombre.style.display = 'block';
         }
 
         if (elImg) {
             const imgUrl = nombreAImagen(cartaNombre);
-            elImg.innerHTML = `<img src="${imgUrl}" alt="${cartaNombre}" onerror="this.parentElement.innerHTML='🃏'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+            elImg.innerHTML = `<img src="${imgUrl}" alt="${cartaNombre || 'carta'}" onerror="this.parentElement.innerHTML='🃏'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
         }
     });
 };
@@ -105,7 +122,7 @@ window.consultaGratis = async function() {
     if (preguntaMostrar) preguntaMostrar.textContent = pregunta;
 
     const cartas = window.obtenerCuatroCartasAleatorias();
-    if (!cartas.length) {
+    if (!cartas || cartas.length < 4) {
         alert('⚠️ Error al cargar el mazo. Verificá que arcanos.js esté cargado.');
         return;
     }
@@ -132,17 +149,14 @@ window.consultaGratis = async function() {
 
     try {
         const payload = {
-            a: cartas[0],
-            b: cartas[1],
-            c: cartas[2],
-            d: cartas[3],
+            a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3],
             tema: 'Consulta Gratis',
             pregunta: pregunta,
             estilo: 'magico',
             modo: 'gratis'
         };
 
-        console.log("📤 Consulta gratis:", payload);
+        console.log("[app.js] 📤 Consulta gratis:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -164,7 +178,7 @@ window.consultaGratis = async function() {
         }
 
     } catch (error) {
-        console.error('❌ Error consulta gratis:', error);
+        console.error('❌ [app.js] Error consulta gratis:', error);
         if (contenedorRespuesta) {
             contenedorRespuesta.innerHTML = `
                 <div style="color: #ff6b6b; text-align: center; padding: 20px;">
@@ -195,6 +209,8 @@ window.entrarAppCompleta = function() {
 // ==========================================
 
 window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
+    console.log("[app.js] enviarPeticionRender recibió cartas:", cartas);
+
     const contenedorTexto = document.getElementById('interpretation-text');
     if (contenedorTexto) {
         contenedorTexto.innerHTML = `
@@ -206,16 +222,13 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
 
     try {
         const payload = {
-            a: cartas[0],
-            b: cartas[1],
-            c: cartas[2],
-            d: cartas[3],
+            a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3],
             tema: tema || 'General',
             pregunta: preguntaCustom || "",
             estilo: window.estiloSeleccionado || 'filosofico'
         };
 
-        console.log("📤 Enviando datos al servidor:", payload);
+        console.log("[app.js] 📤 Enviando datos al servidor:", payload);
 
         const respuesta = await fetch(window.SERVIDOR_URL, {
             method: 'POST',
@@ -224,37 +237,26 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         });
 
         const data = await respuesta.json();
-        console.log("📥 Respuesta del servidor:", data);
+        console.log("[app.js] 📥 Respuesta del servidor:", data);
 
         if (!respuesta.ok) {
             throw new Error(data.error || data.mensaje || `Error HTTP ${respuesta.status}`);
         }
 
         if (contenedorTexto) {
-            let texto = data.lectura ||
-                data.resultado ||
-                data.interpretacion ||
-                data.respuesta ||
-                data.texto ||
-                data.mensaje ||
-                data.reading ||
-                (data.choices && data.choices[0]?.message?.content);
-
+            let texto = data.lectura || data.resultado || data.interpretacion || data.respuesta || data.texto || data.mensaje || data.reading || (data.choices && data.choices[0]?.message?.content);
             if (!texto) {
                 texto = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
             }
-
             contenedorTexto.innerHTML = texto;
 
             if (typeof guardarEnHistorialLocal === 'function') {
-                guardarEnHistorialLocal(tema, 
-                    {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, 
-                    texto);
+                guardarEnHistorialLocal(tema, {a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3]}, texto);
             }
         }
 
     } catch (error) {
-        console.error("❌ Error en la llamada al servidor:", error);
+        console.error("❌ [app.js] Error en la llamada al servidor:", error);
         if (contenedorTexto) {
             contenedorTexto.innerHTML = `
                 <div style="color: #ff6b6b; text-align: center; padding: 20px;">
@@ -274,31 +276,27 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     let cartasElegidas = [];
 
     if (window.modoFisicoActivo) {
-        // Prioridad 1: usar cartas guardadas al confirmar
         if (window.cartasFisicoSeleccionadas && window.cartasFisicoSeleccionadas.length === 4
             && window.cartasFisicoSeleccionadas.every(c => c && c.trim() !== '')) {
-
             cartasElegidas = window.cartasFisicoSeleccionadas;
-            console.log("🃏 Usando cartas físicas guardadas:", cartasElegidas);
-
+            console.log("[app.js] 🃏 Usando cartas físicas guardadas:", cartasElegidas);
         } else {
-            // Fallback: leer del DOM
             cartasElegidas = [
                 document.getElementById('fisico-carta1')?.value,
                 document.getElementById('fisico-carta2')?.value,
                 document.getElementById('fisico-carta3')?.value,
                 document.getElementById('fisico-carta4')?.value
             ];
-            console.log("🃏 Leyendo cartas del DOM (fallback):", cartasElegidas);
+            console.log("[app.js] 🃏 Leyendo cartas del DOM (fallback):", cartasElegidas);
         }
     } else {
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
+        console.log("[app.js] 🃏 Cartas aleatorias obtenidas:", cartasElegidas);
     }
 
     // Validación de seguridad
-    if (!cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
-        console.error("❌ Cartas incompletas:", cartasElegidas);
-
+    if (!cartasElegidas || cartasElegidas.length < 4 || !cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
+        console.error("❌ [app.js] Cartas incompletas:", cartasElegidas);
         if (window.modoFisicoActivo) {
             alert("⚠️ No se detectaron las cartas físicas. Volvé a seleccionarlas.");
             if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-fisico');
@@ -322,15 +320,15 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
 
 window.procesarTiradaEstructural = async function() {
     const cartas = window.cartasFisicoSeleccionadas;
+    console.log("[app.js] procesarTiradaEstructural cartas:", cartas);
 
-    if (!cartas || cartas.length !== 4) {
-        alert("⚠️ Error: no se encontraron las cartas seleccionadas.");
+    if (!cartas || cartas.length !== 4 || cartas.some(c => !c || !c.trim())) {
+        alert("⚠️ Error: no se encontraron las cartas seleccionadas correctamente.");
         return;
     }
 
     const [c1, c2, c3, c4] = cartas;
 
-    // Renderizar las cartas en la mesa
     window.renderizarMesaDuplas(cartas, 'Análisis Estructural');
 
     const contenedorTexto = document.getElementById('interpretation-text');
@@ -345,8 +343,8 @@ window.procesarTiradaEstructural = async function() {
 
     try {
         const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
+        console.log("[app.js] Consultando duplas en:", API_BASE + '/api/duplas/buscar');
 
-        // Consultar ambas duplas al servidor (orden IMPORTA)
         const [resp1, resp2] = await Promise.all([
             fetch(`${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`),
             fetch(`${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c3)}&b=${encodeURIComponent(c4)}`)
@@ -354,10 +352,11 @@ window.procesarTiradaEstructural = async function() {
 
         const data1 = await resp1.json();
         const data2 = await resp2.json();
+        console.log("[app.js] Respuesta dupla 1:", data1);
+        console.log("[app.js] Respuesta dupla 2:", data2);
 
         let html = '';
 
-        // Dupla 1
         html += `<div class="reading-section resaltado-místico">`;
         html += `<h3>🔮 Dupla 1: ${c1} + ${c2}</h3>`;
         if (data1.encontrada) {
@@ -366,7 +365,6 @@ window.procesarTiradaEstructural = async function() {
                 html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${data1.keywords.join(', ')}</p>`;
             }
         } else {
-            // Fallback: buscar en base local
             const local1 = window.buscarDuplaLocal ? window.buscarDuplaLocal(c1, c2) : { encontrada: false };
             if (local1.encontrada) {
                 html += local1.significado;
@@ -379,7 +377,6 @@ window.procesarTiradaEstructural = async function() {
         }
         html += `</div>`;
 
-        // Dupla 2
         html += `<div class="reading-section resaltado-místico">`;
         html += `<h3>🔮 Dupla 2: ${c3} + ${c4}</h3>`;
         if (data2.encontrada) {
@@ -388,7 +385,6 @@ window.procesarTiradaEstructural = async function() {
                 html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${data2.keywords.join(', ')}</p>`;
             }
         } else {
-            // Fallback: buscar en base local
             const local2 = window.buscarDuplaLocal ? window.buscarDuplaLocal(c3, c4) : { encontrada: false };
             if (local2.encontrada) {
                 html += local2.significado;
@@ -403,18 +399,13 @@ window.procesarTiradaEstructural = async function() {
 
         if (contenedorTexto) contenedorTexto.innerHTML = html;
 
-        // Guardar en historial local
         if (typeof guardarEnHistorialLocal === 'function') {
             const textoResumen = `Dupla 1 (${c1}+${c2}): ${data1.encontrada ? 'OK' : 'Sin datos'} | Dupla 2 (${c3}+${c4}): ${data2.encontrada ? 'OK' : 'Sin datos'}`;
-            guardarEnHistorialLocal('Análisis Estructural', 
-                {a: c1, b: c2, c: c3, d: c4}, 
-                textoResumen);
+            guardarEnHistorialLocal('Análisis Estructural', {a: c1, b: c2, c: c3, d: c4}, textoResumen);
         }
 
     } catch (error) {
-        console.error("❌ Error al consultar duplas:", error);
-
-        // Fallback total: usar base local
+        console.error("❌ [app.js] Error al consultar duplas:", error);
         if (contenedorTexto && window.buscarDuplaLocal) {
             let html = '';
             const local1 = window.buscarDuplaLocal(c1, c2);
@@ -442,6 +433,7 @@ window.procesarTiradaEstructural = async function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("[app.js] DOM cargado. Cargando selectores físicos...");
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
     }
