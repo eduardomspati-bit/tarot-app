@@ -68,3 +68,10 @@ function cargarHistorial() {
         </div>
     `).join('');
 }
+
+function limpiarHistorial() {
+    if (confirm('¿Borrar todo el historial local?')) {
+        localStorage.removeItem(HISTORIAL_KEY);
+        cargarHistorial();
+    }
+}
