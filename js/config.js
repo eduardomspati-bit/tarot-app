@@ -8,17 +8,14 @@ console.log("[config.js] SERVIDOR_URL:", window.SERVIDOR_URL);
 
 // Obtener el mazo activo
 window.obtenerMazoActivo = function() {
-    // Intento 1: variable global directa (arcanos.js la expone así)
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
         console.log("[config.js] Mazo encontrado vía arcanosCompleto global:", arcanosCompleto.length);
         return arcanosCompleto;
     }
-    // Intento 2: window.arcanosCompleto
     if (window.arcanosCompleto && Array.isArray(window.arcanosCompleto) && window.arcanosCompleto.length > 0) {
         console.log("[config.js] Mazo encontrado vía window.arcanosCompleto:", window.arcanosCompleto.length);
         return window.arcanosCompleto;
     }
-    // Fallback de emergencia (78 cartas hardcodeadas)
     console.warn("[config.js] ⚠️ arcanos.js no cargó. Usando fallback de emergencia.");
     return [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa",
