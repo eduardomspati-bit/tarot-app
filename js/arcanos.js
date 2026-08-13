@@ -2,7 +2,7 @@
 // MAZO COMPLETO DE TAROT (78 cartas)
 // ==========================================
 
-window.arcanosCompleto = [
+const arcanosCompleto = [
     // Arcanos Mayores (22)
     "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
     "El Papa", "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño",
@@ -30,3 +30,7 @@ window.arcanosCompleto = [
     "6 de Oros", "7 de Oros", "8 de Oros", "9 de Oros", "10 de Oros",
     "Sota de Oros", "Caballero de Oros", "Reina de Oros", "Rey de Oros"
 ];
+
+// Exponer globalmente para que config.js lo encuentre
+window.arcanosCompleto = arcanosCompleto;
+console.log("[arcanos.js] Mazo cargado:", arcanosCompleto.length, "cartas");
