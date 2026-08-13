@@ -1,7 +1,7 @@
 // ==========================================
 // NAVEGACIÓN Y CONTROL DE FLUJO
 // ==========================================
-console.log("✅ [navigation.js] Cargado - versión v3 localStorage");
+console.log("✅ [navigation.js] Cargado - versión v4 integrada");
 
 // Variable global para capturar la pregunta personalizada si la hay
 window.preguntaCustomSeleccionada = "";
@@ -24,33 +24,64 @@ window.mostrarPantalla = function(idPantalla) {
     }
 };
 
-// 1. Selección de Estilo Automático desde la Portada (Mágico / Filosófico)
+// ==========================================
+// 1. Selección de Estilo Automático (Mágico / Filosófico)
+// ==========================================
 window.seleccionarEstiloAutomatico = function(estilo) {
     window.estiloSeleccionado = estilo;
     window.modoFisicoActivo = false;
     window.preguntaCustomSeleccionada = "";
     window.cartasFisicoSeleccionadas = null;
+    window.submodoFisicoActual = null;
     localStorage.removeItem('tarotia_submodo_fisico');
 
     console.log(`✨ Modo Automático Activado: ${estilo}`);
     window.mostrarPantalla('screen-selector');
 };
 
+// ==========================================
 // 2. Módulo Profesional
+// ==========================================
 window.abrirModuloProfesional = function() {
     window.mostrarPantalla('screen-modulo-profesional');
 };
 
-// 3. Abrir Mazo Físico desde Módulo Profesional
+// ==========================================
+// 3. Abrir Mazo Físico desde Módulo Profesional (con verificación de acceso)
+// ==========================================
 window.abrirSeleccionFisico = function(submodo) {
+    // Verificar acceso (premium o muestras disponibles)
+    const tieneAcceso = window.esUsuarioPremium || (typeof obtenerMuestrasFisicasRestantes === 'function' && obtenerMuestrasFisicasRestantes() > 0);
+
+    if (!tieneAcceso) {
+        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar:");
+        if (codigo && typeof canjearCodigoPremium === 'function') {
+            canjearCodigoPremium(codigo);
+            // Reintentar después de canjear
+            if (window.esUsuarioPremium) {
+                window.abrirSeleccionFisico(submodo);
+            }
+        }
+        return;
+    }
+
     window.modoFisicoActivo = true;
     window.submodoFisicoActual = submodo;
-    // GUARDAR en localStorage para que no se pierda por caché/recarga
     localStorage.setItem('tarotia_submodo_fisico', submodo);
     window.cartasFisicoSeleccionadas = null;
     window.preguntaCustomSeleccionada = "";
 
     console.log("🔧 Submodo físico activado:", submodo, "| Guardado en localStorage");
+
+    // Actualizar texto del botón según el submodo
+    const btnConfirmar = document.getElementById('btn-confirmar-fisico');
+    if (btnConfirmar) {
+        if (submodo === 'tarotista_fisico') {
+            btnConfirmar.innerHTML = '🔬 Confirmar Duplas y Ver Análisis Técnico';
+        } else {
+            btnConfirmar.innerHTML = '✨ Confirmar Duplas y Elegir Eje';
+        }
+    }
 
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
@@ -59,7 +90,9 @@ window.abrirSeleccionFisico = function(submodo) {
     window.mostrarPantalla('screen-fisico');
 };
 
+// ==========================================
 // 4. Confirmar Mazo Físico
+// ==========================================
 window.irAlEjeFisico = function() {
     const c1 = document.getElementById('fisico-carta1')?.value;
     const c2 = document.getElementById('fisico-carta2')?.value;
@@ -81,26 +114,33 @@ window.irAlEjeFisico = function() {
     window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
     console.log("🃏 Cartas guardadas:", c1, c2, c3, c4);
 
-    // Recuperar submodo de localStorage como respaldo (por si window se perdió)
+    // Registrar uso de muestra (si no es premium)
+    if (typeof registrarUsoTiradaFisica === 'function' && !window.esUsuarioPremium) {
+        registrarUsoTiradaFisica();
+    }
+
+    // Recuperar submodo de localStorage como respaldo
     const submodo = window.submodoFisicoActual || localStorage.getItem('tarotia_submodo_fisico');
     console.log("🔧 Submodo detectado:", submodo);
 
     // ==========================================
-    // MODO ESTRUCTURAL/TÉCNICO: va DIRECTO al resultado
+    // MODO ESTRUCTURAL/TÉCNICO: va DIRECTO al resultado (SIN elegir tema)
     // ==========================================
     if (submodo === 'tarotista_fisico') {
-        console.log("➡️ Modo ESTRUCTURAL → yendo DIRECTO a resultado");
+        console.log("➡️ Modo ESTRUCTURAL → yendo DIRECTO a resultado (sin selector de temas)");
         window.mostrarPantalla('screen-result');
-        
+
         // Pequeña espera para que el DOM de screen-result esté listo
         setTimeout(() => {
             if (typeof window.procesarTiradaEstructural === 'function') {
                 window.procesarTiradaEstructural();
             } else {
-                document.getElementById('interpretation-text').innerHTML = 
-                    '<p style="color:#ff6b6b;">⚠️ Error: no se cargó procesarTiradaEstructural. Verificá que app.js esté actualizado.</p>';
+                const txt = document.getElementById('interpretation-text');
+                if (txt) {
+                    txt.innerHTML = '<p style="color:#ff6b6b;">⚠️ Error: no se cargó procesarTiradaEstructural. Verificá que app.js esté actualizado.</p>';
+                }
             }
-        }, 100);
+        }, 150);
         return;
     }
 
@@ -111,7 +151,9 @@ window.irAlEjeFisico = function() {
     window.mostrarPantalla('screen-selector');
 };
 
+// ==========================================
 // 5. Pregunta Específica
+// ==========================================
 window.abrirPantallaPregunta = function() {
     const txtArea = document.getElementById('texto-pregunta-usuario');
     if (txtArea) txtArea.value = "";
@@ -130,7 +172,9 @@ window.confirmarPreguntaYEjecutar = function() {
     window.ejecutarLecturaSegunModo('Pregunta Específica');
 };
 
+// ==========================================
 // 6. Ejecución de la lectura según el tema presionado
+// ==========================================
 window.ejecutarLecturaSegunModo = function(tema) {
     if (typeof window.procesarTiradaCompleta === 'function') {
         window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada);
@@ -139,7 +183,9 @@ window.ejecutarLecturaSegunModo = function(tema) {
     }
 };
 
+// ==========================================
 // Navegación de regreso e Historial
+// ==========================================
 window.volverAPortada = function() {
     window.modoFisicoActivo = false;
     window.submodoFisicoActual = null;
@@ -164,8 +210,6 @@ window.volverAlModuloProfesional = function() {
 window.abrirHistorial = function() {
     if (typeof window.cargarHistorial === 'function') {
         window.cargarHistorial();
-    } else if (typeof cargarHistorial === 'function') {
-        cargarHistorial();
     }
     window.mostrarPantalla('screen-historial');
 };
@@ -180,9 +224,9 @@ window.pedirEmailAlUsuario = function() {
     }
 };
 
-// Stub para Carta del Día (evita ReferenceError)
+// Stub para Carta del Día
 window.tirarCartaDiaria = function() {
-    const mazo = [
+    const mazo = window.obtenerMazoActivo ? window.obtenerMazoActivo() : [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
         "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
         "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo",
