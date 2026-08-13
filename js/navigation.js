@@ -1,3 +1,7 @@
+// ==========================================
+// NAVEGACIÓN Y CONTROL DE FLUJO
+// ==========================================
+
 // Variable global para capturar la pregunta personalizada si la hay
 window.preguntaCustomSeleccionada = "";
 
@@ -24,7 +28,8 @@ window.seleccionarEstiloAutomatico = function(estilo) {
     window.estiloSeleccionado = estilo;
     window.modoFisicoActivo = false;
     window.preguntaCustomSeleccionada = "";
-    window.cartasFisicoSeleccionadas = null; // Limpiar cartas físicas previas
+    window.cartasFisicoSeleccionadas = null;
+    window.submodoFisicoActual = null;
 
     console.log(`✨ Modo Automático Activado: ${estilo}`);
     window.mostrarPantalla('screen-selector');
@@ -38,8 +43,9 @@ window.abrirModuloProfesional = function() {
 // 3. Abrir Mazo Físico desde Módulo Profesional
 window.abrirSeleccionFisico = function(submodo) {
     window.modoFisicoActivo = true;
-    window.submodoFisicoActual = submodo;
-    window.cartasFisicoSeleccionadas = null; // Resetear por si acaso
+    window.submodoFisicoActual = submodo; // 'predictivo_fisico' o 'tarotista_fisico'
+    window.cartasFisicoSeleccionadas = null;
+    window.preguntaCustomSeleccionada = "";
 
     if (typeof window.cargarSelectoresFisicos === 'function') {
         window.cargarSelectoresFisicos();
@@ -48,7 +54,7 @@ window.abrirSeleccionFisico = function(submodo) {
     window.mostrarPantalla('screen-fisico');
 };
 
-// 4. Confirmar Mazo Físico y pasar a los Temas (CORREGIDO: guarda cartas en variable global)
+// 4. Confirmar Mazo Físico
 window.irAlEjeFisico = function() {
     const c1 = document.getElementById('fisico-carta1')?.value;
     const c2 = document.getElementById('fisico-carta2')?.value;
@@ -66,11 +72,13 @@ window.irAlEjeFisico = function() {
         return;
     }
 
-    // Guardar las cartas en variable global
+    // Guardar las cartas en variable global ANTES de cambiar de pantalla
     window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
-    console.log("🃏 Cartas guardadas:", window.cartasFisicoSeleccionadas);
+    console.log("🃏 Cartas físicas guardadas:", window.cartasFisicoSeleccionadas);
 
-    // Si es modo ESTRUCTURAL/TÉCNICO → ir DIRECTO al resultado (sin temas, sin servidor)
+    // ==========================================
+    // MODO ESTRUCTURAL/TÉCNICO: va DIRECTO al resultado
+    // ==========================================
     if (window.submodoFisicoActual === 'tarotista_fisico') {
         window.mostrarPantalla('screen-result');
         if (typeof window.procesarTiradaEstructural === 'function') {
@@ -81,7 +89,9 @@ window.irAlEjeFisico = function() {
         return;
     }
 
-    // Si es PREDICTIVO → ir a selector de temas como siempre
+    // ==========================================
+    // MODO PREDICTIVO: va a elegir tema como siempre
+    // ==========================================
     window.mostrarPantalla('screen-selector');
 };
 
@@ -116,6 +126,7 @@ window.ejecutarLecturaSegunModo = function(tema) {
 // Navegación de regreso e Historial
 window.volverAPortada = function() {
     window.modoFisicoActivo = false;
+    window.submodoFisicoActual = null;
     window.cartasFisicoSeleccionadas = null;
     window.preguntaCustomSeleccionada = "";
     window.mostrarPantalla('screen-portada');
