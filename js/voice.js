@@ -39,6 +39,9 @@ function reproducirVoz(tipo = 'todo') {
 
     if (!textoALeer.trim()) return;
 
+    // Limpiar texto para TTS
+    textoALeer = textoALeer.replace(/🔮|✨|🃏|💫|🚀|💖|💼|⬅|📖|📜|📧|⚠️|❌/g, '');
+
     const mensaje = new SpeechSynthesisUtterance(textoALeer);
     mensaje.lang = 'es-ES';
     mensaje.rate = 0.95;
@@ -49,4 +52,9 @@ function reproducirVoz(tipo = 'todo') {
     if (vozEspanol) mensaje.voice = vozEspanol;
 
     window.speechSynthesis.speak(mensaje);
+}
+
+// Precargar voces (algunos navegadores las cargan asíncronamente)
+if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
 }
