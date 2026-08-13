@@ -1,42 +1,17 @@
 // ==========================================
-// CONFIGURACIÓN DE SERVIDOR Y ARCANOS
+// LÓGICA PRINCIPAL DE LA APP
 // ==========================================
-
-window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com') + '/tirada';
-
-function obtenerMazoActivo() {
-    if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
-        return arcanosCompleto;
-    }
-    if (window.arcanosCompleto && Array.isArray(window.arcanosCompleto) && window.arcanosCompleto.length > 0) {
-        return window.arcanosCompleto;
-    }
-    return [
-        "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa",
-        "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
-        "La Fuerza", "El Colgado", "La Muerte", "La Templanza", "El Diablo", "La Torre",
-        "La Estrella", "La Luna", "El Sol", "El Juicio", "El Mundo",
-        "As de Bastos", "2 de Bastos", "3 de Bastos", "4 de Bastos", "5 de Bastos",
-        "6 de Bastos", "7 de Bastos", "8 de Bastos", "9 de Bastos", "10 de Bastos",
-        "Sota de Bastos", "Caballero de Bastos", "Reina de Bastos", "Rey de Bastos",
-        "As de Copas", "2 de Copas", "3 de Copas", "4 de Copas", "5 de Copas",
-        "6 de Copas", "7 de Copas", "8 de Copas", "9 de Copas", "10 de Copas",
-        "Sota de Copas", "Caballero de Copas", "Reina de Copas", "Rey de Copas",
-        "As de Espadas", "2 de Espadas", "3 de Espadas", "4 de Espadas", "5 de Espadas",
-        "6 de Espadas", "7 de Espadas", "8 de Espadas", "9 de Espadas", "10 de Espadas",
-        "Sota de Espadas", "Caballero de Espadas", "Reina de Espadas", "Rey de Espadas",
-        "As de Oros", "2 de Oros", "3 de Oros", "4 de Oros", "5 de Oros",
-        "6 de Oros", "7 de Oros", "8 de Oros", "9 de Oros", "10 de Oros",
-        "Sota de Oros", "Caballero de Oros", "Reina de Oros", "Rey de Oros"
-    ];
-}
 
 // ==========================================
 // FUNCIONES DE MANEJO DE CARTAS
 // ==========================================
 
 window.obtenerCuatroCartasAleatorias = function() {
-    const mazo = obtenerMazoActivo();
+    const mazo = window.obtenerMazoActivo ? window.obtenerMazoActivo() : [];
+    if (!mazo.length) {
+        console.error("❌ No se pudo obtener el mazo. Verificá que arcanos.js esté cargado.");
+        return [];
+    }
     const mezclado = [...mazo];
     for (let i = mezclado.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -47,7 +22,12 @@ window.obtenerCuatroCartasAleatorias = function() {
 
 window.cargarSelectoresFisicos = function() {
     const idsSelects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
-    const mazo = obtenerMazoActivo();
+    const mazo = window.obtenerMazoActivo ? window.obtenerMazoActivo() : [];
+
+    if (!mazo.length) {
+        console.warn("⚠️ Mazo no disponible para cargar selectores.");
+        return;
+    }
 
     idsSelects.forEach((id, index) => {
         const select = document.getElementById(id);
@@ -66,6 +46,7 @@ window.cargarSelectoresFisicos = function() {
 };
 
 function nombreAImagen(nombre) {
+    if (!nombre || typeof nombre !== 'string') return 'cartas/desconocida.jpg';
     const slug = nombre.toLowerCase()
         .replace(/ /g, '_')
         .replace(/á/g, 'a').replace(/é/g, 'e').replace(/í/g, 'i')
@@ -80,7 +61,8 @@ window.renderizarMesaDuplas = function(cartas, tema) {
     const tituloTema = document.getElementById('reading-theme-title');
     if (tituloTema) {
         const estiloTxt = (window.estiloSeleccionado || 'Mágico').toUpperCase();
-        tituloTema.textContent = `🔮 Lectura por Duplas (${estiloTxt}): ${tema}`;
+        const modoTxt = window.submodoFisicoActual === 'tarotista_fisico' ? 'ESTRUCTURAL' : estiloTxt;
+        tituloTema.textContent = `🔮 Lectura por Duplas (${modoTxt}): ${tema}`;
     }
 
     const idsNombres = ['name-a', 'name-b', 'name-c', 'name-d'];
@@ -123,6 +105,10 @@ window.consultaGratis = async function() {
     if (preguntaMostrar) preguntaMostrar.textContent = pregunta;
 
     const cartas = window.obtenerCuatroCartasAleatorias();
+    if (!cartas.length) {
+        alert('⚠️ Error al cargar el mazo. Verificá que arcanos.js esté cargado.');
+        return;
+    }
 
     const contenedorCartas = document.getElementById('gratis-cartas-visuales');
     if (contenedorCartas) {
@@ -281,7 +267,7 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
 };
 
 // ==========================================
-// FLUJO PRINCIPAL DE LA TIRADA (CORREGIDO)
+// FLUJO PRINCIPAL DE LA TIRADA
 // ==========================================
 
 window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
@@ -291,12 +277,12 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
         // Prioridad 1: usar cartas guardadas al confirmar
         if (window.cartasFisicoSeleccionadas && window.cartasFisicoSeleccionadas.length === 4
             && window.cartasFisicoSeleccionadas.every(c => c && c.trim() !== '')) {
-            
+
             cartasElegidas = window.cartasFisicoSeleccionadas;
             console.log("🃏 Usando cartas físicas guardadas:", cartasElegidas);
-        
+
         } else {
-            // Fallback: leer del DOM (puede fallar si la pantalla está oculta)
+            // Fallback: leer del DOM
             cartasElegidas = [
                 document.getElementById('fisico-carta1')?.value,
                 document.getElementById('fisico-carta2')?.value,
@@ -312,7 +298,7 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     // Validación de seguridad
     if (!cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
         console.error("❌ Cartas incompletas:", cartasElegidas);
-        
+
         if (window.modoFisicoActivo) {
             alert("⚠️ No se detectaron las cartas físicas. Volvé a seleccionarlas.");
             if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-fisico');
@@ -331,7 +317,7 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
 };
 
 // ==========================================
-// TIRADA ESTRUCTURAL / TÉCNICA (BASE DE DATOS EN SERVIDOR)
+// TIRADA ESTRUCTURAL / TÉCNICA (BASE DE DATOS)
 // ==========================================
 
 window.procesarTiradaEstructural = async function() {
@@ -380,7 +366,16 @@ window.procesarTiradaEstructural = async function() {
                 html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${data1.keywords.join(', ')}</p>`;
             }
         } else {
-            html += `<p style="color:#ff6b6b;">⚠️ Esta combinación aún no tiene interpretación cargada.<br><small style="color:#aaa;">${c1} | ${c2}</small></p>`;
+            // Fallback: buscar en base local
+            const local1 = window.buscarDuplaLocal ? window.buscarDuplaLocal(c1, c2) : { encontrada: false };
+            if (local1.encontrada) {
+                html += local1.significado;
+                if (local1.keywords && local1.keywords.length > 0) {
+                    html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${local1.keywords.join(', ')}</p>`;
+                }
+            } else {
+                html += `<p style="color:#ff6b6b;">⚠️ Esta combinación aún no tiene interpretación cargada.<br><small style="color:#aaa;">${c1} | ${c2}</small></p>`;
+            }
         }
         html += `</div>`;
 
@@ -393,7 +388,16 @@ window.procesarTiradaEstructural = async function() {
                 html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${data2.keywords.join(', ')}</p>`;
             }
         } else {
-            html += `<p style="color:#ff6b6b;">⚠️ Esta combinación aún no tiene interpretación cargada.<br><small style="color:#aaa;">${c3} | ${c4}</small></p>`;
+            // Fallback: buscar en base local
+            const local2 = window.buscarDuplaLocal ? window.buscarDuplaLocal(c3, c4) : { encontrada: false };
+            if (local2.encontrada) {
+                html += local2.significado;
+                if (local2.keywords && local2.keywords.length > 0) {
+                    html += `<p style="margin-top:10px; font-size:0.85rem; color:#a78bfa;">🏷️ Keywords: ${local2.keywords.join(', ')}</p>`;
+                }
+            } else {
+                html += `<p style="color:#ff6b6b;">⚠️ Esta combinación aún no tiene interpretación cargada.<br><small style="color:#aaa;">${c3} | ${c4}</small></p>`;
+            }
         }
         html += `</div>`;
 
@@ -409,7 +413,24 @@ window.procesarTiradaEstructural = async function() {
 
     } catch (error) {
         console.error("❌ Error al consultar duplas:", error);
-        if (contenedorTexto) {
+
+        // Fallback total: usar base local
+        if (contenedorTexto && window.buscarDuplaLocal) {
+            let html = '';
+            const local1 = window.buscarDuplaLocal(c1, c2);
+            const local2 = window.buscarDuplaLocal(c3, c4);
+
+            html += `<div class="reading-section resaltado-místico"><h3>🔮 Dupla 1: ${c1} + ${c2}</h3>`;
+            html += local1.encontrada ? local1.significado : `<p style="color:#ff6b6b;">⚠️ Sin datos locales.</p>`;
+            html += `</div>`;
+
+            html += `<div class="reading-section resaltado-místico"><h3>🔮 Dupla 2: ${c3} + ${c4}</h3>`;
+            html += local2.encontrada ? local2.significado : `<p style="color:#ff6b6b;">⚠️ Sin datos locales.</p>`;
+            html += `</div>`;
+
+            html += `<p style="text-align:center; color:#eab308; font-size:0.85rem; margin-top:15px;">⚠️ Modo offline activado (sin conexión al servidor)</p>`;
+            contenedorTexto.innerHTML = html;
+        } else if (contenedorTexto) {
             contenedorTexto.innerHTML = `
                 <div style="color: #ff6b6b; text-align: center; padding: 20px;">
                     ❌ Error de conexión con la base de duplas.<br>
@@ -421,5 +442,7 @@ window.procesarTiradaEstructural = async function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.cargarSelectoresFisicos();
+    if (typeof window.cargarSelectoresFisicos === 'function') {
+        window.cargarSelectoresFisicos();
+    }
 });
