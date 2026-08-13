@@ -288,7 +288,7 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     let cartasElegidas = [];
 
     if (window.modoFisicoActivo) {
-        // Prioridad 1: usar cartas guardadas al confirmar (más confiable)
+        // Prioridad 1: usar cartas guardadas al confirmar
         if (window.cartasFisicoSeleccionadas && window.cartasFisicoSeleccionadas.length === 4
             && window.cartasFisicoSeleccionadas.every(c => c && c.trim() !== '')) {
             
@@ -303,7 +303,7 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
                 document.getElementById('fisico-carta3')?.value,
                 document.getElementById('fisico-carta4')?.value
             ];
-            console.log("🃏 Leyendo cartas físicas del DOM (fallback):", cartasElegidas);
+            console.log("🃏 Leyendo cartas del DOM (fallback):", cartasElegidas);
         }
     } else {
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
