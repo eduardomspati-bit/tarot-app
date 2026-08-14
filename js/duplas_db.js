@@ -20,7 +20,7 @@ window.baseDeDatosDuplas = {
 
 // --- EL LOCO ---
 "El Loco|El Loco": { significado: "<p>next</p>", keywords: [] },
-"El Loco|El Mago": { significado: "<p>next</p>", keywords: [] },,
+"El Loco|El Mago": { significado: "<p>next</p>", keywords: [] },
 "El Loco|La Sacerdotisa": { significado: "<p>next</p>", keywords: [] },
 "El Loco|La Emperatriz": { significado: "<p>next</p>", keywords: [] },
 "El Loco|El Emperador": { significado: "<p>next</p>", keywords: [] },
