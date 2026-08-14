@@ -37,7 +37,6 @@
 </head>
 <body>
 
-<!-- MODAL DE AUTENTICACIÓN SEGURO EN LUGAR DE PROMPT -->
 <div id="auth-overlay" class="auth-overlay">
     <div class="auth-box">
         <h2>🔒 Autenticación Admin</h2>
@@ -49,15 +48,15 @@
 
 <div class="container" id="admin-panel-content" style="display: none;">
     <h1>🔮 Panel de Control General - TarotIA</h1>
-    
+
     <div class="grid">
         <div class="card">
             <h2>⚙️ Simulador de Modos</h2>
             <p class="txt-ayuda">Hacé clic en el botón para alternar el estado local del cliente:</p>
             <button id="btn-toggle-premium" class="btn btn-status">Cargando estado...</button>
-            
+
             <hr style="border-color: #334155; margin: 20px 0;">
-            
+
             <h2>🛠️ Pruebas de Sistema</h2>
             <a href="index.html" target="_blank" class="btn-link">Abrir App de Clientes ↗</a>
 
@@ -121,7 +120,7 @@
     function actualizarBotonEstado() {
         const btn = document.getElementById('btn-toggle-premium');
         let esPremium = localStorage.getItem('simularPremium') === 'true';
-        
+
         if (esPremium) {
             btn.innerText = "SISTEMA: VISTA PREMIUM ACTIVA ✨";
             btn.className = "btn active-premium";
@@ -180,7 +179,7 @@
                     </thead>
                     <tbody>
             `;
-            
+
             clientesReales.forEach(c => {
                 const esPremium = c.plan === 'Premium';
                 const badgeClass = esPremium ? 'badge-premium' : 'badge-gratis';
@@ -201,7 +200,7 @@
                     </tr>
                 `;
             });
-            
+
             html += `</tbody></table>`;
             contenedor.innerHTML = html;
 
