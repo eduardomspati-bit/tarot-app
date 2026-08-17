@@ -32,18 +32,51 @@ window.baseDeDatosDuplas = {
 
 };
 
-// Buscar dupla (servidor primero, esto es fallback)
-window.buscarDuplaLocal = function(cartaA, cartaB) {
+// ==========================================
+// CONFIGURACIÓN DE TU BACKEND EN RENDER
+// ==========================================
+// Reemplaza esto con la URL real de tu backend en Render
+const RENDER_URL = "https://tarot-613b.onrender.com"; 
+
+// Buscar dupla (Busca en tu backend primero, usa la local como fallback)
+window.buscarDupla = async function(cartaA, cartaB) {
     const key1 = cartaA + "|" + cartaB;
     const key2 = cartaB + "|" + cartaA;
 
+    // 1. BUSCAR EN TU SERVIDOR DE RENDER
+    try {
+        // Intentamos buscar en orden directo
+        let response = await fetch(`${RENDER_URL}/api/duplas/buscar?a=${encodeURIComponent(cartaA)}&b=${encodeURIComponent(cartaB)}`);
+        let data = await response.json();
+
+        if (data.encontrada) {
+            console.log("✅ ¡Dupla traída desde tu backend en Render!");
+            return { ...data, orden: 'directo' };
+        }
+
+        // Si no se encontró en orden directo, intentamos inverso
+        response = await fetch(`${RENDER_URL}/api/duplas/buscar?a=${encodeURIComponent(cartaB)}&b=${encodeURIComponent(cartaA)}`);
+        data = await response.json();
+
+        if (data.encontrada) {
+            console.log("✅ ¡Dupla traída desde tu backend en Render (orden inverso)!");
+            return { ...data, orden: 'inverso' };
+        }
+
+    } catch (error) {
+        console.warn("❌ Error al consultar el servidor Render, activando fallback local:", error);
+    }
+
+    // 2. FALLBACK A LA BASE LOCAL SI FALLA EL SERVIDOR O NO SE ENCUENTRA
+    console.log("⚠️ Buscando en base local de emergencia...");
     if (window.baseDeDatosDuplas[key1]) {
         return { encontrada: true, ...window.baseDeDatosDuplas[key1], orden: 'directo' };
     }
     if (window.baseDeDatosDuplas[key2]) {
         return { encontrada: true, ...window.baseDeDatosDuplas[key2], orden: 'inverso' };
     }
-    return { encontrada: false, mensaje: 'Dupla no encontrada en base local.' };
+    
+    return { encontrada: false, mensaje: 'Dupla no encontrada en ninguna base de datos.' };
 };
 
 // Agregar dupla localmente (para testear)
@@ -52,4 +85,4 @@ window.agregarDuplaLocal = function(cartaA, cartaB, significado, keywords) {
     window.baseDeDatosDuplas[key] = { significado, keywords: keywords || [] };
 };
 
-console.log("[duplas.js] Base local cargada:", Object.keys(window.baseDeDatosDuplas).length, "duplas");
+console.log("[duplas.js] Base local y conexión a Render cargadas.");
