@@ -28,42 +28,47 @@ window.baseDeDatosDuplas = {
     "El Mago|El Loco": { significado: "<p>next</p>", keywords: [] },
     "El Mago|El Mago": { significado: "<p>next</p>", keywords: [] },
     "El Mago|La Sacerdotisa": { significado: "<p>next</p>", keywords: [] },
-
-
 };
 
 // ==========================================
 // CONFIGURACIÓN DE TU BACKEND EN RENDER
 // ==========================================
-// Reemplaza esto con la URL real de tu backend en Render
 const RENDER_URL = "https://tarot-613b.onrender.com"; 
 
-// Buscar dupla (Busca en tu backend primero, usa la local como fallback)
+// Buscar dupla (Busca en tu backend primero evitando caché, usa la local como fallback)
 window.buscarDupla = async function(cartaA, cartaB) {
     const keyLocal = cartaA + "|" + cartaB;
+    const keyInversaLocal = cartaB + "|" + cartaA;
 
-    // 1. BUSCAR EN RENDER (SOLO ORDEN EXACTO)
+    // 1. BUSCAR EN RENDER (Evitando caché con Date.now())
     try {
         const response = await fetch(
-            `${RENDER_URL}/api/duplas/buscar?a=${encodeURIComponent(cartaA)}&b=${encodeURIComponent(cartaB)}`
+            `${RENDER_URL}/api/duplas/buscar?a=${encodeURIComponent(cartaA)}&b=${encodeURIComponent(cartaB)}&_t=${Date.now()}`
         );
         const data = await response.json();
 
         if (data.encontrada) {
-            console.log("✅ Dupla traída desde Render (orden exacto)");
-            return { ...data, orden: 'directo' };
+            console.log("✅ Dupla traída desde Render con éxito");
+            return { ...data, orden: data.orden || 'directo' };
         }
     } catch (error) {
-        console.warn("❌ Render no responde:", error);
+        console.warn("❌ Render no responde, activando fallback local:", error);
     }
 
-    // 2. FALLBACK LOCAL (TAMBIÉN ORDEN EXACTO)
-    console.log("⚠️ Buscando en base local...");
+    // 2. FALLBACK LOCAL (Revisa ambos sentidos también en local)
+    console.log("⚠️ Buscando en base local de emergencia...");
     if (window.baseDeDatosDuplas[keyLocal]) {
         return { 
             encontrada: true, 
             ...window.baseDeDatosDuplas[keyLocal], 
             orden: 'directo' 
+        };
+    }
+    if (window.baseDeDatosDuplas[keyInversaLocal]) {
+        return { 
+            encontrada: true, 
+            ...window.baseDeDatosDuplas[keyInversaLocal], 
+            orden: 'inverso' 
         };
     }
     
@@ -79,4 +84,4 @@ window.agregarDuplaLocal = function(cartaA, cartaB, significado, keywords) {
     window.baseDeDatosDuplas[key] = { significado, keywords: keywords || [] };
 };
 
-console.log("[duplas.js] Base local y conexión a Render cargadas.");
+console.log("[duplas.js] Base local y conexión a Render configuradas correctamente.");
