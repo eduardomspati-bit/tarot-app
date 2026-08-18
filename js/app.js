@@ -345,6 +345,28 @@ window.procesarTiradaEstructural = async function() {
 
         if (contenedorTexto) contenedorTexto.innerHTML = html;
 
+        // ==========================================
+        // 🔥 AQUÍ VA EL CÓDIGO DEL PUNTO 3 🔥
+        // ==========================================
+        
+        // Almacenar textos de duplas para voz
+        window.textoDupla1 = data1.encontrada ? 
+            `Dupla 1: ${c1} y ${c2}. ${data1.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
+            `Dupla 1: ${c1} y ${c2}. Sin interpretación cargada.`;
+
+        window.textoDupla2 = data2.encontrada ? 
+            `Dupla 2: ${c3} y ${c4}. ${data2.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
+            `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
+
+        // Mostrar panel de voz para duplas (si existe la función)
+        if (typeof window.mostrarPanelVozDuplas === 'function') {
+            window.mostrarPanelVozDuplas();
+        }
+
+        // ==========================================
+        // FIN DEL CÓDIGO DEL PUNTO 3
+        // ==========================================
+
         if (typeof guardarEnHistorialLocal === 'function') {
             const resumen = `Dupla 1 (${c1}+${c2}): ${data1.encontrada?'OK':'Sin datos'} | Dupla 2 (${c3}+${c4}): ${data2.encontrada?'OK':'Sin datos'}`;
             guardarEnHistorialLocal('Análisis Estructural', {a:c1,b:c2,c:c3,d:c4}, resumen);
@@ -369,18 +391,4 @@ window.procesarTiradaEstructural = async function() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log("[app.js] DOM listo. Cargando selectores...");
     if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
-
-    // Almacenar textos de duplas para voz
-window.textoDupla1 = data1.encontrada ? 
-    `Dupla 1: ${c1} y ${c2}. ${data1.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
-    `Dupla 1: ${c1} y ${c2}. Sin interpretación cargada.`;
-
-window.textoDupla2 = data2.encontrada ? 
-    `Dupla 2: ${c3} y ${c4}. ${data2.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
-    `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
-
-// Mostrar panel de voz para duplas
-if (typeof window.mostrarPanelVozDuplas === 'function') {
-    window.mostrarPanelVozDuplas();
-}
 });
