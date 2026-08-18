@@ -292,6 +292,10 @@ window.procesarTiradaEstructural = async function() {
         `;
     }
 
+    // Ocultar el panel de voz al inicio
+    const panelVoz = document.getElementById('voice-panel-tecnico');
+    if (panelVoz) panelVoz.style.display = 'none';
+
     try {
         const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
         console.log("[app.js] Consultando duplas en:", API_BASE);
@@ -346,7 +350,7 @@ window.procesarTiradaEstructural = async function() {
         if (contenedorTexto) contenedorTexto.innerHTML = html;
 
         // ==========================================
-        // 🔥 AQUÍ VA EL CÓDIGO DEL PUNTO 3 🔥
+        // ALMACENAR TEXTOS PARA VOZ Y MOSTRAR PANEL
         // ==========================================
         
         // Almacenar textos de duplas para voz
@@ -358,15 +362,13 @@ window.procesarTiradaEstructural = async function() {
             `Dupla 2: ${c3} y ${c4}. ${data2.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
             `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
 
-        // Mostrar panel de voz para duplas (si existe la función)
-        if (typeof window.mostrarPanelVozDuplas === 'function') {
-            window.mostrarPanelVozDuplas();
+        // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
+        if (data1.encontrada || data2.encontrada) {
+            const panelVoz2 = document.getElementById('voice-panel-tecnico');
+            if (panelVoz2) panelVoz2.style.display = 'grid';
         }
 
-        // ==========================================
-        // FIN DEL CÓDIGO DEL PUNTO 3
-        // ==========================================
-
+        // Guardar en historial
         if (typeof guardarEnHistorialLocal === 'function') {
             const resumen = `Dupla 1 (${c1}+${c2}): ${data1.encontrada?'OK':'Sin datos'} | Dupla 2 (${c3}+${c4}): ${data2.encontrada?'OK':'Sin datos'}`;
             guardarEnHistorialLocal('Análisis Estructural', {a:c1,b:c2,c:c3,d:c4}, resumen);
@@ -387,8 +389,3 @@ window.procesarTiradaEstructural = async function() {
         }
     }
 };
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("[app.js] DOM listo. Cargando selectores...");
-    if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
-});
