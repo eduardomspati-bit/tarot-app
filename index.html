@@ -445,38 +445,50 @@
     </div>
 
     <!-- ========== MESA DE RESULTADOS ========== -->
-    <div id="screen-result" class="screen hidden">
-        <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
+    <!-- ========== MESA DE RESULTADOS ========== -->
+<div id="screen-result" class="screen hidden">
+    <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
 
-        <div class="tarot-table">
-            <!-- DUPLA 1 -->
-            <div class="duple-box">
-                <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
-                <div class="card-container">
-                    <div id="img-a" class="card-visual"></div>
-                    <div id="name-a" class="card-name"></div>
-                </div>
-                <div class="card-container">
-                    <div id="img-b" class="card-visual"></div>
-                    <div id="name-b" class="card-name"></div>
-                </div>
+    <div class="tarot-table">
+        <!-- DUPLA 1 -->
+        <div class="duple-box">
+            <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
+            <div class="card-container">
+                <div id="img-a" class="card-visual"></div>
+                <div id="name-a" class="card-name"></div>
             </div>
-
-            <!-- DUPLA 2 -->
-            <div class="duple-box">
-                <div class="duple-title">Dupla 2: Futuro / Evolución</div>
-                <div class="card-container">
-                    <div id="img-c" class="card-visual"></div>
-                    <div id="name-c" class="card-name"></div>
-                </div>
-                <div class="card-container">
-                    <div id="img-d" class="card-visual"></div>
-                    <div id="name-d" class="card-name"></div>
-                </div>
+            <div class="card-container">
+                <div id="img-b" class="card-visual"></div>
+                <div id="name-b" class="card-name"></div>
             </div>
         </div>
 
-        <div class="reading-output" id="interpretation-text"></div>
+        <!-- DUPLA 2 -->
+        <div class="duple-box">
+            <div class="duple-title">Dupla 2: Futuro / Evolución</div>
+            <div class="card-container">
+                <div id="img-c" class="card-visual"></div>
+                <div id="name-c" class="card-name"></div>
+            </div>
+            <div class="card-container">
+                <div id="img-d" class="card-visual"></div>
+                <div id="name-d" class="card-name"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="reading-output" id="interpretation-text"></div>
+
+    <!-- PANEL DE VOZ ÚNICO PARA MAZO FÍSICO TÉCNICO -->
+    <div class="voice-panel" id="voice-panel-tecnico" style="display: none;">
+        <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+        <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+        <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+        <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+    </div>
+
+    <button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
+</div>
 
         <!-- ========== PANEL DE VOZ PARA DUPLAS ========== -->
 <div class="voice-duplas-panel" id="voice-duplas-panel" style="display: none;">
