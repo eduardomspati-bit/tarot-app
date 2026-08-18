@@ -475,13 +475,58 @@
         gap: 15px !important;
     }
 
-    .voice-panel {
-        grid-template-columns: 1fr !important;
-    }
+   /* ==========================================
+   ESTILOS PARA VOZ DE DUPLAS
+   ========================================== */
 
-    .mini-carta {
-        width: 50px !important;
-        height: 75px !important;
+/* El panel .voice-panel ya existe, solo aseguramos que los botones nuevos se vean bien */
+.voice-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.btn-voice {
+    font-size: 0.95rem;
+    padding: 12px;
+    border-color: #b3a7c4;
+    color: #b3a7c4;
+    background: transparent;
+    border: 2px solid #b3a7c4;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-voice:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+}
+
+/* Estilo especial para el botón Detener */
+.btn-voice:last-child:hover {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .voice-panel {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .btn-voice {
+        font-size: 0.8rem;
+        padding: 10px 8px;
     }
 }
 /* ==========================================
