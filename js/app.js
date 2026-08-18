@@ -296,14 +296,20 @@ window.procesarTiradaEstructural = async function() {
         const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
         console.log("[app.js] Consultando duplas en:", API_BASE);
 
+        const url1 = `${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`;
+        const url2 = `${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c3)}&b=${encodeURIComponent(c4)}`;
+        
+        console.log("🔗 URL Dupla 1:", url1);
+        console.log("🔗 URL Dupla 2:", url2);
+
         const [resp1, resp2] = await Promise.all([
-            fetch(`${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`),
-            fetch(`${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c3)}&b=${encodeURIComponent(c4)}`)
+            fetch(url1),
+            fetch(url2)
         ]);
 
         const data1 = await resp1.json();
         const data2 = await resp2.json();
-        console.log("[app.js] Dupla 1:", data1, "Dupla 2:", data2);
+        console.log("[app.js] Dupla 1 respuesta:", data1, "Dupla 2 respuesta:", data2);
 
         let html = '';
 
