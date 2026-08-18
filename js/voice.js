@@ -60,24 +60,6 @@ function reproducirVoz(tipo = 'todo') {
 window.textoDupla1 = "";
 window.textoDupla2 = "";
 
-// Función para extraer texto de una dupla específica
-function extraerTextoDupla(numero) {
-    const contenedor = document.getElementById('interpretation-text');
-    if (!contenedor) return "";
-
-    const secciones = contenedor.querySelectorAll('.reading-section.resaltado-místico');
-    if (secciones.length < numero) return "";
-
-    const seccion = secciones[numero - 1];
-    let texto = seccion.innerText || seccion.textContent || "";
-    
-    // Limpiar emojis y caracteres especiales
-    texto = texto.replace(/🔮|✨|🃏|💫|🚀|💖|💼|⬅|📖|📜|📧|⚠️|❌|✅|🎉|🔍|📊|📂|🏷️/g, '');
-    texto = texto.replace(/\s+/g, ' ').trim();
-    
-    return texto;
-}
-
 // Función para reproducir una dupla específica
 window.reproducirVozDupla = function(numero) {
     if (!('speechSynthesis' in window)) {
@@ -89,12 +71,12 @@ window.reproducirVozDupla = function(numero) {
 
     let texto = "";
     if (numero === 1) {
-        texto = window.textoDupla1 || extraerTextoDupla(1);
+        texto = window.textoDupla1;
     } else if (numero === 2) {
-        texto = window.textoDupla2 || extraerTextoDupla(2);
+        texto = window.textoDupla2;
     }
 
-    if (!texto.trim()) {
+    if (!texto || !texto.trim()) {
         alert("⚠️ No hay texto para leer en esta dupla.");
         return;
     }
