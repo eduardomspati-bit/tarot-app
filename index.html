@@ -478,6 +478,23 @@
 
         <div class="reading-output" id="interpretation-text"></div>
 
+        <!-- ========== PANEL DE VOZ PARA DUPLAS ========== -->
+<div class="voice-duplas-panel" id="voice-duplas-panel" style="display: none;">
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;">
+        <button class="btn-voice-dupla" onclick="reproducirVozDupla(1)">
+            🔊 Dupla 1
+        </button>
+        <button class="btn-voice-dupla" onclick="reproducirVozDupla(2)">
+            🔊 Dupla 2
+        </button>
+        <button class="btn-voice-dupla" onclick="reproducirVozAmbasDuplas()">
+            🔊 Ambas Duplas
+        </button>
+        <button class="btn-voice-dupla" onclick="window.speechSynthesis.cancel()" style="background: #ff6b6b; color: white;">
+            ⏹ Detener
+        </button>
+    </div>
+</div>
         <!-- PANEL DE VOZ -->
         <div class="voice-panel">
             <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
