@@ -35,7 +35,7 @@ window.baseDeDatosDuplas = {
 // ==========================================
 const RENDER_URL = "https://tarot-613b.onrender.com"; 
 
-// Buscar dupla (Con orden exacto estricto + anti-caché aleatorio + logs de depuración)
+// Buscar dupla (Con orden exacto estricto + anti-caché aleatorio)
 window.buscarDupla = async function(cartaA, cartaB) {
     const keyLocal = cartaA + "|" + cartaB;
     const randomCacheKill = Math.random();
