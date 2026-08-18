@@ -112,7 +112,7 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
         }
-         .btn-entrar-app {
+        .btn-entrar-app {
             background: transparent;
             border: 1px solid rgba(255,255,255,0.2);
             color: rgba(255,255,255,0.6);
@@ -171,29 +171,6 @@
         .mini-carta:nth-child(2) { animation-delay: 0.5s; }
         .mini-carta:nth-child(3) { animation-delay: 1s; }
         .mini-carta:nth-child(4) { animation-delay: 1.5s; }
-        .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid rgba(168,85,247,0.2);
-            border-top-color: #a855f7;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .gratis-dupla-box {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(168,85,247,0.2);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 15px 0;
-            text-align: left;
-        }
-        .gratis-dupla-title {
-            color: #ffd700;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
         .screen.hidden { display: none !important; }
         .auth-box {
             max-width: 400px;
@@ -220,10 +197,6 @@
             color: rgba(255,255,255,0.4);
         }
     </style>
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
 
@@ -330,7 +303,6 @@
 
         <h3 style="margin-bottom: 15px;">Selecciona el estilo de lectura (Tiradas Automáticas):</h3>
         <div class="menu-portada">
-
             <!-- ESTILO MÁGICO -->
             <div class="opcion-tarjeta" onclick="seleccionarEstiloAutomatico('magico')">
                 <div class="opcion-icono">🔮</div>
@@ -445,78 +417,49 @@
     </div>
 
     <!-- ========== MESA DE RESULTADOS ========== -->
-    <!-- ========== MESA DE RESULTADOS ========== -->
-<div id="screen-result" class="screen hidden">
-    <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
+    <div id="screen-result" class="screen hidden">
+        <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
 
-    <div class="tarot-table">
-        <!-- DUPLA 1 -->
-        <div class="duple-box">
-            <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
-            <div class="card-container">
-                <div id="img-a" class="card-visual"></div>
-                <div id="name-a" class="card-name"></div>
+        <div class="tarot-table">
+            <!-- DUPLA 1 -->
+            <div class="duple-box">
+                <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
+                <div class="card-container">
+                    <div id="img-a" class="card-visual"></div>
+                    <div id="name-a" class="card-name"></div>
+                </div>
+                <div class="card-container">
+                    <div id="img-b" class="card-visual"></div>
+                    <div id="name-b" class="card-name"></div>
+                </div>
             </div>
-            <div class="card-container">
-                <div id="img-b" class="card-visual"></div>
-                <div id="name-b" class="card-name"></div>
+
+            <!-- DUPLA 2 -->
+            <div class="duple-box">
+                <div class="duple-title">Dupla 2: Futuro / Evolución</div>
+                <div class="card-container">
+                    <div id="img-c" class="card-visual"></div>
+                    <div id="name-c" class="card-name"></div>
+                </div>
+                <div class="card-container">
+                    <div id="img-d" class="card-visual"></div>
+                    <div id="name-d" class="card-name"></div>
+                </div>
             </div>
         </div>
 
-        <!-- DUPLA 2 -->
-        <div class="duple-box">
-            <div class="duple-title">Dupla 2: Futuro / Evolución</div>
-            <div class="card-container">
-                <div id="img-c" class="card-visual"></div>
-                <div id="name-c" class="card-name"></div>
-            </div>
-            <div class="card-container">
-                <div id="img-d" class="card-visual"></div>
-                <div id="name-d" class="card-name"></div>
-            </div>
+        <div class="reading-output" id="interpretation-text"></div>
+
+        <!-- PANEL DE VOZ UNIFICADO -->
+        <div class="voice-panel" id="voice-panel-tecnico">
+            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+            <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+            <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
         </div>
+
+        <button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
     </div>
-
-    <div class="reading-output" id="interpretation-text"></div>
-
-    <!-- PANEL DE VOZ ÚNICO PARA MAZO FÍSICO TÉCNICO -->
-    <div class="voice-panel" id="voice-panel-tecnico" style="display: none;">
-        <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-        <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-        <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-        <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-    </div>
-
-    <button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
-</div>
-
-        <!-- ========== PANEL DE VOZ PARA DUPLAS ========== -->
-<div class="voice-duplas-panel" id="voice-duplas-panel" style="display: none;">
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;">
-        <button class="btn-voice-dupla" onclick="reproducirVozDupla(1)">
-            🔊 Dupla 1
-        </button>
-        <button class="btn-voice-dupla" onclick="reproducirVozDupla(2)">
-            🔊 Dupla 2
-        </button>
-        <button class="btn-voice-dupla" onclick="reproducirVozAmbasDuplas()">
-            🔊 Ambas Duplas
-        </button>
-        <button class="btn-voice-dupla" onclick="window.speechSynthesis.cancel()" style="background: #ff6b6b; color: white;">
-            ⏹ Detener
-        </button>
-    </div>
-</div>
-        <!-- PANEL DE VOZ -->
-        <!-- PANEL DE VOZ PARA MAZO FÍSICO TÉCNICO -->
-<div class="voice-panel" id="voice-panel-tecnico">
-    <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-    <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-    <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-    <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-</div>
-
-<button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
 
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
@@ -605,9 +548,7 @@ window.seleccionarEstiloAutomatico = function(estilo){
 
 window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
 
-// >>> FUNCIÓN CLAVE: abre selección de cartas físicas <<<
 window.abrirSeleccionFisico = function(submodo){
-    console.log(">>> abrirSeleccionFisico:", submodo);
     window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
     localStorage.setItem('tarotia_submodo_fisico',submodo);
     window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
@@ -615,7 +556,6 @@ window.abrirSeleccionFisico = function(submodo){
     window.mostrarPantalla('screen-fisico');
 };
 
-// >>> FUNCIÓN CLAVE: confirma cartas y decide a dónde ir <<<
 window.irAlEjeFisico = function(){
     const c1=document.getElementById('fisico-carta1')?.value;
     const c2=document.getElementById('fisico-carta2')?.value;
@@ -625,13 +565,11 @@ window.irAlEjeFisico = function(){
     if(new Set([c1,c2,c3,c4]).size!==4){alert("⚠️ No repetir cartas.");return;}
     window.cartasFisicoSeleccionadas=[c1,c2,c3,c4];
     const submodo=window.submodoFisicoActual||localStorage.getItem('tarotia_submodo_fisico');
-    // ESTRUCTURAL: DIRECTO A RESULTADO
     if(submodo==='tarotista_fisico'){
         window.mostrarPantalla('screen-result');
         setTimeout(()=>{ if(typeof window.procesarTiradaEstructural==='function') window.procesarTiradaEstructural(); },150);
         return;
     }
-    // PREDICTIVO: va a elegir tema
     window.mostrarPantalla('screen-selector');
 };
 
@@ -667,7 +605,7 @@ window.tirarCartaDiaria=function(){
 window.volverALanding=function(){
     window.mostrarPantalla('screen-landing');
 };
-console.log("✅ Navegación inline v7 cargada");
+console.log("✅ Navegación inline v7 cargada y limpia");
 </script>
 
 </body>
