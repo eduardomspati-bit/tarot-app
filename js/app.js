@@ -151,7 +151,8 @@ window.consultaGratis = async function() {
         };
         console.log("[app.js] 📤 Consulta gratis:", payload);
 
-        const respuesta = await fetch(window.SERVIDOR_URL, {
+        const urlEndpoint = window.SERVIDOR_URL.endsWith('/') ? `${window.SERVIDOR_URL}tirada` : `${window.SERVIDOR_URL}/tirada`;
+        const respuesta = await fetch(urlEndpoint, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
@@ -200,7 +201,8 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         };
         console.log("[app.js] 📤 Enviando:", payload);
 
-        const respuesta = await fetch(window.SERVIDOR_URL, {
+        const urlEndpoint = window.SERVIDOR_URL.endsWith('/') ? `${window.SERVIDOR_URL}tirada` : `${window.SERVIDOR_URL}/tirada`;
+        const respuesta = await fetch(urlEndpoint, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
