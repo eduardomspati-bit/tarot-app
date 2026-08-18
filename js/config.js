@@ -3,8 +3,9 @@
 // ==========================================
 
 // URL del servidor backend
-window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com') + '/tirada';
-console.log("[config.js] SERVIDOR_URL:", window.SERVIDOR_URL);
+// URL base limpia de tu backend en Render (sin sufijos mágicos)
+window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com');
+console.log("[config.js] SERVIDOR_URL base:", window.SERVIDOR_URL);
 
 // Obtener el mazo activo
 window.obtenerMazoActivo = function() {
