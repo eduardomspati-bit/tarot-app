@@ -369,4 +369,18 @@ window.procesarTiradaEstructural = async function() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log("[app.js] DOM listo. Cargando selectores...");
     if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
+
+    // Almacenar textos de duplas para voz
+window.textoDupla1 = data1.encontrada ? 
+    `Dupla 1: ${c1} y ${c2}. ${data1.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
+    `Dupla 1: ${c1} y ${c2}. Sin interpretación cargada.`;
+
+window.textoDupla2 = data2.encontrada ? 
+    `Dupla 2: ${c3} y ${c4}. ${data2.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
+    `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
+
+// Mostrar panel de voz para duplas
+if (typeof window.mostrarPanelVozDuplas === 'function') {
+    window.mostrarPanelVozDuplas();
+}
 });
