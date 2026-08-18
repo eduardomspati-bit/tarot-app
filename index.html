@@ -496,15 +496,15 @@
     </div>
 </div>
         <!-- PANEL DE VOZ -->
-        <div class="voice-panel">
-            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-            <button class="btn-voice" onclick="reproducirVoz('conclusion')">✨ Solo conclusión</button>
-            <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
-            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-        </div>
+        <!-- PANEL DE VOZ PARA MAZO FÍSICO TÉCNICO -->
+<div class="voice-panel" id="voice-panel-tecnico">
+    <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+    <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+    <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+    <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+</div>
 
-        <button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
-    </div>
+<button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
 
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
