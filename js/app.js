@@ -267,7 +267,30 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     window.renderizarMesaDuplas(cartasElegidas, tema);
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
+// ==========================================
+// CONTROL DE PANEL DE VOZ SEGÚN MODO
+// ==========================================
 
+window.mostrarPanelVozSegunModo = function() {
+    const panelMagico = document.getElementById('voice-panel-magico-filosofico');
+    const panelProfesional = document.getElementById('voice-panel-profesional');
+    
+    // Verificar si estamos en modo estructural/técnico (profesional)
+    const esModoProfesional = window.submodoFisicoActual === 'tarotista_fisico';
+    
+    // Ocultar ambos primero
+    if (panelMagico) panelMagico.style.display = 'none';
+    if (panelProfesional) panelProfesional.style.display = 'none';
+    
+    // Mostrar el que corresponde
+    if (esModoProfesional) {
+        if (panelProfesional) panelProfesional.style.display = 'grid';
+        console.log("[UI] Panel profesional (Dupla 1 y Dupla 2)");
+    } else {
+        if (panelMagico) panelMagico.style.display = 'grid';
+        console.log("[UI] Panel mágico/filosófico (Leer todo, Conclusión, Predicciones)");
+    }
+};
 // ==========================================
 // TIRADA ESTRUCTURAL / TÉCNICA
 // ==========================================
