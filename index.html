@@ -576,6 +576,19 @@ window.mostrarPantalla = function(id) {
     }
 };
 
+// Detener voz si el usuario cierra la app o cambia de pestaña
+window.addEventListener('beforeunload', function() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+});
+
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+});
+
 window.seleccionarEstiloAutomatico = function(estilo){
     window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
     window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
