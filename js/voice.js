@@ -30,33 +30,53 @@ function reproducirVoz(tipo = 'todo') {
         const textoCompleto = contenedorTexto.innerText;
         const textoLower = textoCompleto.toLowerCase();
 
-        // Marcas estrictas enfocadas exclusivamente en la sección de predicciones/oráculo
-        const marcas = [
+        // Marcas de inicio de la sección de predicciones
+        const marcasInicio = [
             'predicciones del oráculo',
             'predicciones del oraculo',
-            'consejo del oráculo',
-            'consejo del oraculo',
             'predicciones:'
         ];
 
         let inicio = -1;
-        for (const marca of marcas) {
+        let marcaEncontrada = "";
+        for (const marca of marcasInicio) {
             inicio = textoLower.indexOf(marca);
-            if (inicio !== -1) break;
+            if (inicio !== -1) {
+                marcaEncontrada = marca;
+                break;
+            }
         }
 
         if (inicio !== -1) {
-            // Leer exclusivamente desde la marca de predicciones en adelante
-            textoALeer = textoCompleto.substring(inicio);
-        } else {
-            // Fallback por si la IA no usó exactamente esas palabras
-            const parrafos = contenedorTexto.querySelectorAll('p');
-            if (parrafos.length >= 2) {
-                // Tomar los últimos dos párrafos que suelen corresponder a las predicciones y cierre
-                textoALeer = Array.from(parrafos).slice(-2).map(p => p.innerText).join('\n');
-            } else {
-                textoALeer = textoCompleto;
+            // Buscamos si hay un título posterior que marque el inicio de la conclusión o consejo para cortar ahí
+            const marcasFin = [
+                'consejo y conclusión',
+                'consejo y conclusion',
+                'conclusión',
+                'conclusion',
+                'consejo final',
+                'síntesis',
+                'sintesis'
+            ];
+
+            let fin = -1;
+            // Buscamos solo después de haber encontrado el inicio de las predicciones
+            for (const marcaFin of marcasFin) {
+                const idx = textoLower.indexOf(marcaFin, inicio + marcaEncontrada.length);
+                if (idx !== -1 && (fin === -1 || idx < fin)) {
+                    fin = idx;
+                }
             }
+
+            // Si encontramos dónde empieza el siguiente bloque, cortamos antes. Si no, leemos un trecho prudente.
+            if (fin !== -1) {
+                textoALeer = textoCompleto.substring(inicio, fin);
+            } else {
+                textoALeer = textoCompleto.substring(inicio);
+            }
+        } else {
+            // Fallback si no encuentra la etiqueta exacta
+            textoALeer = textoCompleto;
         }
     }
 
