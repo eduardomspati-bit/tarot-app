@@ -537,15 +537,39 @@
 <script src="js/app.js?v=7"></script>
 
 <!-- NAVEGACIÓN INLINE v7 - Flujo corregido -->
+// NAVEGACIÓN INLINE v7 - Flujo corregido
 <script>
 window.preguntaCustomSeleccionada = "";
 
-window.mostrarPantalla = function(id) {
+// ==========================================
+// PUNTO 5: NAVEGACIÓN CON PANEL DE VOZ DINÁMICO
+// ==========================================
+
+// Guardamos la función original para no romper nada
+const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
     document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
     const d = document.getElementById(id);
     if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
 };
 
+// Sobrescribimos con la versión mejorada
+window.mostrarPantalla = function(id) {
+    // Ejecutar la función original
+    mostrarPantallaOriginal(id);
+    
+    // Si es la pantalla de resultados, ajustar el panel de voz
+    if (id === 'screen-result') {
+        // Esperar un momento para que se renderice el contenido
+        setTimeout(() => {
+            if (typeof window.mostrarPanelVozSegunModo === 'function') {
+                window.mostrarPanelVozSegunModo();
+                console.log("[Navegación] Panel de voz ajustado para screen-result");
+            }
+        }, 150);
+    }
+};
+
+// El resto de tus funciones de navegación...
 window.seleccionarEstiloAutomatico = function(estilo){
     window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
     window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
@@ -614,6 +638,4 @@ window.volverALanding=function(){
 };
 console.log("✅ Navegación inline v7 cargada y limpia");
 </script>
-
-</body>
 </html>
