@@ -450,17 +450,24 @@
 
         <div class="reading-output" id="interpretation-text"></div>
 
-        <!-- PANEL DE VOZ UNIFICADO -->
-        <div class="voice-panel" id="voice-panel-tecnico">
-            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-            <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-            <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-        </div>
-
-        <button class="back-btn" onclick="volverInicio()" style="margin-top: 25px;">Nueva Consulta</button>
+        <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
+<div id="voice-panel-container">
+    <!-- Panel para Estilo Mágico y Filosófico -->
+    <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
+        <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+        <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
+        <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
+        <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
     </div>
 
+    <!-- Panel para Módulo Profesional / Estructural -->
+    <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
+        <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+        <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+        <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+        <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+    </div>
+</div>
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
         <h2 style="color: #a78bfa; margin-bottom: 5px;">💼 Módulo Profesional</h2>
