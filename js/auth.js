@@ -1,5 +1,6 @@
-// ==========================================
-// AUTH - Autenticación y Gestión de Usuarios
+
+auth_js = '''// ==========================================
+// AUTH.JS - Autenticación y Gestión de Usuarios
 // ==========================================
 
 console.log("[auth.js] Módulo de autenticación cargado");
@@ -67,25 +68,27 @@ window.obtenerPlanUsuario = function() {
     return usuario ? usuario.plan : 'Gratis';
 };
 
-window.esUsuarioPremium = function() {
-    // Verificar primero si está forzado por admin
+// esUsuarioPremium es BOOLEANO, no función
+window.esUsuarioPremium = false;
+
+function actualizarEstadoPremium() {
     if (localStorage.getItem('simularPremium') === 'true') {
-        return true;
+        window.esUsuarioPremium = true;
+        return;
     }
     const usuario = window.obtenerDatosUsuario();
-    return usuario ? usuario.plan === 'Premium' : false;
-};
+    window.esUsuarioPremium = usuario ? usuario.plan === 'Premium' : false;
+}
 
 // ==========================================
 // REGISTRO / LOGIN
 // ==========================================
 
 window.autenticarUsuario = async function(nombre, email) {
-    const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
-        ? window.SERVIDOR_URL.replace('/tirada', '')
+    const API_BASE = (typeof window.API_BASE_URL !== 'undefined' && window.API_BASE_URL)
+        ? window.API_BASE_URL
         : 'https://tarot-613b.onrender.com';
 
-    // Validaciones básicas
     if (!email || !email.includes('@')) {
         return { exito: false, error: 'Email inválido.' };
     }
@@ -99,9 +102,9 @@ window.autenticarUsuario = async function(nombre, email) {
         const resp = await fetch(`${API_BASE}/api/auth/registrar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                nombre: nombreLimpio, 
-                email: emailLimpio 
+            body: JSON.stringify({
+                nombre: nombreLimpio,
+                email: emailLimpio
             })
         });
 
@@ -109,16 +112,14 @@ window.autenticarUsuario = async function(nombre, email) {
         console.log("[auth.js] Respuesta del servidor:", data);
 
         if (resp.ok && data.token) {
-            // Guardar token
             window.guardarToken(data.token);
-            
-            // Guardar datos del usuario
+
             if (data.usuario) {
                 window.guardarDatosUsuario(data.usuario);
                 localStorage.setItem(EMAIL_KEY, emailLimpio);
             }
 
-            // Actualizar estado premium global
+            // Actualizar estado premium global (booleano)
             if (data.usuario && data.usuario.plan === 'Premium') {
                 window.esUsuarioPremium = true;
                 localStorage.setItem('simularPremium', 'true');
@@ -127,23 +128,23 @@ window.autenticarUsuario = async function(nombre, email) {
                 localStorage.removeItem('simularPremium');
             }
 
-            return { 
-                exito: true, 
+            return {
+                exito: true,
                 usuario: data.usuario,
                 token: data.token
             };
         }
 
-        return { 
-            exito: false, 
-            error: data.error || 'Error desconocido en el servidor.' 
+        return {
+            exito: false,
+            error: data.error || 'Error desconocido en el servidor.'
         };
 
     } catch (error) {
         console.error("[auth.js] Error en autenticación:", error);
-        return { 
-            exito: false, 
-            error: 'Error de conexión. Verifica tu internet.' 
+        return {
+            exito: false,
+            error: 'Error de conexión. Verifica tu internet.'
         };
     }
 };
@@ -156,11 +157,13 @@ window.iniciarSesion = async function() {
     const nombreInput = document.getElementById('auth-nombre');
     const emailInput = document.getElementById('auth-email');
     const errorDiv = document.getElementById('auth-error');
+    // Buscar el botón DENTRO de la pantalla de auth, no el primero de la página
+    const authBox = document.querySelector('#screen-auth .auth-box');
+    const btn = authBox ? authBox.querySelector('.btn-consulta-gratis') : null;
 
     const nombre = nombreInput ? nombreInput.value.trim() : 'Consultante';
     const email = emailInput ? emailInput.value.trim() : '';
 
-    // Validar email
     if (!email || !email.includes('@')) {
         if (errorDiv) {
             errorDiv.textContent = '⚠️ Ingresá un correo electrónico válido.';
@@ -174,8 +177,6 @@ window.iniciarSesion = async function() {
         errorDiv.textContent = '';
     }
 
-    // Mostrar estado de carga
-    const btn = document.querySelector('.btn-consulta-gratis');
     if (btn) {
         btn.textContent = '⏳ Conectando...';
         btn.disabled = true;
@@ -185,25 +186,15 @@ window.iniciarSesion = async function() {
         const resultado = await window.autenticarUsuario(nombre, email);
 
         if (resultado.exito) {
-            // Actualizar badge de muestras
             if (typeof actualizarBadgeMuestrasFisicas === 'function') {
                 actualizarBadgeMuestrasFisicas();
             }
-
-            // Actualizar info en portada
             if (typeof actualizarInfoUsuario === 'function') {
                 actualizarInfoUsuario();
             }
-
-            // Ir a la portada
             if (typeof window.mostrarPantalla === 'function') {
                 window.mostrarPantalla('screen-portada');
             }
-
-            // Mostrar mensaje de bienvenida
-            const nombreUsuario = resultado.usuario?.nombre || 'Consultante';
-            console.log(`[auth.js] ✅ Bienvenido ${nombreUsuario}!`);
-
         } else {
             if (errorDiv) {
                 errorDiv.textContent = '❌ ' + (resultado.error || 'Error al iniciar sesión.');
@@ -218,7 +209,6 @@ window.iniciarSesion = async function() {
             errorDiv.style.display = 'block';
         }
     } finally {
-        // Restaurar botón
         if (btn) {
             btn.textContent = '🔮 Entrar al Tarot Completo';
             btn.disabled = false;
@@ -231,32 +221,27 @@ window.iniciarSesion = async function() {
 // ==========================================
 
 window.cerrarSesion = function() {
-    // Detener voz si está sonando
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
     }
 
-    // Limpiar datos locales
     window.eliminarToken();
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem(USER_DATA_KEY);
     localStorage.removeItem('simularPremium');
     window.esUsuarioPremium = false;
 
-    // Volver al landing
     if (typeof window.mostrarPantalla === 'function') {
         window.mostrarPantalla('screen-landing');
     }
 
     console.log("[auth.js] 👋 Sesión cerrada correctamente.");
-    
-    // Limpiar campos de auth si existen
+
     const emailInput = document.getElementById('auth-email');
     const nombreInput = document.getElementById('auth-nombre');
     if (emailInput) emailInput.value = '';
     if (nombreInput) nombreInput.value = '';
 
-    // Mostrar mensaje (opcional)
     alert('👋 Sesión cerrada correctamente.');
 };
 
@@ -270,16 +255,12 @@ window.verificarSesionAlCargar = function() {
 
     if (token && usuario) {
         console.log("[auth.js] 🔐 Sesión activa:", usuario.email);
-        // Actualizar estado premium
-        if (usuario.plan === 'Premium' || localStorage.getItem('simularPremium') === 'true') {
-            window.esUsuarioPremium = true;
-        } else {
-            window.esUsuarioPremium = false;
-        }
+        actualizarEstadoPremium();
         return true;
     }
 
     console.log("[auth.js] 🔓 No hay sesión activa");
+    window.esUsuarioPremium = false;
     return false;
 };
 
@@ -291,8 +272,7 @@ window.canjearCodigoPremium = function(codigo) {
     if (!codigo) return false;
 
     const codigoLimpio = codigo.trim().toUpperCase();
-    
-    // Lista de códigos válidos (también se validan en el servidor)
+
     const CODIGOS_VALIDOS = [
         'ADMIN2026',
         'PASEMISTICO',
@@ -300,18 +280,15 @@ window.canjearCodigoPremium = function(codigo) {
     ];
 
     if (CODIGOS_VALIDOS.includes(codigoLimpio)) {
-        // Actualizar estado local
         window.esUsuarioPremium = true;
         localStorage.setItem('simularPremium', 'true');
 
-        // Actualizar datos del usuario
         const usuario = window.obtenerDatosUsuario();
         if (usuario) {
             usuario.plan = 'Premium';
             window.guardarDatosUsuario(usuario);
         }
 
-        // Actualizar UI
         if (typeof actualizarBadgeMuestrasFisicas === 'function') {
             actualizarBadgeMuestrasFisicas();
         }
@@ -331,14 +308,9 @@ window.canjearCodigoPremium = function(codigo) {
 // INICIALIZACIÓN
 // ==========================================
 
-// Verificar sesión al cargar
 document.addEventListener('DOMContentLoaded', function() {
-    const tieneSesion = window.verificarSesionAlCargar();
-    
-    // Si hay sesión y estamos en el landing, redirigir a portada?
-    // (No lo hacemos automáticamente para no interrumpir la experiencia)
-    
-    // Cargar email guardado en el campo de auth si existe
+    window.verificarSesionAlCargar();
+
     const emailInput = document.getElementById('auth-email');
     if (emailInput) {
         const email = window.obtenerEmailUsuario();
@@ -365,9 +337,14 @@ window.auth = {
     obtenerDatosUsuario: window.obtenerDatosUsuario,
     obtenerEmailUsuario: window.obtenerEmailUsuario,
     obtenerPlanUsuario: window.obtenerPlanUsuario,
-    esUsuarioPremium: window.esUsuarioPremium,
     canjearCodigoPremium: window.canjearCodigoPremium,
     verificarSesionAlCargar: window.verificarSesionAlCargar
 };
 
 console.log("[auth.js] Módulo de autenticación listo");
+'''
+
+with open('/mnt/agents/output/auth_corregido.js', 'w', encoding='utf-8') as f:
+    f.write(auth_js)
+
+print("✅ auth_corregido.js creado")
