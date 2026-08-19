@@ -560,7 +560,13 @@ const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
 };
 
 window.mostrarPantalla = function(id) {
+    // ⛔ DETENER VOZ al cambiar de pantalla
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+
     mostrarPantallaOriginal(id);
+
     if (id === 'screen-result') {
         setTimeout(() => {
             if (typeof window.mostrarPanelVozSegunModo === 'function') {
