@@ -364,10 +364,10 @@ window.procesarTiradaEstructural = async function() {
             `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
 
         // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
-        if (data1.encontrada || data2.encontrada) {
-            const panelVoz2 = document.getElementById('voice-panel-tecnico');
-            if (panelVoz2) panelVoz2.style.display = 'grid';
-        }
+        // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
+if (data1.encontrada || data2.encontrada) {
+    window.mostrarPanelVozSegunModo();
+}
 
         // Guardar en historial
         if (typeof guardarEnHistorialLocal === 'function') {
