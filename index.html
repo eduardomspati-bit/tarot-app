@@ -199,8 +199,8 @@
         }
         .plan-badge {
             display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
+            padding: 2px 12px;
+            border-radius: 20px;
             font-size: 0.75rem;
             font-weight: bold;
         }
@@ -211,6 +211,23 @@
         .plan-gratis {
             background: #4a4a6a;
             color: #ccc;
+        }
+        .btn-cerrar-sesion {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            color: #ff6b6b;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .btn-cerrar-sesion:hover {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff6b6b;
+            transform: scale(1.02);
         }
     </style>
 </head>
@@ -354,7 +371,7 @@
             📜 Ver Mis Lecturas Anteriores
         </button>
 
-        <button onclick="cerrarSesion()" style="background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); color: #ff6b6b; width: 100%; padding: 12px; border-radius: 12px; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease;">
+        <button onclick="cerrarSesion()" class="btn-cerrar-sesion">
             🚪 Cerrar Sesión
         </button>
     </div>
@@ -570,31 +587,67 @@
 <script src="js/app.js?v=7"></script>
 
 <!-- ========================================== -->
-<!-- NAVEGACIÓN INLINE v7 - Flujo corregido -->
+<!-- NAVEGACIÓN INLINE v8 - CON AUTENTICACIÓN -->
 <!-- ========================================== -->
 <script>
 window.preguntaCustomSeleccionada = "";
 
 // ==========================================
-// MOSTRAR PANTALLA CON DETENER VOZ
+// MOSTRAR PANTALLA CON PROTECCIÓN Y VOZ
 // ==========================================
 const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
-    document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
+    document.querySelectorAll('.screen').forEach(p => { 
+        p.style.display='none'; 
+        p.classList.add('hidden'); 
+    });
     const d = document.getElementById(id);
-    if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
+    if(d){ 
+        d.style.display='block'; 
+        d.classList.remove('hidden'); 
+        window.scrollTo(0,0); 
+    }
 };
 
 window.mostrarPantalla = function(id) {
-    // ⛔ DETENER VOZ al cambiar de pantalla
+    // DETENER VOZ al cambiar de pantalla
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
     }
 
+    // ==========================================
+    // PANTALLAS PROTEGIDAS (requieren autenticación)
+    // ==========================================
+    const pantallasProtegidas = [
+        'screen-portada', 
+        'screen-selector', 
+        'screen-pregunta', 
+        'screen-result',
+        'screen-fisico',
+        'screen-modulo-profesional',
+        'screen-historial',
+        'screen-guia-lectura'
+    ];
+
+    if (pantallasProtegidas.includes(id)) {
+        // Verificar si está logueado
+        const logueado = window.estaLogueado ? window.estaLogueado() : false;
+        if (!logueado) {
+            console.log(`[nav] 🔒 Pantalla "${id}" protegida. Redirigiendo a auth.`);
+            mostrarPantallaOriginal('screen-auth');
+            return;
+        }
+    }
+
+    // Mostrar la pantalla solicitada
     mostrarPantallaOriginal(id);
 
-    // Actualizar info de usuario en portada
+    // ==========================================
+    // ACCIONES ESPECÍFICAS POR PANTALLA
+    // ==========================================
     if (id === 'screen-portada') {
-        actualizarInfoUsuario();
+        if (typeof actualizarInfoUsuario === 'function') {
+            setTimeout(actualizarInfoUsuario, 100);
+        }
     }
 
     if (id === 'screen-result') {
@@ -603,6 +656,44 @@ window.mostrarPantalla = function(id) {
                 window.mostrarPanelVozSegunModo();
             }
         }, 150);
+    }
+
+    if (id === 'screen-auth') {
+        // Limpiar errores anteriores
+        const errorDiv = document.getElementById('auth-error');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+        // Cargar email guardado si existe
+        const emailInput = document.getElementById('auth-email');
+        if (emailInput) {
+            const email = localStorage.getItem('tarotia_email_usuario') || '';
+            if (email) emailInput.value = email;
+        }
+    }
+};
+
+// ==========================================
+// ENTRAR A LA APP COMPLETA CON VERIFICACIÓN
+// ==========================================
+window.entrarAppCompleta = function() {
+    console.log("[nav] Entrar a Tarot Completo - Verificando sesión...");
+    
+    // Verificar si hay sesión activa
+    if (window.estaLogueado && window.estaLogueado()) {
+        console.log("[nav] ✅ Usuario logueado, mostrando portada");
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-portada');
+            if (typeof actualizarInfoUsuario === 'function') {
+                setTimeout(actualizarInfoUsuario, 100);
+            }
+        }
+    } else {
+        console.log("[nav] ❌ Usuario no logueado, mostrando auth");
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-auth');
+        }
     }
 };
 
@@ -622,7 +713,7 @@ function actualizarInfoUsuario() {
     let muestras = '---';
     if (typeof obtenerMuestrasFisicasRestantes === 'function') {
         const restantes = obtenerMuestrasFisicasRestantes();
-        muestras = esPremium ? '♾️ Ilimitadas' : `${restantes} de ${MAX_MUESTRAS || 5}`;
+        muestras = esPremium ? '♾️ Ilimitadas' : `${restantes} de ${window.MAX_MUESTRAS_FISICAS || 5}`;
     }
 
     container.innerHTML = `
@@ -669,9 +760,22 @@ window.seleccionarEstiloAutomatico = function(estilo){
     window.mostrarPantalla('screen-selector');
 };
 
-window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
+window.abrirModuloProfesional = function(){ 
+    window.mostrarPantalla('screen-modulo-profesional'); 
+};
 
 window.abrirSeleccionFisico = function(submodo){
+    // Verificar acceso Premium para modo estructural
+    if (submodo === 'tarotista_fisico' && !window.esUsuarioPremium) {
+        if (window.verificarAccesoPremium) {
+            const tieneAcceso = window.verificarAccesoPremium();
+            if (!tieneAcceso) return;
+        } else {
+            alert('🔒 Esta función es exclusiva para usuarios Premium.');
+            return;
+        }
+    }
+    
     window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
     localStorage.setItem('tarotia_submodo_fisico',submodo);
     window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
@@ -696,38 +800,77 @@ window.irAlEjeFisico = function(){
     window.mostrarPantalla('screen-selector');
 };
 
-window.abrirPantallaPregunta=function(){document.getElementById('texto-pregunta-usuario').value="";window.mostrarPantalla('screen-pregunta');};
+window.abrirPantallaPregunta=function(){
+    document.getElementById('texto-pregunta-usuario').value="";
+    window.mostrarPantalla('screen-pregunta');
+};
+
 window.confirmarPreguntaYEjecutar=function(){
     window.preguntaCustomSeleccionada=document.getElementById('texto-pregunta-usuario').value.trim();
     if(!window.preguntaCustomSeleccionada){alert("⚠️ Escribí tu pregunta.");return;}
     window.ejecutarLecturaSegunModo('Pregunta Específica');
 };
+
 window.ejecutarLecturaSegunModo=function(tema){
-    if(typeof window.procesarTiradaCompleta==='function') window.procesarTiradaCompleta(tema,window.preguntaCustomSeleccionada);
+    if(typeof window.procesarTiradaCompleta==='function') {
+        window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada);
+    }
 };
+
 window.volverAPortada=function(){
-    window.modoFisicoActivo=false;window.submodoFisicoActual=null;
-    window.cartasFisicoSeleccionadas=null;window.preguntaCustomSeleccionada="";
+    window.modoFisicoActivo=false;
+    window.submodoFisicoActual=null;
+    window.cartasFisicoSeleccionadas=null;
+    window.preguntaCustomSeleccionada="";
     localStorage.removeItem('tarotia_submodo_fisico');
     window.mostrarPantalla('screen-portada');
-    actualizarInfoUsuario();
+    if (typeof actualizarInfoUsuario === 'function') {
+        setTimeout(actualizarInfoUsuario, 100);
+    }
 };
-window.volverInicio=function(){window.volverAPortada();};
-window.abrirGuiaLectura=function(){window.mostrarPantalla('screen-guia-lectura');};
-window.volverAlModuloProfesional=function(){window.mostrarPantalla('screen-modulo-profesional');};
+
+window.volverInicio=function(){
+    window.volverAPortada();
+};
+
+window.abrirGuiaLectura=function(){
+    window.mostrarPantalla('screen-guia-lectura');
+};
+
+window.volverAlModuloProfesional=function(){
+    window.mostrarPantalla('screen-modulo-profesional');
+};
+
 window.abrirHistorial=function(){
-    if(typeof window.cargarHistorial==='function')window.cargarHistorial();
+    if(typeof window.cargarHistorial==='function') window.cargarHistorial();
     window.mostrarPantalla('screen-historial');
 };
+
 window.tirarCartaDiaria=function(){
     const mazo=window.obtenerMazoActivo?window.obtenerMazoActivo():["El Loco","El Mago","La Sacerdotisa"];
     alert("🔮 Carta del Día: "+mazo[Math.floor(Math.random()*mazo.length)]);
 };
+
 window.volverALanding=function(){
     window.mostrarPantalla('screen-landing');
 };
 
-console.log("✅ Navegación inline v7 cargada y limpia");
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("[nav] ✅ Navegación inicializada");
+    
+    // Verificar sesión al cargar
+    if (window.estaLogueado && window.estaLogueado()) {
+        console.log("[nav] ✅ Sesión activa detectada");
+        if (window.esUsuarioPremium) {
+            console.log("[nav] ⭐ Usuario Premium");
+        }
+    }
+});
+
+console.log("✅ Navegación inline v8 cargada - Con autenticación");
 </script>
 
 </body>
