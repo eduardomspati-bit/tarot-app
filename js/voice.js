@@ -30,15 +30,13 @@ function reproducirVoz(tipo = 'todo') {
         const textoCompleto = contenedorTexto.innerText;
         const textoLower = textoCompleto.toLowerCase();
 
-        // Buscamos la marca exacta en orden de prioridad
+        // Marcas estrictas enfocadas exclusivamente en la sección de predicciones/oráculo
         const marcas = [
             'predicciones del oráculo',
             'predicciones del oraculo',
-            'predicciones',
-            'oráculo',
-            'oraculo',
-            'futuro cercano',
-            'futuro'
+            'consejo del oráculo',
+            'consejo del oraculo',
+            'predicciones:'
         ];
 
         let inicio = -1;
@@ -48,11 +46,17 @@ function reproducirVoz(tipo = 'todo') {
         }
 
         if (inicio !== -1) {
-            // Leer desde "Predicciones..." hasta el final
+            // Leer exclusivamente desde la marca de predicciones en adelante
             textoALeer = textoCompleto.substring(inicio);
         } else {
-            // Si no encontramos nada, leemos todo (fallback)
-            textoALeer = textoCompleto;
+            // Fallback por si la IA no usó exactamente esas palabras
+            const parrafos = contenedorTexto.querySelectorAll('p');
+            if (parrafos.length >= 2) {
+                // Tomar los últimos dos párrafos que suelen corresponder a las predicciones y cierre
+                textoALeer = Array.from(parrafos).slice(-2).map(p => p.innerText).join('\n');
+            } else {
+                textoALeer = textoCompleto;
+            }
         }
     }
 
@@ -77,11 +81,9 @@ function reproducirVoz(tipo = 'todo') {
 // VOZ PARA DUPLAS (MODO ESTRUCTURAL)
 // ==========================================
 
-// Variables para almacenar el texto de cada dupla
 window.textoDupla1 = "";
 window.textoDupla2 = "";
 
-// Función para reproducir una dupla específica
 window.reproducirVozDupla = function(numero) {
     if (!('speechSynthesis' in window)) {
         alert("⚠️ Tu navegador no soporta la lectura por voz.");
