@@ -21,6 +21,8 @@ const CODIGOS_PREMIUM_VALIDOS = [
     if (simulado) {
         window.esUsuarioPremium = true;
         console.log('✨ Modo Premium activado desde localStorage');
+    } else {
+        window.esUsuarioPremium = false;
     }
 })();
 
@@ -40,11 +42,22 @@ window.estaLogueado = function() {
 };
 
 window.cerrarSesion = function() {
+    // Detener voz si está sonando
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+    
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem('simularPremium');
     window.esUsuarioPremium = false;
-    alert('Sesión cerrada.');
+    
+    // Volver al landing
+    if (typeof window.mostrarPantalla === 'function') {
+        window.mostrarPantalla('screen-landing');
+    }
+    
+    alert('👋 Sesión cerrada correctamente.');
 };
 
 // Registro/Login contra el servidor
@@ -124,11 +137,11 @@ function actualizarBadgeMuestrasFisicas() {
 
     if (badge) {
         if (window.esUsuarioPremium) {
-            badge.innerText = "Ilimitado ✨";
+            badge.innerText = "♾️ Ilimitado";
             badge.style.borderColor = "#a78bfa";
         } else {
             const restantes = obtenerMuestrasFisicasRestantes();
-            badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
+            badge.innerText = restantes > 0 ? `🔮 ${restantes} Muestras` : "🔒 Agotado";
         }
     }
 }
@@ -136,37 +149,39 @@ function actualizarBadgeMuestrasFisicas() {
 // ==========================================
 // CANJEAR CÓDIGO PREMIUM
 // ==========================================
-function canjearCodigoPremium(codigo) {
+window.canjearCodigoPremium = function(codigo) {
     if (!codigo) return;
     const codigoLimpio = codigo.trim().toUpperCase();
 
     if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
         window.esUsuarioPremium = true;
         localStorage.setItem('simularPremium', 'true');
-        alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
+        alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado a todas las funciones.');
         actualizarBadgeMuestrasFisicas();
+        return true;
     } else {
         alert('❌ Código inválido o expirado. Probá con otro o contactá al administrador.');
+        return false;
     }
-}
+};
 
 // ==========================================
-// MERCADO PAGO (STUB)
+// MERCADO PAGO (STUB - Integrar con Mercado Pago real)
 // ==========================================
-function abrirMercadoPago() {
+window.abrirMercadoPago = function() {
     alert('🛒 Próximamente: enlace de pago por Mercado Pago.\n\nContactá al administrador para adquirir tu Pase Místico.');
-}
+};
 
 // ==========================================
 // ACCESO A MAZO FÍSICO (CORREGIDO)
 // ==========================================
-function verificarAccesoFisico() {
+window.verificarAccesoFisico = function() {
     // 1. Si es usuario Premium, abre directamente la carga de cartas físicas
     if (window.esUsuarioPremium) {
-        if (typeof abrirModoFisico === 'function') {
-            abrirModoFisico();
-        } else if (typeof mostrarPantalla === 'function') {
-            mostrarPantalla('screen-fisico');
+        if (typeof window.abrirModoFisico === 'function') {
+            window.abrirModoFisico();
+        } else if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-fisico');
         }
         return;
     }
@@ -175,41 +190,186 @@ function verificarAccesoFisico() {
     const muestrasRestantes = obtenerMuestrasFisicasRestantes();
 
     if (muestrasRestantes > 0) {
-        if (typeof abrirModoFisico === 'function') {
-            abrirModoFisico();
-        } else if (typeof mostrarPantalla === 'function') {
-            mostrarPantalla('screen-fisico');
+        if (typeof window.abrirModoFisico === 'function') {
+            window.abrirModoFisico();
+        } else if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-fisico');
         }
     } else {
         // 3. Muestras agotadas: Solicita código Premium o redirige a suscripción
-        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar o adquiere tu Pase Místico:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
-        } else if (typeof abrirMercadoPago === 'function') {
-            abrirMercadoPago();
+        const opcion = confirm("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\n¿Quieres ingresar un código Premium? (Aceptar = Sí, Cancelar = Ver suscripción)");
+        if (opcion) {
+            const codigo = prompt("Ingresa tu código de acceso Premium:");
+            if (codigo && typeof window.canjearCodigoPremium === 'function') {
+                const exito = window.canjearCodigoPremium(codigo);
+                if (exito && typeof window.abrirModoFisico === 'function') {
+                    window.abrirModoFisico();
+                }
+            }
+        } else {
+            window.abrirMercadoPago();
         }
     }
-}
+};
 
 // ==========================================
 // PUENTE / ALIAS PARA EVITAR EL REFERENCE ERROR
 // ==========================================
-function verificarAccesoTarotistaFisico() {
-    verificarAccesoFisico();
-}
+window.verificarAccesoTarotistaFisico = function() {
+    window.verificarAccesoFisico();
+};
 
-function verificarAccesoTarotista() {
+window.verificarAccesoTarotista = function() {
     if (window.esUsuarioPremium) {
-        if (typeof irAlEjeConsulta === 'function') irAlEjeConsulta('manual');
+        if (typeof window.irAlEjeConsulta === 'function') {
+            window.irAlEjeConsulta('manual');
+        } else {
+            alert("⚠️ Función 'irAlEjeConsulta' no definida.");
+        }
     } else {
-        const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
-            canjearCodigoPremium(codigo);
+        const opcion = confirm("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\n\n¿Quieres ingresar un código Premium?");
+        if (opcion) {
+            const codigo = prompt("Ingresa tu código de acceso:");
+            if (codigo && typeof window.canjearCodigoPremium === 'function') {
+                window.canjearCodigoPremium(codigo);
+            }
+        } else {
+            window.abrirMercadoPago();
         }
     }
-}
+};
 
-// Inicializar el estado de los badges al cargar el módulo
-document.addEventListener('DOMContentLoaded', () => {
+// ==========================================
+// INICIAR SESIÓN (desde la pantalla de auth)
+// ==========================================
+
+window.iniciarSesion = async function() {
+    const nombreInput = document.getElementById('auth-nombre');
+    const emailInput = document.getElementById('auth-email');
+    const errorDiv = document.getElementById('auth-error');
+
+    const nombre = nombreInput ? nombreInput.value.trim() : 'Consultante';
+    const email = emailInput ? emailInput.value.trim() : '';
+
+    if (!email || !email.includes('@')) {
+        if (errorDiv) {
+            errorDiv.textContent = '⚠️ Ingresá un correo válido.';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+
+    if (errorDiv) errorDiv.style.display = 'none';
+
+    const resultado = await window.autenticarUsuario(nombre, email);
+
+    if (resultado.exito) {
+        // Actualizar badge de muestras
+        if (typeof actualizarBadgeMuestrasFisicas === 'function') {
+            actualizarBadgeMuestrasFisicas();
+        }
+        // Ir a la portada
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-portada');
+        }
+    } else {
+        if (errorDiv) {
+            errorDiv.textContent = '❌ ' + (resultado.error || 'Error al iniciar sesión.');
+            errorDiv.style.display = 'block';
+        }
+    }
+};
+
+// ==========================================
+// ABRIR MODO FÍSICO
+// ==========================================
+
+window.abrirModoFisico = function() {
+    if (typeof window.cargarSelectoresFisicos === 'function') {
+        window.cargarSelectoresFisicos();
+    }
+    if (typeof window.mostrarPantalla === 'function') {
+        window.mostrarPantalla('screen-fisico');
+    }
+};
+
+// ==========================================
+// FORZAR FLUJO DE AUTENTICACIÓN
+// ==========================================
+
+// Redirigir a auth si no está logueado y trata de entrar a la app completa
+window.entrarAppCompleta = function() {
+    if (window.estaLogueado()) {
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-portada');
+        }
+    } else {
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-auth');
+        }
+    }
+};
+
+// ==========================================
+// VERIFICAR ACCESO PREMIUM
+// ==========================================
+
+window.verificarAccesoPremium = function() {
+    if (window.esUsuarioPremium) {
+        return true;
+    } else {
+        const opcion = confirm("🔒 Esta función es exclusiva para TarotIA Premium.\n\n¿Quieres ingresar un código Premium? (Aceptar = Sí, Cancelar = Ver suscripción)");
+        if (opcion) {
+            const codigo = prompt("Ingresa tu código de acceso Premium:");
+            if (codigo && typeof window.canjearCodigoPremium === 'function') {
+                return window.canjearCodigoPremium(codigo);
+            }
+        } else {
+            window.abrirMercadoPago();
+        }
+        return false;
+    }
+};
+
+// ==========================================
+// MOSTRAR PLAN DEL USUARIO EN LA PORTADA
+// ==========================================
+
+window.mostrarPlanUsuario = function() {
+    const email = localStorage.getItem(EMAIL_KEY) || 'No logueado';
+    const plan = window.esUsuarioPremium ? '⭐ PREMIUM' : '🃏 GRATIS';
+    const muestras = window.esUsuarioPremium ? '♾️ Ilimitadas' : `${obtenerMuestrasFisicasRestantes()} de ${MAX_MUESTRAS}`;
+    
+    return `<div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,215,0,0.1); border-radius: 10px; padding: 12px; margin-bottom: 20px; font-size: 0.9rem;">
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+            <span>📧 ${email}</span>
+            <span style="color: ${window.esUsuarioPremium ? '#ffd700' : '#a78bfa'};">${plan}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; margin-top: 4px; color: var(--muted-text);">
+            <span>🔮 Muestras físicas: ${muestras}</span>
+        </div>
+    </div>`;
+};
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+
+// Al cargar la página, actualizar badges
+document.addEventListener('DOMContentLoaded', function() {
     actualizarBadgeMuestrasFisicas();
+    
+    // Si hay un email guardado, mostrarlo en el placeholder del auth
+    const emailInput = document.getElementById('auth-email');
+    if (emailInput) {
+        const emailGuardado = localStorage.getItem(EMAIL_KEY);
+        if (emailGuardado) {
+            emailInput.value = emailGuardado;
+        }
+    }
+    
+    console.log('[access.js] Módulo de acceso inicializado');
+    console.log('[access.js] Usuario Premium:', window.esUsuarioPremium);
 });
+
+console.log("[access.js] Módulo de control de acceso cargado");
