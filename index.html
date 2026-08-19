@@ -451,23 +451,25 @@
         <div class="reading-output" id="interpretation-text"></div>
 
         <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
-<div id="voice-panel-container">
-    <!-- Panel para Estilo Mágico y Filosófico -->
-    <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
-        <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-        <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
-        <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
-        <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        <div id="voice-panel-container">
+            <!-- Panel para Estilo Mágico y Filosófico -->
+            <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
+                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+                <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
+                <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
+                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+            </div>
+
+            <!-- Panel para Módulo Profesional / Estructural -->
+            <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
+                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+                <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+                <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+            </div>
+        </div>
     </div>
 
-    <!-- Panel para Módulo Profesional / Estructural -->
-    <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
-        <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-        <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-        <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-        <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-    </div>
-</div>
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
         <h2 style="color: #a78bfa; margin-bottom: 5px;">💼 Módulo Profesional</h2>
@@ -537,7 +539,6 @@
 <script src="js/app.js?v=7"></script>
 
 <!-- NAVEGACIÓN INLINE v7 - Flujo corregido -->
-// NAVEGACIÓN INLINE v7 - Flujo corregido
 <script>
 window.preguntaCustomSeleccionada = "";
 
@@ -545,21 +546,16 @@ window.preguntaCustomSeleccionada = "";
 // PUNTO 5: NAVEGACIÓN CON PANEL DE VOZ DINÁMICO
 // ==========================================
 
-// Guardamos la función original para no romper nada
 const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
     document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
     const d = document.getElementById(id);
     if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
 };
 
-// Sobrescribimos con la versión mejorada
 window.mostrarPantalla = function(id) {
-    // Ejecutar la función original
     mostrarPantallaOriginal(id);
     
-    // Si es la pantalla de resultados, ajustar el panel de voz
     if (id === 'screen-result') {
-        // Esperar un momento para que se renderice el contenido
         setTimeout(() => {
             if (typeof window.mostrarPanelVozSegunModo === 'function') {
                 window.mostrarPanelVozSegunModo();
@@ -569,7 +565,6 @@ window.mostrarPantalla = function(id) {
     }
 };
 
-// El resto de tus funciones de navegación...
 window.seleccionarEstiloAutomatico = function(estilo){
     window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
     window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
