@@ -417,58 +417,68 @@
     </div>
 
     <!-- ========== MESA DE RESULTADOS ========== -->
-    <div id="screen-result" class="screen hidden">
-        <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
+<div id="screen-result" class="screen hidden">
+    <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
 
-        <div class="tarot-table">
-            <!-- DUPLA 1 -->
-            <div class="duple-box">
-                <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
-                <div class="card-container">
-                    <div id="img-a" class="card-visual"></div>
-                    <div id="name-a" class="card-name"></div>
-                </div>
-                <div class="card-container">
-                    <div id="img-b" class="card-visual"></div>
-                    <div id="name-b" class="card-name"></div>
-                </div>
+    <div class="tarot-table">
+        <!-- DUPLA 1 -->
+        <div class="duple-box">
+            <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
+            <div class="card-container">
+                <div id="img-a" class="card-visual"></div>
+                <div id="name-a" class="card-name"></div>
             </div>
-
-            <!-- DUPLA 2 -->
-            <div class="duple-box">
-                <div class="duple-title">Dupla 2: Futuro / Evolución</div>
-                <div class="card-container">
-                    <div id="img-c" class="card-visual"></div>
-                    <div id="name-c" class="card-name"></div>
-                </div>
-                <div class="card-container">
-                    <div id="img-d" class="card-visual"></div>
-                    <div id="name-d" class="card-name"></div>
-                </div>
+            <div class="card-container">
+                <div id="img-b" class="card-visual"></div>
+                <div id="name-b" class="card-name"></div>
             </div>
         </div>
 
-        <div class="reading-output" id="interpretation-text"></div>
-
-        <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
-        <div id="voice-panel-container">
-            <!-- Panel para Estilo Mágico y Filosófico -->
-            <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
-                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-                <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
-                <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
-                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        <!-- DUPLA 2 -->
+        <div class="duple-box">
+            <div class="duple-title">Dupla 2: Futuro / Evolución</div>
+            <div class="card-container">
+                <div id="img-c" class="card-visual"></div>
+                <div id="name-c" class="card-name"></div>
             </div>
-
-            <!-- Panel para Módulo Profesional / Estructural -->
-            <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
-                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-                <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-                <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+            <div class="card-container">
+                <div id="img-d" class="card-visual"></div>
+                <div id="name-d" class="card-name"></div>
             </div>
         </div>
     </div>
+
+    <div class="reading-output" id="interpretation-text"></div>
+
+    <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
+    <div id="voice-panel-container">
+        <!-- Panel para Estilo Mágico y Filosófico -->
+        <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
+            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+            <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
+            <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
+            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        </div>
+
+        <!-- Panel para Módulo Profesional / Estructural -->
+        <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
+            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+            <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+            <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        </div>
+    </div>
+
+    <!-- ========== BOTONES DE NAVEGACIÓN SIEMPRE VISIBLES ========== -->
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+        <button class="back-btn" onclick="volverInicio()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
+            🔄 Nueva Consulta
+        </button>
+        <button class="back-btn" onclick="volverAPortada()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
+            ⬅ Volver al Menú
+        </button>
+    </div>
+</div>
 
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
