@@ -529,6 +529,7 @@
 </div>
 
 <!-- Carga de Scripts con cache-busting -->
+<!-- Carga de Scripts con cache-busting -->
 <script src="js/arcanos.js?v=7"></script>
 <script src="js/config.js?v=7"></script>
 <script src="js/auth.js?v=7"></script>
@@ -542,10 +543,6 @@
 <script>
 window.preguntaCustomSeleccionada = "";
 
-// ==========================================
-// PUNTO 5: NAVEGACIÓN CON PANEL DE VOZ DINÁMICO
-// ==========================================
-
 const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
     document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
     const d = document.getElementById(id);
@@ -554,12 +551,10 @@ const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
 
 window.mostrarPantalla = function(id) {
     mostrarPantallaOriginal(id);
-    
     if (id === 'screen-result') {
         setTimeout(() => {
             if (typeof window.mostrarPanelVozSegunModo === 'function') {
                 window.mostrarPanelVozSegunModo();
-                console.log("[Navegación] Panel de voz ajustado para screen-result");
             }
         }, 150);
     }
