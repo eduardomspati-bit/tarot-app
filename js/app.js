@@ -295,8 +295,7 @@ window.procesarTiradaEstructural = async function() {
     }
 
     // Ocultar el panel de voz al inicio
-    const panelVoz = document.getElementById('voice-panel-tecnico');
-    if (panelVoz) panelVoz.style.display = 'none';
+    window.mostrarPanelVozSegunModo();
 
     try {
         const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
