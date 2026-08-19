@@ -17,6 +17,7 @@ function reproducirVoz(tipo = 'todo') {
 
     if (tipo === 'todo') {
         textoALeer = contenedorTexto.innerText;
+
     } else if (tipo === 'conclusion') {
         const parrafos = contenedorTexto.querySelectorAll('p');
         if (parrafos.length > 0) {
@@ -24,21 +25,41 @@ function reproducirVoz(tipo = 'todo') {
         } else {
             textoALeer = contenedorTexto.innerText;
         }
+
     } else if (tipo === 'predicciones') {
-        const secciones = contenedorTexto.querySelectorAll('div, section, p');
-        let encontrado = false;
-        secciones.forEach(sec => {
-            if (sec.innerText.toLowerCase().includes('futuro') || sec.innerText.toLowerCase().includes('predicción')) {
-                textoALeer += " " + sec.innerText;
-                encontrado = true;
-            }
-        });
-        if (!encontrado) textoALeer = contenedorTexto.innerText;
+        const textoCompleto = contenedorTexto.innerText;
+        const textoLower = textoCompleto.toLowerCase();
+
+        // Buscamos la marca exacta en orden de prioridad
+        const marcas = [
+            'predicciones del oráculo',
+            'predicciones del oraculo',
+            'predicciones',
+            'oráculo',
+            'oraculo',
+            'futuro cercano',
+            'futuro'
+        ];
+
+        let inicio = -1;
+        for (const marca of marcas) {
+            inicio = textoLower.indexOf(marca);
+            if (inicio !== -1) break;
+        }
+
+        if (inicio !== -1) {
+            // Leer desde "Predicciones..." hasta el final
+            textoALeer = textoCompleto.substring(inicio);
+        } else {
+            // Si no encontramos nada, leemos todo (fallback)
+            textoALeer = textoCompleto;
+        }
     }
 
     if (!textoALeer.trim()) return;
 
-    textoALeer = textoALeer.replace(/🔮|✨|🃏|💫|🚀|💖|💼|⬅|📖|📜|📧|⚠️|❌/g, '');
+    // Limpiar emojis
+    textoALeer = textoALeer.replace(/🔮|✨|🃏|💫|🚀|💖|💼|⬅|📖|📜|📧|⚠️|❌|📌/g, '');
 
     const mensaje = new SpeechSynthesisUtterance(textoALeer);
     mensaje.lang = 'es-ES';
