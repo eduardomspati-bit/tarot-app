@@ -2,10 +2,6 @@
 // CONTROL DE ACCESOS, AUTENTICACIÓN Y MUESTRAS FÍSICAS
 // ==========================================
 
-// ==========================================
-// MUESTRAS FÍSICAS (FLUJO PROGRESIVO: 2 LIBRES -> EMAIL -> 3 CLOUD -> PAGO)
-// ==========================================
-
 const TIRADAS_LIBRES_LOCALES = 2;
 
 function obtenerTiradasLibresLocalesUsadas() {
@@ -21,7 +17,7 @@ function registrarTiradaLibreLocalUsada() {
 async function obtenerMuestrasFisicasRestantes() {
     if (window.esUsuarioPremium) return 999;
 
-    const token = window.obtenerToken();
+    const token = window.obtenerToken ? window.obtenerToken() : null;
     const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
         ? window.SERVIDOR_URL.replace('/tirada', '')
         : 'https://tarot-613b.onrender.com';
@@ -40,7 +36,6 @@ async function obtenerMuestrasFisicasRestantes() {
         }
     }
 
-    // Si aún no se registró, calculamos en base a las 2 libres locales
     const libresRestantes = Math.max(0, TIRADAS_LIBRES_LOCALES - obtenerTiradasLibresLocalesUsadas());
     return libresRestantes;
 }
@@ -48,7 +43,7 @@ async function obtenerMuestrasFisicasRestantes() {
 async function registrarUsoTiradaFisica() {
     if (window.esUsuarioPremium) return 999;
 
-    const token = window.obtenerToken();
+    const token = window.obtenerToken ? window.obtenerToken() : null;
     const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
         ? window.SERVIDOR_URL.replace('/tirada', '')
         : 'https://tarot-613b.onrender.com';
@@ -66,9 +61,14 @@ async function registrarUsoTiradaFisica() {
                 const data = await resp.json();
                 actualizarBadgeMuestrasFisicas();
                 return data.muestrasRestantes;
+            } else {
+                const data = await resp.json().catch(() => ({}));
+                console.warn("⚠️ Servidor respondió:", resp.status, data.error);
+                return -1;
             }
         } catch (e) {
             console.error("Error al registrar muestra en MongoDB:", e);
+            return -1;
         }
     }
     return -1;
@@ -90,14 +90,11 @@ async function actualizarBadgeMuestrasFisicas() {
     }
 }
 
-// ==========================================
-// CANJEAR CÓDIGO PREMIUM
-// ==========================================
 function canjearCodigoPremium(codigo) {
     if (!codigo) return;
     const codigoLimpio = codigo.trim().toUpperCase();
 
-    if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
+    if (typeof CODIGOS_PREMIUM_VALIDOS !== 'undefined' && CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
         window.esUsuarioPremium = true;
         localStorage.setItem('simularPremium', 'true');
         localStorage.setItem('tarotia_plan_premium', 'true');
@@ -108,9 +105,6 @@ function canjearCodigoPremium(codigo) {
     }
 }
 
-// ==========================================
-// MERCADO PAGO 
-// ==========================================
 window.abrirMercadoPago = function() {
     window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
 };
@@ -118,9 +112,9 @@ window.abrirMercadoPago = function() {
 // ==========================================
 // ACCESO A MAZO FÍSICO (NÚCLEO DEL EMBUDO)
 // ==========================================
-async function verificarAccesoFisico() {
+async function verificarAccesoFisico(submodo) {
     if (window.esUsuarioPremium) {
-        ejecutarModoFisicoSeguro();
+        abrirPantallaFisico(submodo);
         return;
     }
 
@@ -129,23 +123,27 @@ async function verificarAccesoFisico() {
     if (libresUsadas < TIRADAS_LIBRES_LOCALES) {
         registrarTiradaLibreLocalUsada();
         console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_LOCALES})`);
-        ejecutarModoFisicoSeguro();
+        abrirPantallaFisico(submodo);
         return;
     }
 
     // 2. Ya gastó las 2 libres. ¿Tiene token (dejó su email)?
-    const token = window.obtenerToken();
+    const token = window.obtenerToken ? window.obtenerToken() : null;
     if (!token) {
         const emailInput = prompt("✨ ¡Has disfrutado tus 2 lecturas de cortesía!\n\nIngresa tu correo electrónico para desbloquear 3 tiradas gratuitas adicionales y continuar:");
         if (emailInput && emailInput.includes('@') && emailInput.includes('.')) {
-            const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
-            if (resultado.exito) {
-                alert("¡Correo registrado con éxito! Tienes 3 tiradas adicionales en la nube.");
-                ejecutarModoFisicoSeguro();
+            if (typeof window.autenticarUsuario === 'function') {
+                const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
+                if (resultado && resultado.exito) {
+                    alert("¡Correo registrado con éxito! Tienes 3 tiradas adicionales en la nube.");
+                    abrirPantallaFisico(submodo);
+                } else {
+                    alert("No se pudo registrar el correo. Intenta de nuevo.");
+                }
             } else {
-                alert("No se pudo registrar el correo. Intenta de nuevo.");
+                alert("⚠️ Sistema de autenticación no disponible. Recarga la página.");
             }
-        } else {
+        } else if (emailInput !== null) {
             alert("Se requiere un correo válido para continuar con las lecturas gratuitas.");
         }
         return;
@@ -154,18 +152,20 @@ async function verificarAccesoFisico() {
     // 3. Ya tiene token: consultamos y descontamos en MongoDB (las 3 de la nube)
     const muestrasRestantes = await registrarUsoTiradaFisica();
     if (muestrasRestantes >= 0) {
-        ejecutarModoFisicoSeguro();
+        abrirPantallaFisico(submodo);
     } else {
         lanzarMuroDePago();
     }
 }
 
-function ejecutarModoFisicoSeguro() {
-    if (typeof abrirModoFisico === 'function') {
-        abrirModoFisico();
-    } else if (typeof mostrarPantalla === 'function') {
-        mostrarPantalla('screen-fisico');
-    }
+function abrirPantallaFisico(submodo) {
+    window.modoFisicoActivo = true;
+    window.submodoFisicoActual = submodo;
+    localStorage.setItem('tarotia_submodo_fisico', submodo);
+    window.cartasFisicoSeleccionadas = null;
+    window.preguntaCustomSeleccionada = "";
+    if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
+    if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-fisico');
 }
 
 function lanzarMuroDePago() {
@@ -178,7 +178,7 @@ function lanzarMuroDePago() {
 }
 
 function verificarAccesoTarotistaFisico() {
-    verificarAccesoFisico();
+    verificarAccesoFisico('tarotista_fisico');
 }
 
 function verificarAccesoTarotista() {
@@ -196,7 +196,7 @@ function verificarAccesoTarotista() {
 // VERIFICACIÓN DE SEGURIDAD Y MÓDULO DE INICIO
 // ==========================================
 async function verificarEstadoReal() {
-    const token = window.obtenerToken();
+    const token = window.obtenerToken ? window.obtenerToken() : null;
     if (!token) return;
 
     try {
@@ -204,7 +204,7 @@ async function verificarEstadoReal() {
         const resp = await fetch(`${API_BASE}/api/auth/perfil`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+
         if (resp.ok) {
             const data = await resp.json();
             window.esUsuarioPremium = (data.usuario.plan === 'Premium');
