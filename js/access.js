@@ -6,26 +6,8 @@ const MAX_MUESTRAS = 5;
 const TOKEN_KEY = 'tarotia_token';
 const EMAIL_KEY = 'tarotia_email_usuario';
 
-// Códigos premium válidos (Respaldo por si el servidor no responde)
-const CODIGOS_PREMIUM_VALIDOS = [
-    'ADMIN2026',
-    'PASEMISTICO',
-    'TAROTGRATIS'
-];
-
-// ==========================================
-// ESTADO PREMIUM
-// ==========================================
-(function inicializarEstadoPremium() {
-    const simulado = localStorage.getItem('simularPremium') === 'true';
-    const planLocal = localStorage.getItem('tarotia_plan_premium') === 'true';
-    if (simulado || planLocal) {
-        window.esUsuarioPremium = true;
-        console.log('✨ Modo Premium activado');
-    } else {
-        window.esUsuarioPremium = false;
-    }
-})();
+// Arrancamos por defecto en falso. El servidor dirá la verdad después.
+window.esUsuarioPremium = false;
 
 // ==========================================
 // TOKEN / AUTH
