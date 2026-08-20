@@ -6,7 +6,7 @@ const MAX_MUESTRAS = 5;
 const TOKEN_KEY = 'tarotia_token';
 const EMAIL_KEY = 'tarotia_email_usuario';
 
-// Códigos premium válidos
+// Códigos premium válidos (Respaldo por si el servidor no responde)
 const CODIGOS_PREMIUM_VALIDOS = [
     'ADMIN2026',
     'PASEMISTICO',
@@ -18,9 +18,12 @@ const CODIGOS_PREMIUM_VALIDOS = [
 // ==========================================
 (function inicializarEstadoPremium() {
     const simulado = localStorage.getItem('simularPremium') === 'true';
-    if (simulado) {
+    const planLocal = localStorage.getItem('tarotia_plan_premium') === 'true';
+    if (simulado || planLocal) {
         window.esUsuarioPremium = true;
-        console.log('✨ Modo Premium activado desde localStorage');
+        console.log('✨ Modo Premium activado');
+    } else {
+        window.esUsuarioPremium = false;
     }
 })();
 
@@ -36,18 +39,81 @@ window.guardarToken = function(token) {
 };
 
 window.estaLogueado = function() {
-    return !!localStorage.getItem(TOKEN_KEY);
+    return !!localStorage.getItem(TOKEN_KEY) || !!localStorage.getItem(EMAIL_KEY);
 };
 
 window.cerrarSesion = function() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(EMAIL_KEY);
     localStorage.removeItem('simularPremium');
+    localStorage.removeItem('tarotia_plan_premium');
     window.esUsuarioPremium = false;
     alert('Sesión cerrada.');
+    if (typeof window.mostrarPantalla === 'function') {
+        window.mostrarPantalla('screen-auth');
+    }
 };
 
-// Registro/Login contra el servidor
+// ==========================================
+// INTEGRACIÓN CON LA PANTALLA DE AUTH DEL HTML
+// ==========================================
+window.iniciarSesion = async function() {
+    const emailInput = document.getElementById('auth-email');
+    const nombreInput = document.getElementById('auth-nombre');
+    const errorElement = document.getElementById('auth-error');
+
+    if (!emailInput) return;
+
+    const email = emailInput.value.trim().toLowerCase();
+    const nombre = nombreInput ? nombreInput.value.trim() : 'Consultante';
+
+    if (!email || !email.includes('@') || !email.includes('.')) {
+        if (errorElement) {
+            errorElement.textContent = "⚠️ Por favor, ingresá un correo electrónico válido.";
+            errorElement.style.display = 'block';
+        }
+        return;
+    }
+
+    if (errorElement) errorElement.style.display = 'none';
+
+    // Llamamos a tu función de autenticación con el servidor
+    const resultado = await window.autenticarUsuario(nombre, email);
+
+    if (resultado.exito) {
+        localStorage.setItem(EMAIL_KEY, email);
+        if (nombre && nombre !== 'Consultante') {
+            localStorage.setItem('tarotia_nombre_usuario', nombre);
+        }
+        
+        // Si todo va bien, pasamos a la portada de la app
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-portada');
+        }
+    } else {
+        // Fallback offline o si el servidor tarda: permitimos el acceso con almacenamiento local
+        console.warn("⚠️ Servidor no disponible, permitiendo acceso local con email:", email);
+        localStorage.setItem(EMAIL_KEY, email);
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-portada');
+        }
+    }
+};
+
+// Función principal de enlace desde la landing ("Entrar al Tarot Completo")
+window.entrarAppCompleta = function() {
+    if (window.estaLogueado()) {
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-portada');
+        }
+    } else {
+        if (typeof window.mostrarPantalla === 'function') {
+            window.mostrarPantalla('screen-auth');
+        }
+    }
+};
+
+// Registro/Login contra el servidor (Tu lógica original mejorada)
 window.autenticarUsuario = async function(nombre, email) {
     const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
         ? window.SERVIDOR_URL.replace('/tirada', '')
@@ -63,9 +129,10 @@ window.autenticarUsuario = async function(nombre, email) {
         if (resp.ok && data.token) {
             window.guardarToken(data.token);
             localStorage.setItem(EMAIL_KEY, email);
-            if (data.usuario && data.usuario.plan === 'Premium') {
+            if (data.usuario && (data.usuario.plan === 'Premium' || data.usuario.esPremium)) {
                 window.esUsuarioPremium = true;
                 localStorage.setItem('simularPremium', 'true');
+                localStorage.setItem('tarotia_plan_premium', 'true');
             }
             return { exito: true, usuario: data.usuario };
         }
@@ -78,7 +145,7 @@ window.autenticarUsuario = async function(nombre, email) {
 // Verificar muestras físicas restantes desde servidor
 window.consultarMuestras = async function() {
     const token = window.obtenerToken();
-    if (!token) return { premium: false, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
+    if (!token) return { premium: window.esUsuarioPremium, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
 
     const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
         ? window.SERVIDOR_URL.replace('/tirada', '')
@@ -89,9 +156,9 @@ window.consultarMuestras = async function() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (resp.ok) return await resp.json();
-        return { premium: false, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
+        return { premium: window.esUsuarioPremium, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
     } catch (e) {
-        return { premium: false, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
+        return { premium: window.esUsuarioPremium, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
     }
 };
 
@@ -99,6 +166,7 @@ window.consultarMuestras = async function() {
 // MUESTRAS FÍSICAS (LOCAL)
 // ==========================================
 function obtenerMuestrasFisicasRestantes() {
+    if (window.esUsuarioPremium) return 999;
     let muestras = localStorage.getItem('muestrasFisicasTarot');
     if (muestras === null) {
         localStorage.setItem('muestrasFisicasTarot', MAX_MUESTRAS.toString());
@@ -143,6 +211,7 @@ function canjearCodigoPremium(codigo) {
     if (CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
         window.esUsuarioPremium = true;
         localStorage.setItem('simularPremium', 'true');
+        localStorage.setItem('tarotia_plan_premium', 'true');
         alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
         actualizarBadgeMuestrasFisicas();
     } else {
@@ -151,17 +220,17 @@ function canjearCodigoPremium(codigo) {
 }
 
 // ==========================================
-// MERCADO PAGO (STUB)
+// MERCADO PAGO 
 // ==========================================
-function abrirMercadoPago() {
-    alert('🛒 Próximamente: enlace de pago por Mercado Pago.\n\nContactá al administrador para adquirir tu Pase Místico.');
-}
+window.abrirMercadoPago = function() {
+    // Aquí puedes abrir tu link de pago directo o redirigir
+    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
+};
 
 // ==========================================
-// ACCESO A MAZO FÍSICO (CORREGIDO)
+// ACCESO A MAZO FÍSICO
 // ==========================================
 function verificarAccesoFisico() {
-    // 1. Si es usuario Premium, abre directamente la carga de cartas físicas
     if (window.esUsuarioPremium) {
         if (typeof abrirModoFisico === 'function') {
             abrirModoFisico();
@@ -171,7 +240,6 @@ function verificarAccesoFisico() {
         return;
     }
 
-    // 2. Si es usuario gratuito, verificar las muestras restantes
     const muestrasRestantes = obtenerMuestrasFisicasRestantes();
 
     if (muestrasRestantes > 0) {
@@ -181,19 +249,15 @@ function verificarAccesoFisico() {
             mostrarPantalla('screen-fisico');
         }
     } else {
-        // 3. Muestras agotadas: Solicita código Premium o redirige a suscripción
-        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium para continuar o adquiere tu Pase Místico:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
+        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium o pulsa Aceptar para adquirir tu Pase Místico por Mercado Pago:");
+        if (codigo) {
             canjearCodigoPremium(codigo);
-        } else if (typeof abrirMercadoPago === 'function') {
-            abrirMercadoPago();
+        } else {
+            window.abrirMercadoPago();
         }
     }
 }
 
-// ==========================================
-// PUENTE / ALIAS PARA EVITAR EL REFERENCE ERROR
-// ==========================================
 function verificarAccesoTarotistaFisico() {
     verificarAccesoFisico();
 }
@@ -203,7 +267,7 @@ function verificarAccesoTarotista() {
         if (typeof irAlEjeConsulta === 'function') irAlEjeConsulta('manual');
     } else {
         const codigo = prompt("✨ El Modo Tarotista es exclusivo de TarotIA Premium.\nPor favor, ingresa tu código de acceso:");
-        if (codigo && typeof canjearCodigoPremium === 'function') {
+        if (codigo) {
             canjearCodigoPremium(codigo);
         }
     }
@@ -213,3 +277,5 @@ function verificarAccesoTarotista() {
 document.addEventListener('DOMContentLoaded', () => {
     actualizarBadgeMuestrasFisicas();
 });
+
+console.log("[access.js] Módulo de control de accesos y muestras físicas sincronizado correctamente");
