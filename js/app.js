@@ -1,5 +1,6 @@
 // ==========================================
-// APP.JS - Lógica principal de la app
+// APP.JS DEFINITIVO - Solo lógica de la app
+// SIN funciones de navegación (están inline en index.html)
 // ==========================================
 console.log("[app.js] Cargado - versión definitiva");
 
@@ -13,12 +14,7 @@ window.obtenerCuatroCartasAleatorias = function() {
 
     if (!mazo || !mazo.length) {
         console.error("❌ [app.js] Mazo vacío. Verificá arcanos.js");
-        // Intentar cargar mazo de emergencia
-        if (window.arcanosCompleto && window.arcanosCompleto.length > 0) {
-            console.log("[app.js] Usando fallback de arcanosCompleto");
-            return window.arcanosCompleto.slice(0, 4);
-        }
-        return ["El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz"];
+        return [];
     }
 
     const mezclado = [...mazo];
@@ -155,15 +151,11 @@ window.consultaGratis = async function() {
         };
         console.log("[app.js] 📤 Consulta gratis:", payload);
 
-        // Usar función de config.js
-        const urlEndpoint = window.obtenerUrlTirada ? window.obtenerUrlTirada() : `${window.SERVIDOR_URL}tirada`;
-        
+        const urlEndpoint = window.SERVIDOR_URL.endsWith('/') ? `${window.SERVIDOR_URL}tirada` : `${window.SERVIDOR_URL}/tirada`;
         const respuesta = await fetch(urlEndpoint, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
         const data = await respuesta.json();
         if (!respuesta.ok) throw new Error(data.error || 'Error servidor');
 
@@ -185,6 +177,10 @@ window.nuevaConsultaGratis = function() {
     if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-landing');
 };
 
+window.entrarAppCompleta = function() {
+    if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-portada');
+};
+
 // ==========================================
 // PETICIÓN AL SERVIDOR (APP COMPLETA)
 // ==========================================
@@ -200,21 +196,16 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     try {
         const payload = {
             a: cartas[0], b: cartas[1], c: cartas[2], d: cartas[3],
-            tema: tema || 'General', 
-            pregunta: preguntaCustom || "",
+            tema: tema || 'General', pregunta: preguntaCustom || "",
             estilo: window.estiloSeleccionado || 'filosofico'
         };
         console.log("[app.js] 📤 Enviando:", payload);
 
-        // Usar función de config.js
-        const urlEndpoint = window.obtenerUrlTirada ? window.obtenerUrlTirada() : `${window.SERVIDOR_URL}tirada`;
-        
+        const urlEndpoint = window.SERVIDOR_URL.endsWith('/') ? `${window.SERVIDOR_URL}tirada` : `${window.SERVIDOR_URL}/tirada`;
         const respuesta = await fetch(urlEndpoint, {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
         const data = await respuesta.json();
         console.log("[app.js] 📥 Respuesta:", data);
 
@@ -257,11 +248,6 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
             ];
             console.log("[app.js] Leyendo del DOM:", cartasElegidas);
         }
-        
-        // Registrar uso de muestra física (solo si no es Premium)
-        if (!window.esUsuarioPremium && typeof registrarUsoTiradaFisica === 'function') {
-            registrarUsoTiradaFisica();
-        }
     } else {
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
     }
@@ -281,7 +267,6 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     window.renderizarMesaDuplas(cartasElegidas, tema);
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
-
 // ==========================================
 // CONTROL DE PANEL DE VOZ SEGÚN MODO
 // ==========================================
@@ -306,7 +291,6 @@ window.mostrarPanelVozSegunModo = function() {
         console.log("[UI] Panel mágico/filosófico (Leer todo, Conclusión, Predicciones)");
     }
 };
-
 // ==========================================
 // TIRADA ESTRUCTURAL / TÉCNICA
 // ==========================================
@@ -318,25 +302,6 @@ window.procesarTiradaEstructural = async function() {
     if (!cartas || cartas.length !== 4 || cartas.some(c => !c || !c.trim())) {
         alert("⚠️ Error: cartas no seleccionadas correctamente.");
         return;
-    }
-
-    // Verificar si es Premium (para modo estructural)
-    if (!window.esUsuarioPremium) {
-        const confirmar = confirm("🔒 El modo Estructural/Técnico es exclusivo para usuarios Premium.\n\n¿Quieres ingresar un código Premium?");
-        if (confirmar) {
-            const codigo = prompt("Ingresa tu código de acceso Premium:");
-            if (codigo && typeof window.canjearCodigoPremium === 'function') {
-                const exito = window.canjearCodigoPremium(codigo);
-                if (!exito) return;
-            } else {
-                return;
-            }
-        } else {
-            if (typeof window.abrirMercadoPago === 'function') {
-                window.abrirMercadoPago();
-            }
-            return;
-        }
     }
 
     const [c1, c2, c3, c4] = cartas;
@@ -352,11 +317,11 @@ window.procesarTiradaEstructural = async function() {
         `;
     }
 
-    // Mostrar panel de voz profesional
+    // Ocultar el panel de voz al inicio
     window.mostrarPanelVozSegunModo();
 
     try {
-        const API_BASE = window.API_BASE_URL || window.SERVIDOR_URL.replace('/tirada', '');
+        const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
         console.log("[app.js] Consultando duplas en:", API_BASE);
 
         const url1 = `${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`;
@@ -409,9 +374,10 @@ window.procesarTiradaEstructural = async function() {
         if (contenedorTexto) contenedorTexto.innerHTML = html;
 
         // ==========================================
-        // ALMACENAR TEXTOS PARA VOZ
+        // ALMACENAR TEXTOS PARA VOZ Y MOSTRAR PANEL
         // ==========================================
         
+        // Almacenar textos de duplas para voz
         window.textoDupla1 = data1.encontrada ? 
             `Dupla 1: ${c1} y ${c2}. ${data1.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
             `Dupla 1: ${c1} y ${c2}. Sin interpretación cargada.`;
@@ -421,9 +387,10 @@ window.procesarTiradaEstructural = async function() {
             `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
 
         // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
-        if (data1.encontrada || data2.encontrada) {
-            window.mostrarPanelVozSegunModo();
-        }
+        // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
+if (data1.encontrada || data2.encontrada) {
+    window.mostrarPanelVozSegunModo();
+}
 
         // Guardar en historial
         if (typeof guardarEnHistorialLocal === 'function') {
@@ -446,5 +413,3 @@ window.procesarTiradaEstructural = async function() {
         }
     }
 };
-
-console.log("[app.js] ✅ Módulo principal cargado");
