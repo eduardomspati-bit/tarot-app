@@ -613,12 +613,17 @@ window.seleccionarEstiloAutomatico = function(estilo){
 
 window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
 
-window.abrirSeleccionFisico = function(submodo){
-    window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
-    localStorage.setItem('tarotia_submodo_fisico',submodo);
-    window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
-    if(typeof window.cargarSelectoresFisicos==='function') window.cargarSelectoresFisicos();
-    window.mostrarPantalla('screen-fisico');
+window.abrirSeleccionFisico = async function(submodo){
+    if (typeof verificarAccesoFisico === 'function') {
+        await verificarAccesoFisico(submodo);
+    } else {
+        console.warn("[nav] access.js no cargó, abriendo sin verificar");
+        window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
+        localStorage.setItem('tarotia_submodo_fisico',submodo);
+        window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
+        if(typeof window.cargarSelectoresFisicos==='function') window.cargarSelectoresFisicos();
+        window.mostrarPantalla('screen-fisico');
+    }
 };
 
 window.irAlEjeFisico = function(){
