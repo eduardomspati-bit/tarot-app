@@ -2,151 +2,21 @@
 // CONTROL DE ACCESOS, AUTENTICACIÓN Y MUESTRAS FÍSICAS
 // ==========================================
 
-const MAX_MUESTRAS = 5;
-const TOKEN_KEY = 'tarotia_token';
-const EMAIL_KEY = 'tarotia_email_usuario';
-
-// Arrancamos por defecto en falso. El servidor dirá la verdad después.
-window.esUsuarioPremium = false;
-
 // ==========================================
-// TOKEN / AUTH
+// MUESTRAS FÍSICAS (FLUJO PROGRESIVO: 2 LIBRES -> EMAIL -> 3 CLOUD -> PAGO)
 // ==========================================
-window.obtenerToken = function() {
-    return localStorage.getItem(TOKEN_KEY);
-};
 
-window.guardarToken = function(token) {
-    localStorage.setItem(TOKEN_KEY, token);
-};
+const TIRADAS_LIBRES_LOCALES = 2;
 
-window.estaLogueado = function() {
-    return !!localStorage.getItem(TOKEN_KEY) || !!localStorage.getItem(EMAIL_KEY);
-};
+function obtenerTiradasLibresLocalesUsadas() {
+    let usadas = localStorage.getItem('tarotia_libres_usadas');
+    return usadas ? parseInt(usadas, 10) : 0;
+}
 
-window.cerrarSesion = function() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(EMAIL_KEY);
-    localStorage.removeItem('simularPremium');
-    localStorage.removeItem('tarotia_plan_premium');
-    window.esUsuarioPremium = false;
-    alert('Sesión cerrada.');
-    if (typeof window.mostrarPantalla === 'function') {
-        window.mostrarPantalla('screen-auth');
-    }
-};
-
-// ==========================================
-// INTEGRACIÓN CON LA PANTALLA DE AUTH DEL HTML
-// ==========================================
-window.iniciarSesion = async function() {
-    const emailInput = document.getElementById('auth-email');
-    const nombreInput = document.getElementById('auth-nombre');
-    const errorElement = document.getElementById('auth-error');
-
-    if (!emailInput) return;
-
-    const email = emailInput.value.trim().toLowerCase();
-    const nombre = nombreInput ? nombreInput.value.trim() : 'Consultante';
-
-    if (!email || !email.includes('@') || !email.includes('.')) {
-        if (errorElement) {
-            errorElement.textContent = "⚠️ Por favor, ingresá un correo electrónico válido.";
-            errorElement.style.display = 'block';
-        }
-        return;
-    }
-
-    if (errorElement) errorElement.style.display = 'none';
-
-    // Llamamos a tu función de autenticación con el servidor
-    const resultado = await window.autenticarUsuario(nombre, email);
-
-    if (resultado.exito) {
-        localStorage.setItem(EMAIL_KEY, email);
-        if (nombre && nombre !== 'Consultante') {
-            localStorage.setItem('tarotia_nombre_usuario', nombre);
-        }
-        
-        // Si todo va bien, pasamos a la portada de la app
-        if (typeof window.mostrarPantalla === 'function') {
-            window.mostrarPantalla('screen-portada');
-        }
-    } else {
-        // Fallback offline o si el servidor tarda: permitimos el acceso con almacenamiento local
-        console.warn("⚠️ Servidor no disponible, permitiendo acceso local con email:", email);
-        localStorage.setItem(EMAIL_KEY, email);
-        if (typeof window.mostrarPantalla === 'function') {
-            window.mostrarPantalla('screen-portada');
-        }
-    }
-};
-
-// Función principal de enlace desde la landing ("Entrar al Tarot Completo")
-window.entrarAppCompleta = function() {
-    if (window.estaLogueado()) {
-        if (typeof window.mostrarPantalla === 'function') {
-            window.mostrarPantalla('screen-portada');
-        }
-    } else {
-        if (typeof window.mostrarPantalla === 'function') {
-            window.mostrarPantalla('screen-auth');
-        }
-    }
-};
-
-// Registro/Login contra el servidor (Tu lógica original mejorada)
-window.autenticarUsuario = async function(nombre, email) {
-    const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
-        ? window.SERVIDOR_URL.replace('/tirada', '')
-        : 'https://tarot-613b.onrender.com';
-
-    try {
-        const resp = await fetch(`${API_BASE}/api/auth/registrar`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nombre, email })
-        });
-        const data = await resp.json();
-        if (resp.ok && data.token) {
-            window.guardarToken(data.token);
-            localStorage.setItem(EMAIL_KEY, email);
-            if (data.usuario && (data.usuario.plan === 'Premium' || data.usuario.esPremium)) {
-                window.esUsuarioPremium = true;
-                localStorage.setItem('simularPremium', 'true');
-                localStorage.setItem('tarotia_plan_premium', 'true');
-            }
-            return { exito: true, usuario: data.usuario };
-        }
-        return { exito: false, error: data.error || 'Error desconocido' };
-    } catch (e) {
-        return { exito: false, error: e.message };
-    }
-};
-
-// Verificar muestras físicas restantes desde servidor
-window.consultarMuestras = async function() {
-    const token = window.obtenerToken();
-    if (!token) return { premium: window.esUsuarioPremium, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
-
-    const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
-        ? window.SERVIDOR_URL.replace('/tirada', '')
-        : 'https://tarot-613b.onrender.com';
-
-    try {
-        const resp = await fetch(`${API_BASE}/api/tiradas/muestras`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resp.ok) return await resp.json();
-        return { premium: window.esUsuarioPremium, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
-    } catch (e) {
-        return { premium: window.esUsuarioPremium, muestrasRestantes: obtenerMuestrasFisicasRestantes() };
-    }
-};
-
-// ==========================================
-// MUESTRAS FÍSICAS (SINCRONIZADAS CON MONGODB)
-// ==========================================
+function registrarTiradaLibreLocalUsada() {
+    let usadas = obtenerTiradasLibresLocalesUsadas();
+    localStorage.setItem('tarotia_libres_usadas', usadas + 1);
+}
 
 async function obtenerMuestrasFisicasRestantes() {
     if (window.esUsuarioPremium) return 999;
@@ -156,7 +26,6 @@ async function obtenerMuestrasFisicasRestantes() {
         ? window.SERVIDOR_URL.replace('/tirada', '')
         : 'https://tarot-613b.onrender.com';
 
-    // Si hay token, le preguntamos directamente a tu servidor de Render/MongoDB
     if (token) {
         try {
             const resp = await fetch(`${API_BASE}/api/tiradas/muestras`, {
@@ -171,24 +40,19 @@ async function obtenerMuestrasFisicasRestantes() {
         }
     }
 
-    // Fallback local por si acaso
-    let muestras = localStorage.getItem('muestrasFisicasTarot');
-    if (muestras === null) {
-        localStorage.setItem('muestrasFisicasTarot', '5');
-        return 5;
-    }
-    return parseInt(muestras, 10) || 0;
+    // Si aún no se registró, calculamos en base a las 2 libres locales
+    const libresRestantes = Math.max(0, TIRADAS_LIBRES_LOCALES - obtenerTiradasLibresLocalesUsadas());
+    return libresRestantes;
 }
 
 async function registrarUsoTiradaFisica() {
-    if (window.esUsuarioPremium) return;
+    if (window.esUsuarioPremium) return 999;
 
     const token = window.obtenerToken();
     const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
         ? window.SERVIDOR_URL.replace('/tirada', '')
         : 'https://tarot-613b.onrender.com';
 
-    // Llamamos al endpoint que ya tienes en tu server.js: app.post('/api/tiradas/usar-muestra')
     if (token) {
         try {
             const resp = await fetch(`${API_BASE}/api/tiradas/usar-muestra`, {
@@ -207,6 +71,7 @@ async function registrarUsoTiradaFisica() {
             console.error("Error al registrar muestra en MongoDB:", e);
         }
     }
+    return -1;
 }
 
 async function actualizarBadgeMuestrasFisicas() {
@@ -224,6 +89,7 @@ async function actualizarBadgeMuestrasFisicas() {
         }
     }
 }
+
 // ==========================================
 // CANJEAR CÓDIGO PREMIUM
 // ==========================================
@@ -250,35 +116,65 @@ window.abrirMercadoPago = function() {
 };
 
 // ==========================================
-// ACCESO A MAZO FÍSICO
+// ACCESO A MAZO FÍSICO (NÚCLEO DEL EMBUDO)
 // ==========================================
-function verificarAccesoFisico() {
+async function verificarAccesoFisico() {
     if (window.esUsuarioPremium) {
-        if (typeof abrirModoFisico === 'function') {
-            abrirModoFisico();
-        } else if (typeof mostrarPantalla === 'function') {
-            mostrarPantalla('screen-fisico');
+        ejecutarModoFisicoSeguro();
+        return;
+    }
+
+    // 1. ¿Le quedan tiradas libres locales (las primeras 2 sin registro)?
+    const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+    if (libresUsadas < TIRADAS_LIBRES_LOCALES) {
+        registrarTiradaLibreLocalUsada();
+        console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_LOCALES})`);
+        ejecutarModoFisicoSeguro();
+        return;
+    }
+
+    // 2. Ya gastó las 2 libres. ¿Tiene token (dejó su email)?
+    const token = window.obtenerToken();
+    if (!token) {
+        const emailInput = prompt("✨ ¡Has disfrutado tus 2 lecturas de cortesía!\n\nIngresa tu correo electrónico para desbloquear 3 tiradas gratuitas adicionales y continuar:");
+        if (emailInput && emailInput.includes('@') && emailInput.includes('.')) {
+            const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
+            if (resultado.exito) {
+                alert("¡Correo registrado con éxito! Tienes 3 tiradas adicionales en la nube.");
+                ejecutarModoFisicoSeguro();
+            } else {
+                alert("No se pudo registrar el correo. Intenta de nuevo.");
+            }
+        } else {
+            alert("Se requiere un correo válido para continuar con las lecturas gratuitas.");
         }
         return;
     }
 
-    // Aquí llamamos a la versión asíncrona que conecta con MongoDB
-    obtenerMuestrasFisicasRestantes().then(muestrasRestantes => {
-        if (muestrasRestantes > 0) {
-            if (typeof abrirModoFisico === 'function') {
-                abrirModoFisico();
-            } else if (typeof mostrarPantalla === 'function') {
-                mostrarPantalla('screen-fisico');
-            }
-        } else {
-            const codigo = prompt("🔒 Has agotado tus muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium o pulsa Aceptar para adquirir tu Pase Místico por Mercado Pago:");
-            if (codigo) {
-                canjearCodigoPremium(codigo);
-            } else {
-                window.abrirMercadoPago();
-            }
-        }
-    });
+    // 3. Ya tiene token: consultamos y descontamos en MongoDB (las 3 de la nube)
+    const muestrasRestantes = await registrarUsoTiradaFisica();
+    if (muestrasRestantes >= 0) {
+        ejecutarModoFisicoSeguro();
+    } else {
+        lanzarMuroDePago();
+    }
+}
+
+function ejecutarModoFisicoSeguro() {
+    if (typeof abrirModoFisico === 'function') {
+        abrirModoFisico();
+    } else if (typeof mostrarPantalla === 'function') {
+        mostrarPantalla('screen-fisico');
+    }
+}
+
+function lanzarMuroDePago() {
+    const codigo = prompt("🔒 Has agotado tus muestras gratuitas totales.\n\nIngresa tu código de acceso Premium o pulsa Aceptar para adquirir tu Pase Místico por Mercado Pago:");
+    if (codigo) {
+        canjearCodigoPremium(codigo);
+    } else {
+        window.abrirMercadoPago();
+    }
 }
 
 function verificarAccesoTarotistaFisico() {
@@ -311,7 +207,6 @@ async function verificarEstadoReal() {
         
         if (resp.ok) {
             const data = await resp.json();
-            // Esto es lo que realmente traba o libera la app
             window.esUsuarioPremium = (data.usuario.plan === 'Premium');
             actualizarBadgeMuestrasFisicas();
         }
@@ -321,8 +216,8 @@ async function verificarEstadoReal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    verificarEstadoReal(); // Verifica si eres Premium real en la BD
-    actualizarBadgeMuestrasFisicas(); // Actualiza el contador visual
+    verificarEstadoReal(); 
+    actualizarBadgeMuestrasFisicas(); 
 });
 
-console.log("[access.js] Módulo de control de accesos y muestras físicas sincronizado correctamente");
+console.log("[access.js] Flujo progresivo (2 libres -> Email -> Cloud -> Pago) sincronizado correctamente");
