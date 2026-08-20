@@ -264,7 +264,6 @@ function canjearCodigoPremium(codigo) {
 // MERCADO PAGO 
 // ==========================================
 window.abrirMercadoPago = function() {
-    // Aquí puedes abrir tu link de pago directo o redirigir
     window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
 };
 
@@ -281,22 +280,23 @@ function verificarAccesoFisico() {
         return;
     }
 
-    const muestrasRestantes = obtenerMuestrasFisicasRestantes();
-
-    if (muestrasRestantes > 0) {
-        if (typeof abrirModoFisico === 'function') {
-            abrirModoFisico();
-        } else if (typeof mostrarPantalla === 'function') {
-            mostrarPantalla('screen-fisico');
-        }
-    } else {
-        const codigo = prompt("🔒 Has agotado tus 5 muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium o pulsa Aceptar para adquirir tu Pase Místico por Mercado Pago:");
-        if (codigo) {
-            canjearCodigoPremium(codigo);
+    // Aquí llamamos a la versión asíncrona que conecta con MongoDB
+    obtenerMuestrasFisicasRestantes().then(muestrasRestantes => {
+        if (muestrasRestantes > 0) {
+            if (typeof abrirModoFisico === 'function') {
+                abrirModoFisico();
+            } else if (typeof mostrarPantalla === 'function') {
+                mostrarPantalla('screen-fisico');
+            }
         } else {
-            window.abrirMercadoPago();
+            const codigo = prompt("🔒 Has agotado tus muestras gratuitas de Mazo Físico.\n\nIngresa tu código de acceso Premium o pulsa Aceptar para adquirir tu Pase Místico por Mercado Pago:");
+            if (codigo) {
+                canjearCodigoPremium(codigo);
+            } else {
+                window.abrirMercadoPago();
+            }
         }
-    }
+    });
 }
 
 function verificarAccesoTarotistaFisico() {
@@ -314,9 +314,33 @@ function verificarAccesoTarotista() {
     }
 }
 
-// Inicializar el estado de los badges al cargar el módulo
+// ==========================================
+// VERIFICACIÓN DE SEGURIDAD Y MÓDULO DE INICIO
+// ==========================================
+async function verificarEstadoReal() {
+    const token = window.obtenerToken();
+    if (!token) return;
+
+    try {
+        const API_BASE = 'https://tarot-613b.onrender.com';
+        const resp = await fetch(`${API_BASE}/api/auth/perfil`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (resp.ok) {
+            const data = await resp.json();
+            // Esto es lo que realmente traba o libera la app
+            window.esUsuarioPremium = (data.usuario.plan === 'Premium');
+            actualizarBadgeMuestrasFisicas();
+        }
+    } catch (e) {
+        console.warn("No se pudo verificar el estado en el servidor.");
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    actualizarBadgeMuestrasFisicas();
+    verificarEstadoReal(); // Verifica si eres Premium real en la BD
+    actualizarBadgeMuestrasFisicas(); // Actualiza el contador visual
 });
 
 console.log("[access.js] Módulo de control de accesos y muestras físicas sincronizado correctamente");
