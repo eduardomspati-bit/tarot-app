@@ -17,8 +17,8 @@ const CODIGOS_PREMIUM_VALIDOS = [
 // ESTADO PREMIUM
 // ==========================================
 (function inicializarEstadoPremium() {
-    const simulado = localStorage.getItem('simularPremium') === 'false';
-    const planLocal = localStorage.getItem('tarotia_plan_premium') === 'false';
+    const simulado = localStorage.getItem('simularPremium') === 'true';
+    const planLocal = localStorage.getItem('tarotia_plan_premium') === 'true';
     if (simulado || planLocal) {
         window.esUsuarioPremium = true;
         console.log('✨ Modo Premium activado');
