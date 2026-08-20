@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -197,38 +196,6 @@
         .auth-input::placeholder {
             color: rgba(255,255,255,0.4);
         }
-        .plan-badge {
-            display: inline-block;
-            padding: 2px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-        .plan-premium {
-            background: #ffd700;
-            color: #1a0f2e;
-        }
-        .plan-gratis {
-            background: #4a4a6a;
-            color: #ccc;
-        }
-        .btn-cerrar-sesion {
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            color: #ff6b6b;
-            width: 100%;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-        .btn-cerrar-sesion:hover {
-            background: rgba(255, 0, 0, 0.2);
-            border-color: #ff6b6b;
-            transform: scale(1.02);
-        }
     </style>
 </head>
 <body>
@@ -330,9 +297,6 @@
 
     <!-- ========== PORTADA PRINCIPAL (APP COMPLETA) ========== -->
     <div id="screen-portada" class="screen hidden">
-        <!-- INFO DEL USUARIO -->
-        <div id="info-usuario-container" style="margin-bottom: 20px;"></div>
-
         <button class="btn-carta-diaria" onclick="if(typeof tirarCartaDiaria==='function') tirarCartaDiaria();">
             ✨ Mi Carta Consejo del Día Gratis ✨
         </button>
@@ -357,8 +321,8 @@
                 </div>
             </div>
 
-            <!-- MÓDULO PROFESIONAL (SOLO PREMIUM) -->
-            <div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="if(window.verificarAccesoPremium && window.verificarAccesoPremium()) { abrirModuloProfesional(); } else { alert('🔒 Necesitas ser Premium para acceder al Módulo Profesional.'); }">
+            <!-- MÓDULO PROFESIONAL -->
+            <div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="abrirModuloProfesional()">
                 <div class="opcion-icono">💼</div>
                 <div class="opcion-info">
                     <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
@@ -367,12 +331,12 @@
             </div>
         </div>
 
-        <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
+        <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
             📜 Ver Mis Lecturas Anteriores
         </button>
 
-        <button onclick="cerrarSesion()" class="btn-cerrar-sesion">
-            🚪 Cerrar Sesión
+        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--muted-text); width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem;">
+            📧 Vincular mi Correo Electrónico
         </button>
     </div>
 
@@ -453,68 +417,68 @@
     </div>
 
     <!-- ========== MESA DE RESULTADOS ========== -->
-    <div id="screen-result" class="screen hidden">
-        <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
+<div id="screen-result" class="screen hidden">
+    <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
 
-        <div class="tarot-table">
-            <!-- DUPLA 1 -->
-            <div class="duple-box">
-                <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
-                <div class="card-container">
-                    <div id="img-a" class="card-visual"></div>
-                    <div id="name-a" class="card-name"></div>
-                </div>
-                <div class="card-container">
-                    <div id="img-b" class="card-visual"></div>
-                    <div id="name-b" class="card-name"></div>
-                </div>
+    <div class="tarot-table">
+        <!-- DUPLA 1 -->
+        <div class="duple-box">
+            <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
+            <div class="card-container">
+                <div id="img-a" class="card-visual"></div>
+                <div id="name-a" class="card-name"></div>
             </div>
-
-            <!-- DUPLA 2 -->
-            <div class="duple-box">
-                <div class="duple-title">Dupla 2: Futuro / Evolución</div>
-                <div class="card-container">
-                    <div id="img-c" class="card-visual"></div>
-                    <div id="name-c" class="card-name"></div>
-                </div>
-                <div class="card-container">
-                    <div id="img-d" class="card-visual"></div>
-                    <div id="name-d" class="card-name"></div>
-                </div>
+            <div class="card-container">
+                <div id="img-b" class="card-visual"></div>
+                <div id="name-b" class="card-name"></div>
             </div>
         </div>
 
-        <div class="reading-output" id="interpretation-text"></div>
-
-        <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
-        <div id="voice-panel-container">
-            <!-- Panel para Estilo Mágico y Filosófico -->
-            <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
-                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-                <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
-                <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
-                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        <!-- DUPLA 2 -->
+        <div class="duple-box">
+            <div class="duple-title">Dupla 2: Futuro / Evolución</div>
+            <div class="card-container">
+                <div id="img-c" class="card-visual"></div>
+                <div id="name-c" class="card-name"></div>
             </div>
-
-            <!-- Panel para Módulo Profesional / Estructural -->
-            <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
-                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-                <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-                <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+            <div class="card-container">
+                <div id="img-d" class="card-visual"></div>
+                <div id="name-d" class="card-name"></div>
             </div>
-        </div>
-
-        <!-- ========== BOTONES DE NAVEGACIÓN SIEMPRE VISIBLES ========== -->
-        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-            <button class="back-btn" onclick="volverInicio()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
-                🔄 Nueva Consulta
-            </button>
-            <button class="back-btn" onclick="volverAPortada()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
-                ⬅ Volver al Menú
-            </button>
         </div>
     </div>
+
+    <div class="reading-output" id="interpretation-text"></div>
+
+    <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
+    <div id="voice-panel-container">
+        <!-- Panel para Estilo Mágico y Filosófico -->
+        <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
+            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+            <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
+            <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
+            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        </div>
+
+        <!-- Panel para Módulo Profesional / Estructural -->
+        <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
+            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+            <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+            <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
+        </div>
+    </div>
+
+    <!-- ========== BOTONES DE NAVEGACIÓN SIEMPRE VISIBLES ========== -->
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+        <button class="back-btn" onclick="volverInicio()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
+            🔄 Nueva Consulta
+        </button>
+        <button class="back-btn" onclick="volverAPortada()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
+            ⬅ Volver al Menú
+        </button>
+    </div>
+</div>
 
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
@@ -574,9 +538,8 @@
 
 </div>
 
-<!-- ========================================== -->
-<!-- SCRIPTS -->
-<!-- ========================================== -->
+<!-- Carga de Scripts con cache-busting -->
+<!-- Carga de Scripts con cache-busting -->
 <script src="js/arcanos.js?v=7"></script>
 <script src="js/config.js?v=7"></script>
 <script src="js/auth.js?v=7"></script>
@@ -586,68 +549,23 @@
 <script src="js/duplas.js?v=7"></script>
 <script src="js/app.js?v=7"></script>
 
-<!-- ========================================== -->
-<!-- NAVEGACIÓN INLINE v8 - CON AUTENTICACIÓN -->
-<!-- ========================================== -->
+<!-- NAVEGACIÓN INLINE v7 - Flujo corregido -->
 <script>
 window.preguntaCustomSeleccionada = "";
 
-// ==========================================
-// MOSTRAR PANTALLA CON PROTECCIÓN Y VOZ
-// ==========================================
 const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
-    document.querySelectorAll('.screen').forEach(p => {
-        p.style.display = 'none';
-        p.classList.add('hidden');
-    });
+    document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
     const d = document.getElementById(id);
-    if (d) {
-        d.style.display = 'block';
-        d.classList.remove('hidden');
-        window.scrollTo(0, 0);
-    }
+    if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
 };
 
 window.mostrarPantalla = function(id) {
-    // DETENER VOZ al cambiar de pantalla
+    // ⛔ DETENER VOZ al cambiar de pantalla
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
     }
 
-    // ==========================================
-    // PANTALLAS PROTEGIDAS (requieren autenticación)
-    // ==========================================
-    const pantallasProtegidas = [
-        'screen-portada',
-        'screen-selector',
-        'screen-pregunta',
-        'screen-result',
-        'screen-fisico',
-        'screen-modulo-profesional',
-        'screen-historial',
-        'screen-guia-lectura'
-    ];
-
-    if (pantallasProtegidas.includes(id)) {
-        const logueado = (typeof window.estaLogueado === 'function') ? window.estaLogueado() : false;
-        if (!logueado) {
-            console.log(`[nav] 🔒 Pantalla "${id}" protegida. Redirigiendo a auth.`);
-            mostrarPantallaOriginal('screen-auth');
-            return;
-        }
-    }
-
-    // Mostrar la pantalla solicitada
     mostrarPantallaOriginal(id);
-
-    // ==========================================
-    // ACCIONES ESPECÍFICAS POR PANTALLA
-    // ==========================================
-    if (id === 'screen-portada') {
-        if (typeof actualizarInfoUsuario === 'function') {
-            setTimeout(actualizarInfoUsuario, 100);
-        }
-    }
 
     if (id === 'screen-result') {
         setTimeout(() => {
@@ -656,80 +574,9 @@ window.mostrarPantalla = function(id) {
             }
         }, 150);
     }
-
-    if (id === 'screen-auth') {
-        const errorDiv = document.getElementById('auth-error');
-        if (errorDiv) {
-            errorDiv.style.display = 'none';
-            errorDiv.textContent = '';
-        }
-        const emailInput = document.getElementById('auth-email');
-        if (emailInput) {
-            const email = localStorage.getItem('tarotia_email_usuario') || '';
-            if (email) emailInput.value = email;
-        }
-    }
 };
 
-// ==========================================
-// ENTRAR A LA APP COMPLETA CON VERIFICACIÓN
-// ==========================================
-window.entrarAppCompleta = function() {
-    console.log("[nav] Entrar a Tarot Completo - Verificando sesión...");
-
-    const logueado = (typeof window.estaLogueado === 'function') ? window.estaLogueado() : false;
-
-    if (logueado) {
-        console.log("[nav] ✅ Usuario logueado, mostrando portada");
-        window.mostrarPantalla('screen-portada');
-        if (typeof actualizarInfoUsuario === 'function') {
-            setTimeout(actualizarInfoUsuario, 100);
-        }
-    } else {
-        console.log("[nav] ❌ Usuario no logueado, mostrando auth");
-        window.mostrarPantalla('screen-auth');
-    }
-};
-
-// ==========================================
-// ACTUALIZAR INFO DEL USUARIO EN PORTADA
-// ==========================================
-function actualizarInfoUsuario() {
-    const container = document.getElementById('info-usuario-container');
-    if (!container) return;
-
-    const email = localStorage.getItem('tarotia_email_usuario') || 'No logueado';
-    const esPremium = window.esUsuarioPremium === true;
-    const plan = esPremium ? '⭐ PREMIUM' : '🃏 GRATIS';
-    const planClass = esPremium ? 'plan-premium' : 'plan-gratis';
-
-    let muestras = '---';
-    if (typeof obtenerMuestrasFisicasRestantes === 'function') {
-        const restantes = obtenerMuestrasFisicasRestantes();
-        muestras = esPremium ? '♾️ Ilimitadas' : `${restantes} de ${window.MAX_MUESTRAS_FISICAS || 5}`;
-    }
-
-    container.innerHTML = `
-        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,215,0,0.1); border-radius: 12px; padding: 15px; text-align: left;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div>
-                    <span style="font-size: 0.9rem; color: var(--muted-text);">📧 ${email}</span>
-                </div>
-                <div>
-                    <span class="plan-badge ${planClass}">${plan}</span>
-                </div>
-            </div>
-            <div style="margin-top: 8px; font-size: 0.85rem; color: var(--muted-text);">
-                🔮 Muestras físicas: ${muestras}
-                ${!esPremium ? ' <span style="font-size: 0.75rem; color: #a78bfa;">(5 gratuitas)</span>' : ''}
-            </div>
-        </div>
-    `;
-}
-
-// ==========================================
-// DETENER VOZ EN EVENTOS DEL NAVEGADOR
-// ==========================================
+// Detener voz si el usuario cierra la app o cambia de pestaña
 window.addEventListener('beforeunload', function() {
     if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -742,134 +589,72 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// ==========================================
-// FUNCIONES DE NAVEGACIÓN
-// ==========================================
-
-window.seleccionarEstiloAutomatico = function(estilo) {
-    window.estiloSeleccionado = estilo;
-    window.modoFisicoActivo = false;
-    window.preguntaCustomSeleccionada = "";
-    window.cartasFisicoSeleccionadas = null;
-    window.submodoFisicoActual = null;
-    localStorage.removeItem('tarotia_submodo_fisico');
+window.seleccionarEstiloAutomatico = function(estilo){
+    window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
+    window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
+    window.submodoFisicoActual=null; localStorage.removeItem('tarotia_submodo_fisico');
     window.mostrarPantalla('screen-selector');
 };
 
-window.abrirModuloProfesional = function() {
-    window.mostrarPantalla('screen-modulo-profesional');
-};
+window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
 
-window.abrirSeleccionFisico = function(submodo) {
-    if (submodo === 'tarotista_fisico' && !window.esUsuarioPremium) {
-        if (window.verificarAccesoPremium) {
-            const tieneAcceso = window.verificarAccesoPremium();
-            if (!tieneAcceso) return;
-        } else {
-            alert('🔒 Esta función es exclusiva para usuarios Premium.');
-            return;
-        }
-    }
-
-    window.modoFisicoActivo = true;
-    window.submodoFisicoActual = submodo;
-    localStorage.setItem('tarotia_submodo_fisico', submodo);
-    window.cartasFisicoSeleccionadas = null;
-    window.preguntaCustomSeleccionada = "";
-    if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
+window.abrirSeleccionFisico = function(submodo){
+    window.modoFisicoActivo=true; window.submodoFisicoActual=submodo;
+    localStorage.setItem('tarotia_submodo_fisico',submodo);
+    window.cartasFisicoSeleccionadas=null; window.preguntaCustomSeleccionada="";
+    if(typeof window.cargarSelectoresFisicos==='function') window.cargarSelectoresFisicos();
     window.mostrarPantalla('screen-fisico');
 };
 
-window.irAlEjeFisico = function() {
-    const c1 = document.getElementById('fisico-carta1')?.value;
-    const c2 = document.getElementById('fisico-carta2')?.value;
-    const c3 = document.getElementById('fisico-carta3')?.value;
-    const c4 = document.getElementById('fisico-carta4')?.value;
-    if (!c1 || !c2 || !c3 || !c4) { alert("⚠️ Seleccioná las 4 cartas."); return; }
-    if (new Set([c1, c2, c3, c4]).size !== 4) { alert("⚠️ No repetir cartas."); return; }
-    window.cartasFisicoSeleccionadas = [c1, c2, c3, c4];
-    const submodo = window.submodoFisicoActual || localStorage.getItem('tarotia_submodo_fisico');
-    if (submodo === 'tarotista_fisico') {
+window.irAlEjeFisico = function(){
+    const c1=document.getElementById('fisico-carta1')?.value;
+    const c2=document.getElementById('fisico-carta2')?.value;
+    const c3=document.getElementById('fisico-carta3')?.value;
+    const c4=document.getElementById('fisico-carta4')?.value;
+    if(!c1||!c2||!c3||!c4){alert("⚠️ Seleccioná las 4 cartas.");return;}
+    if(new Set([c1,c2,c3,c4]).size!==4){alert("⚠️ No repetir cartas.");return;}
+    window.cartasFisicoSeleccionadas=[c1,c2,c3,c4];
+    const submodo=window.submodoFisicoActual||localStorage.getItem('tarotia_submodo_fisico');
+    if(submodo==='tarotista_fisico'){
         window.mostrarPantalla('screen-result');
-        setTimeout(() => { if (typeof window.procesarTiradaEstructural === 'function') window.procesarTiradaEstructural(); }, 150);
+        setTimeout(()=>{ if(typeof window.procesarTiradaEstructural==='function') window.procesarTiradaEstructural(); },150);
         return;
     }
     window.mostrarPantalla('screen-selector');
 };
 
-window.abrirPantallaPregunta = function() {
-    const textarea = document.getElementById('texto-pregunta-usuario');
-    if (textarea) textarea.value = "";
-    window.mostrarPantalla('screen-pregunta');
-};
-
-window.confirmarPreguntaYEjecutar = function() {
-    const textarea = document.getElementById('texto-pregunta-usuario');
-    window.preguntaCustomSeleccionada = textarea ? textarea.value.trim() : "";
-    if (!window.preguntaCustomSeleccionada) { alert("⚠️ Escribí tu pregunta."); return; }
+window.abrirPantallaPregunta=function(){document.getElementById('texto-pregunta-usuario').value="";window.mostrarPantalla('screen-pregunta');};
+window.confirmarPreguntaYEjecutar=function(){
+    window.preguntaCustomSeleccionada=document.getElementById('texto-pregunta-usuario').value.trim();
+    if(!window.preguntaCustomSeleccionada){alert("⚠️ Escribí tu pregunta.");return;}
     window.ejecutarLecturaSegunModo('Pregunta Específica');
 };
-
-window.ejecutarLecturaSegunModo = function(tema) {
-    if (typeof window.procesarTiradaCompleta === 'function') {
-        window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada);
-    }
+window.ejecutarLecturaSegunModo=function(tema){
+    if(typeof window.procesarTiradaCompleta==='function') window.procesarTiradaCompleta(tema,window.preguntaCustomSeleccionada);
 };
-
-window.volverAPortada = function() {
-    window.modoFisicoActivo = false;
-    window.submodoFisicoActual = null;
-    window.cartasFisicoSeleccionadas = null;
-    window.preguntaCustomSeleccionada = "";
-    localStorage.removeItem('tarotia_submodo_fisico');
-    window.mostrarPantalla('screen-portada');
-    if (typeof actualizarInfoUsuario === 'function') {
-        setTimeout(actualizarInfoUsuario, 100);
-    }
+window.volverAPortada=function(){
+    window.modoFisicoActivo=false;window.submodoFisicoActual=null;
+    window.cartasFisicoSeleccionadas=null;window.preguntaCustomSeleccionada="";
+    localStorage.removeItem('tarotia_submodo_fisico');window.mostrarPantalla('screen-portada');
 };
-
-window.volverInicio = function() {
-    window.volverAPortada();
-};
-
-window.abrirGuiaLectura = function() {
-    window.mostrarPantalla('screen-guia-lectura');
-};
-
-window.volverAlModuloProfesional = function() {
-    window.mostrarPantalla('screen-modulo-profesional');
-};
-
-window.abrirHistorial = function() {
-    if (typeof window.cargarHistorial === 'function') window.cargarHistorial();
+window.volverInicio=function(){window.volverAPortada();};
+window.abrirGuiaLectura=function(){window.mostrarPantalla('screen-guia-lectura');};
+window.volverAlModuloProfesional=function(){window.mostrarPantalla('screen-modulo-profesional');};
+window.abrirHistorial=function(){
+    if(typeof window.cargarHistorial==='function')window.cargarHistorial();
     window.mostrarPantalla('screen-historial');
 };
-
-window.tirarCartaDiaria = function() {
-    const mazo = window.obtenerMazoActivo ? window.obtenerMazoActivo() : ["El Loco", "El Mago", "La Sacerdotisa"];
-    alert("🔮 Carta del Día: " + mazo[Math.floor(Math.random() * mazo.length)]);
+window.pedirEmailAlUsuario=function(){
+    const email=prompt("📧 Ingresá tu correo:");
+    if(email&&email.includes('@')){alert("✅ Correo vinculado: "+email);localStorage.setItem('tarotia_email_usuario',email);}
 };
-
-window.volverALanding = function() {
+window.tirarCartaDiaria=function(){
+    const mazo=window.obtenerMazoActivo?window.obtenerMazoActivo():["El Loco","El Mago","La Sacerdotisa"];
+    alert("🔮 Carta del Día: "+mazo[Math.floor(Math.random()*mazo.length)]);
+};
+window.volverALanding=function(){
     window.mostrarPantalla('screen-landing');
 };
-
-// ==========================================
-// INICIALIZACIÓN
-// ==========================================
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("[nav] ✅ Navegación inicializada");
-
-    if (typeof window.estaLogueado === 'function' && window.estaLogueado()) {
-        console.log("[nav] ✅ Sesión activa detectada");
-        if (window.esUsuarioPremium) {
-            console.log("[nav] ⭐ Usuario Premium");
-        }
-    }
-});
-
-console.log("✅ Navegación inline v9 cargada - Consolidada");
+console.log("✅ Navegación inline v7 cargada y limpia");
 </script>
-
-</body>
 </html>
