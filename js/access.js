@@ -163,10 +163,36 @@ window.consultarMuestras = async function() {
 };
 
 // ==========================================
-// MUESTRAS FÍSICAS (LOCAL)
+// MUESTRAS FÍSICAS (SINCRONIZADAS CON BACKEND)
 // ==========================================
-function obtenerMuestrasFisicasRestantes() {
+
+// Obtener muestras (Intenta primero del servidor, si falla usa caché local)
+async function obtenerMuestrasFisicasRestantes() {
     if (window.esUsuarioPremium) return 999;
+
+    const token = window.obtenerToken();
+    const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
+        ? window.SERVIDOR_URL.replace('/tirada', '')
+        : 'https://tarot-613b.onrender.com';
+
+    // Si hay token, consultamos al servidor de Render/MongoDB
+    if (token) {
+        try {
+            const resp = await fetch(`${API_BASE}/api/tiradas/muestras`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                // Sincronizamos con localStorage por velocidad visual
+                localStorage.setItem('muestrasFisicasTarot', data.muestrasRestantes.toString());
+                return data.muestrasRestantes;
+            }
+        } catch (e) {
+            console.warn("⚠️ Servidor desconectado, usando contador local temporal.");
+        }
+    }
+
+    // Fallback local si no hay token o falló el fetch
     let muestras = localStorage.getItem('muestrasFisicasTarot');
     if (muestras === null) {
         localStorage.setItem('muestrasFisicasTarot', MAX_MUESTRAS.toString());
@@ -175,9 +201,37 @@ function obtenerMuestrasFisicasRestantes() {
     return parseInt(muestras, 10) || 0;
 }
 
-function registrarUsoTiradaFisica() {
+// Registrar uso de tirada restando en el servidor
+async function registrarUsoTiradaFisica() {
     if (window.esUsuarioPremium) return;
-    let actuales = obtenerMuestrasFisicasRestantes();
+
+    const token = window.obtenerToken();
+    const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
+        ? window.SERVIDOR_URL.replace('/tirada', '')
+        : 'https://tarot-613b.onrender.com';
+
+    if (token) {
+        try {
+            const resp = await fetch(`${API_BASE}/api/tiradas/gastar-muestra`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                localStorage.setItem('muestrasFisicasTarot', data.muestrasRestantes.toString());
+                actualizarBadgeMuestrasFisicas();
+                return;
+            }
+        } catch (e) {
+            console.error("Error al registrar muestra en servidor:", e);
+        }
+    }
+
+    // Fallback local si el servidor no responde
+    let actuales = await obtenerMuestrasFisicasRestantes();
     if (actuales > 0) {
         actuales--;
         localStorage.setItem('muestrasFisicasTarot', actuales.toString());
@@ -185,7 +239,7 @@ function registrarUsoTiradaFisica() {
     }
 }
 
-function actualizarBadgeMuestrasFisicas() {
+async function actualizarBadgeMuestrasFisicas() {
     const badge = document.getElementById('badge-physic-muestra-prof')
                || document.getElementById('badge-fisico-muestra-prof')
                || document.getElementById('badge-fisico-muestra');
@@ -195,7 +249,7 @@ function actualizarBadgeMuestrasFisicas() {
             badge.innerText = "Ilimitado ✨";
             badge.style.borderColor = "#a78bfa";
         } else {
-            const restantes = obtenerMuestrasFisicasRestantes();
+            const restantes = await obtenerMuestrasFisicasRestantes();
             badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
         }
     }
