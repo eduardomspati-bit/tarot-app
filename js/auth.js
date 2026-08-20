@@ -2,9 +2,13 @@
 // AUTH - Gestión de Autenticación y Sesión
 // ==========================================
 
+const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
+    ? window.SERVIDOR_URL.replace('/tirada', '')
+    : 'https://tarot-613b.onrender.com';
+
 const AuthModule = {
-    // Iniciar sesión con email y nombre opcional desde la interfaz
-    iniciarSesion: function() {
+    // Iniciar sesión con email desde la pantalla de auth
+    iniciarSesion: async function() {
         const emailInput = document.getElementById('auth-email');
         const nombreInput = document.getElementById('auth-nombre');
         const errorElement = document.getElementById('auth-error');
@@ -14,7 +18,6 @@ const AuthModule = {
         const email = emailInput.value.trim().toLowerCase();
         const nombre = nombreInput ? nombreInput.value.trim() : '';
 
-        // Validación básica de correo electrónico
         if (!email || !email.includes('@') || !email.includes('.')) {
             errorElement.textContent = "⚠️ Por favor, ingresa un correo electrónico válido.";
             errorElement.style.display = 'block';
@@ -23,49 +26,54 @@ const AuthModule = {
 
         errorElement.style.display = 'none';
 
-        // Guardar credenciales en el almacenamiento local
-        localStorage.setItem('tarotia_email_usuario', email);
-        if (nombre) {
-            localStorage.setItem('tarotia_nombre_usuario', nombre);
-        }
-
-        // Sincronizar o registrar el usuario en tu backend (MongoDB / Render)
-        this.sincronizarUsuarioBackend(email, nombre);
-
-        // Redirigir a la portada principal de la app
-        if (typeof window.mostrarPantalla === 'function') {
-            window.mostrarPantalla('screen-portada');
+        const resultado = await this.autenticarUsuario(nombre || 'Consultante', email);
+        if (resultado.exito) {
+            if (typeof window.mostrarPantalla === 'function') {
+                window.mostrarPantalla('screen-portada');
+            }
+        } else {
+            errorElement.textContent = resultado.mensaje || "Error al registrar. Intenta de nuevo.";
+            errorElement.style.display = 'block';
         }
     },
 
-    // Sincronización asíncrona con tu backend
-    sincronizarUsuarioBackend: async function(email, nombre) {
+    // Registra o loguea al usuario en el backend y guarda el token JWT
+    autenticarUsuario: async function(nombre, email) {
         try {
-            // Reemplaza o ajusta la URL base de tu backend en Render si es necesario
-            const backendUrl = window.BACKEND_URL || '';
-            if (!backendUrl) return;
-
-            const response = await fetch(`${backendUrl}/api/usuarios`, {
+            const response = await fetch(`${API_BASE}/api/auth/registrar`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, nombre })
+                body: JSON.stringify({ nombre: nombre || 'Consultante', email })
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.premium) {
+            const data = await response.json();
+
+            if (response.ok && data.token) {
+                localStorage.setItem('tarotia_token', data.token);
+                localStorage.setItem('tarotia_email_usuario', email);
+                localStorage.setItem('tarotia_nombre_usuario', data.usuario?.nombre || nombre);
+                if (data.usuario?.plan === 'Premium') {
                     localStorage.setItem('tarotia_plan_premium', 'true');
+                    window.esUsuarioPremium = true;
                 }
+                if (typeof window.actualizarBadgeMuestrasFisicas === 'function') {
+                    window.actualizarBadgeMuestrasFisicas();
+                }
+                return { exito: true, token: data.token, usuario: data.usuario };
+            } else {
+                return { exito: false, mensaje: data.error || 'Error del servidor' };
             }
         } catch (error) {
-            console.warn("⚠️ Modo offline o sin conexión al backend de usuarios:", error);
+            console.warn("⚠️ Error de red al autenticar:", error);
+            return { exito: false, mensaje: 'Sin conexión al servidor. Intenta más tarde.' };
         }
     },
 
-    // Verificar si hay una sesión activa
+    // Verificar si hay una sesión activa (token válido guardado)
     verificarSesionActiva: function() {
+        const token = localStorage.getItem('tarotia_token');
         const email = localStorage.getItem('tarotia_email_usuario');
-        return Boolean(email && email.includes('@'));
+        return Boolean(token && email && email.includes('@'));
     },
 
     // Obtener información del usuario actual
@@ -77,12 +85,16 @@ const AuthModule = {
         };
     },
 
-    // Cerrar sesión
+    // Cerrar sesión completa
     cerrarSesion: function() {
+        localStorage.removeItem('tarotia_token');
         localStorage.removeItem('tarotia_email_usuario');
         localStorage.removeItem('tarotia_nombre_usuario');
         localStorage.removeItem('tarotia_plan_premium');
-        
+        localStorage.removeItem('tarotia_libres_usadas');
+        localStorage.removeItem('tarotia_submodo_fisico');
+        window.esUsuarioPremium = false;
+
         if (typeof window.mostrarPantalla === 'function') {
             window.mostrarPantalla('screen-auth');
         }
@@ -92,8 +104,17 @@ const AuthModule = {
 // ==========================================
 // EXPOSICIÓN GLOBAL DE FUNCIONES
 // ==========================================
+
 window.iniciarSesion = function() {
     AuthModule.iniciarSesion();
+};
+
+window.autenticarUsuario = async function(nombre, email) {
+    return await AuthModule.autenticarUsuario(nombre, email);
+};
+
+window.obtenerToken = function() {
+    return localStorage.getItem('tarotia_token');
 };
 
 window.verificarSesionActiva = function() {
@@ -108,4 +129,4 @@ window.cerrarSesionTarot = function() {
     AuthModule.cerrarSesion();
 };
 
-console.log("[auth.js] Módulo de autenticación avanzado cargado correctamente");
+console.log("[auth.js] Módulo de autenticación corregido y cargado");
