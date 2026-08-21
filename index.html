@@ -319,33 +319,35 @@
 
         <h3 style="margin-bottom: 15px;">Selecciona el estilo de lectura (Tiradas Automáticas):</h3>
         <div class="menu-portada">
-            <!-- ESTILO MÁGICO -->
-            <div class="opcion-tarjeta" onclick="seleccionarEstiloAutomatico('magico')">
-                <div class="opcion-icono">🔮</div>
-                <div class="opcion-info">
-                    <h3>Estilo Mágico</h3>
-                    <p>Tirada automática por duplas. Lectura directa, mística y predictiva.</p>
-                </div>
-            </div>
+           <!-- ESTILO MÁGICO -->
+<div class="opcion-tarjeta" onclick="verificarAccesoEstilo('magico')">
+    <div class="opcion-icono">🔮</div>
+    <div class="opcion-info">
+        <h3>Estilo Mágico</h3>
+        <p>Tirada automática por duplas. Lectura directa, mística y predictiva.</p>
+        <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+    </div>
+</div>
 
-            <!-- ESTILO FILOSÓFICO -->
-            <div class="opcion-tarjeta" onclick="seleccionarEstiloAutomatico('filosofico')">
-                <div class="opcion-icono">🧘‍♂️</div>
-                <div class="opcion-info">
-                    <h3>Estilo Filosófico</h3>
-                    <p>Tirada automática por duplas. Lectura profunda, psicológica y evolutiva.</p>
-                </div>
-            </div>
+<!-- ESTILO FILOSÓFICO -->
+<div class="opcion-tarjeta" onclick="verificarAccesoEstilo('filosofico')">
+    <div class="opcion-icono">🧘‍♂️</div>
+    <div class="opcion-info">
+        <h3>Estilo Filosófico</h3>
+        <p>Tirada automática por duplas. Lectura profunda, psicológica y evolutiva.</p>
+        <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+    </div>
+</div>
 
-            <!-- MÓDULO PROFESIONAL -->
-            <div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="abrirModuloProfesional()">
-                <div class="opcion-icono">💼</div>
-                <div class="opcion-info">
-                    <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
-                    <p>Herramientas avanzadas, lecturas con Mazo Físico y desgloses técnicos.</p>
-                </div>
-            </div>
-        </div>
+<!-- MÓDULO PROFESIONAL -->
+<div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="verificarAccesoFisico('predictivo_fisico')">
+    <div class="opcion-icono">💼</div>
+    <div class="opcion-info">
+        <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
+        <p>Herramientas avanzadas, lecturas con Mazo Físico y desgloses técnicos.</p>
+        <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+    </div>
+</div>
 
         <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
             📜 Ver Mis Lecturas Anteriores
