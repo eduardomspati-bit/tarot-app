@@ -1,23 +1,24 @@
 // ==========================================
-// CONFIGURACIÓN GLOBAL
+// CONFIGURACIÓN GLOBAL v8
 // ==========================================
 
-// URL del servidor backend
-// URL base limpia de tu backend en Render (sin sufijos mágicos)
-window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' ? window.API_URL : 'https://tarot-613b.onrender.com');
+window.SERVIDOR_URL = (typeof window.API_URL !== 'undefined' && window.API_URL)
+    ? window.API_URL
+    : 'https://tarot-613b.onrender.com';
+
+// Limpiar barra final para evitar URLs dobles
+window.SERVIDOR_URL = window.SERVIDOR_URL.replace(/\/$/, '');
+
 console.log("[config.js] SERVIDOR_URL base:", window.SERVIDOR_URL);
 
-// Obtener el mazo activo
 window.obtenerMazoActivo = function() {
     if (typeof arcanosCompleto !== 'undefined' && Array.isArray(arcanosCompleto) && arcanosCompleto.length > 0) {
-        console.log("[config.js] Mazo encontrado vía arcanosCompleto global:", arcanosCompleto.length);
         return arcanosCompleto;
     }
     if (window.arcanosCompleto && Array.isArray(window.arcanosCompleto) && window.arcanosCompleto.length > 0) {
-        console.log("[config.js] Mazo encontrado vía window.arcanosCompleto:", window.arcanosCompleto.length);
         return window.arcanosCompleto;
     }
-    console.warn("[config.js] ⚠️ arcanos.js no cargó. Usando fallback de emergencia.");
+    console.warn("[config.js] ⚠️ arcanos.js no cargó. Usando fallback.");
     return [
         "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador", "El Papa",
         "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño", "La Rueda de la Fortuna",
