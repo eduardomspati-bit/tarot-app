@@ -703,6 +703,28 @@ window.tirarCartaDiaria=function(){
 window.volverALanding=function(){
     window.mostrarPantalla('screen-landing');
 };
+ // ==========================================
+// FUNCIÓN PARA ENTRAR AL TAROT COMPLETO
+// ==========================================
+
+window.entrarAppCompleta = function() {
+    console.log("[nav] Entrar al Tarot Completo");
+    
+    // Primero verificamos si hay sesión activa
+    const token = window.obtenerToken ? window.obtenerToken() : null;
+    
+    if (token) {
+        // Si ya tiene token, va directo a la portada
+        window.mostrarPantalla('screen-portada');
+        // Actualizar badges
+        if (typeof window.actualizarBadgeGlobal === 'function') {
+            window.actualizarBadgeGlobal();
+        }
+    } else {
+        // Si no tiene token, mostrar pantalla de autenticación
+        window.mostrarPantalla('screen-auth');
+    }
+};   
 
 window.verificarPagoAutomaticoPorEmail = async function() {
     const email = prompt("📧 Ingresá el correo con el que realizaste el pago:");
