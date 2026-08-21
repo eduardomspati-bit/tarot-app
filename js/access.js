@@ -110,51 +110,108 @@ window.abrirMercadoPago = function() {
 };
 
 // ==========================================
-// ACCESO A MAZO FÍSICO (NÚCLEO DEL EMBUDO)
+// ACCESO A MAZO FÍSICO (NÚCLEO DEL EMBUDO) - CORREGIDO
 // ==========================================
+
 async function verificarAccesoFisico(submodo) {
+    console.log("[access.js] verificarAccesoFisico llamado, submodo:", submodo);
+    
     if (window.esUsuarioPremium) {
         abrirPantallaFisico(submodo);
         return;
     }
 
-    // 1. ¿Le quedan tiradas libres locales (las primeras 2 sin registro)?
-    const libresUsadas = obtenerTiradasLibresLocalesUsadas();
-    if (libresUsadas < TIRADAS_LIBRES_LOCALES) {
-        registrarTiradaLibreLocalUsada();
-        console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_LOCALES})`);
-        abrirPantallaFisico(submodo);
-        return;
-    }
-
-    // 2. Ya gastó las 2 libres. ¿Tiene token (dejó su email)?
+    // ==========================================
+    // PASO 1: Verificar si tiene token (ya se registró)
+    // ==========================================
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    if (!token) {
-        const emailInput = prompt("✨ ¡Has disfrutado tus 2 lecturas de cortesía!\n\nIngresa tu correo electrónico para desbloquear 3 tiradas gratuitas adicionales y continuar:");
-        if (emailInput && emailInput.includes('@') && emailInput.includes('.')) {
-            if (typeof window.autenticarUsuario === 'function') {
-                const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
-                if (resultado && resultado.exito) {
-                    alert("¡Correo registrado con éxito! Tienes 3 tiradas adicionales en la nube.");
-                    abrirPantallaFisico(submodo);
-                } else {
-                    alert("No se pudo registrar el correo. Intenta de nuevo.");
-                }
-            } else {
-                alert("⚠️ Sistema de autenticación no disponible. Recarga la página.");
-            }
-        } else if (emailInput !== null) {
-            alert("Se requiere un correo válido para continuar con las lecturas gratuitas.");
+    console.log("[access.js] Token encontrado:", token ? "SI" : "NO");
+    
+    if (token) {
+        // Ya tiene token, usar las muestras de la nube
+        const muestrasRestantes = await registrarUsoTiradaFisica();
+        if (muestrasRestantes >= 0) {
+            abrirPantallaFisico(submodo);
+        } else {
+            lanzarMuroDePago();
         }
         return;
     }
 
-    // 3. Ya tiene token: consultamos y descontamos en MongoDB (las 3 de la nube)
-    const muestrasRestantes = await registrarUsoTiradaFisica();
-    if (muestrasRestantes >= 0) {
-        abrirPantallaFisico(submodo);
+    // ==========================================
+    // PASO 2: NO tiene token → PEDIR EMAIL
+    // ==========================================
+    console.log("[access.js] No hay token, pidiendo email...");
+    
+    // Preguntar si el usuario quiere registrarse (opcional: dar 2 gratis si dice que no)
+    const respuesta = confirm(
+        "🔮 Para acceder al Mazo Físico necesitás registrarte con tu email.\n\n" +
+        "✅ 'Aceptar' → Ingresar tu email y obtener 5 tiradas gratuitas en la nube.\n" +
+        "❌ 'Cancelar' → Usar 2 tiradas gratuitas sin registro (solo en este dispositivo)."
+    );
+    
+    if (!respuesta) {
+        // Usuario eligió NO registrarse → dar 2 tiradas locales
+        const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+        if (libresUsadas < TIRADAS_LIBRES_LOCALES) {
+            registrarTiradaLibreLocalUsada();
+            console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_LOCALES})`);
+            abrirPantallaFisico(submodo);
+        } else {
+            // Ya gastó las 2 gratis, ahora SÍ o SÍ debe registrarse
+            alert("🔒 Has agotado tus 2 tiradas gratuitas locales.\n\nPara continuar, debes registrarte con tu email.");
+            await pedirEmailYRegistrar(submodo);
+        }
+        return;
+    }
+
+    // Usuario aceptó registrarse
+    await pedirEmailYRegistrar(submodo);
+}
+
+// ==========================================
+// FUNCIÓN AUXILIAR: Pedir email y registrar
+// ==========================================
+
+async function pedirEmailYRegistrar(submodo) {
+    const emailInput = prompt(
+        "📧 Ingresa tu correo electrónico para desbloquear 5 tiradas gratuitas:\n\n" +
+        "(Tu correo solo se usa para guardar tu progreso y activar tu cuenta)"
+    );
+    
+    if (!emailInput) {
+        alert("⚠️ El correo es necesario para continuar con las lecturas gratuitas.");
+        // Volver a intentar
+        await pedirEmailYRegistrar(submodo);
+        return;
+    }
+    
+    if (!emailInput.includes('@') || !emailInput.includes('.')) {
+        alert("⚠️ Por favor, ingresa un correo electrónico válido.");
+        await pedirEmailYRegistrar(submodo);
+        return;
+    }
+
+    // Registrar en el backend
+    if (typeof window.autenticarUsuario === 'function') {
+        try {
+            const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
+            if (resultado && resultado.exito) {
+                alert("✅ ¡Correo registrado con éxito! Tienes 5 tiradas gratuitas en la nube.");
+                // Ahora tiene token, reintentar el acceso
+                await verificarAccesoFisico(submodo);
+            } else {
+                alert("❌ No se pudo registrar el correo. Error: " + (resultado?.mensaje || "desconocido"));
+                // Reintentar
+                await pedirEmailYRegistrar(submodo);
+            }
+        } catch (e) {
+            console.error("Error al autenticar:", e);
+            alert("❌ Error de conexión. Intenta de nuevo.");
+            await pedirEmailYRegistrar(submodo);
+        }
     } else {
-        lanzarMuroDePago();
+        alert("⚠️ Sistema de autenticación no disponible. Recarga la página.");
     }
 }
 
@@ -195,6 +252,7 @@ function verificarAccesoTarotista() {
 // ==========================================
 // VERIFICACIÓN DE SEGURIDAD Y MÓDULO DE INICIO
 // ==========================================
+
 async function verificarEstadoReal() {
     const token = window.obtenerToken ? window.obtenerToken() : null;
     if (!token) return;
@@ -220,4 +278,4 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarBadgeMuestrasFisicas(); 
 });
 
-console.log("[access.js] Flujo progresivo (2 libres -> Email -> Cloud -> Pago) sincronizado correctamente");
+console.log("[access.js] Flujo progresivo corregido: PRIMERO pide email, después da gratis si rechaza");
