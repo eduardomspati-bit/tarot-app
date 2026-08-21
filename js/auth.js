@@ -18,7 +18,6 @@ const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
         console.log("[auth.js] ✅ localStorage disponible");
     } catch (e) {
         console.warn("[auth.js] ⚠️ localStorage NO disponible (modo incógnito)");
-        // Crear un localStorage falso en memoria
         const memoryStorage = {};
         const originalSetItem = localStorage.setItem;
         const originalGetItem = localStorage.getItem;
@@ -56,7 +55,6 @@ const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined')
 // ==========================================
 
 const AuthModule = {
-    // Iniciar sesión con email desde la pantalla de auth
     iniciarSesion: async function() {
         const emailInput = document.getElementById('auth-email');
         const nombreInput = document.getElementById('auth-nombre');
@@ -77,7 +75,6 @@ const AuthModule = {
 
         const resultado = await this.autenticarUsuario(nombre || 'Consultante', email);
         if (resultado.exito) {
-            // Actualizar badge global
             if (typeof window.actualizarBadgeGlobal === 'function') {
                 await window.actualizarBadgeGlobal();
             }
@@ -90,7 +87,6 @@ const AuthModule = {
         }
     },
 
-    // Registra o loguea al usuario en el backend y guarda el token JWT
     autenticarUsuario: async function(nombre, email) {
         try {
             console.log("[auth.js] Registrando usuario:", email);
@@ -105,12 +101,10 @@ const AuthModule = {
             console.log("[auth.js] Respuesta del servidor:", data);
 
             if (response.ok && data.token) {
-                // Guardar token y datos
                 localStorage.setItem('tarotia_token', data.token);
                 localStorage.setItem('tarotia_email_usuario', email);
                 localStorage.setItem('tarotia_nombre_usuario', data.usuario?.nombre || nombre);
                 
-                // Guardar plan
                 if (data.usuario?.plan === 'Premium') {
                     localStorage.setItem('tarotia_plan_premium', 'true');
                     window.esUsuarioPremium = true;
@@ -119,12 +113,10 @@ const AuthModule = {
                     window.esUsuarioPremium = false;
                 }
 
-                // Guardar cuántas muestras tiene en la nube (para el badge)
                 if (data.usuario?.muestrasFisicasRestantes !== undefined) {
                     localStorage.setItem('tarotia_muestras_restantes', data.usuario.muestrasFisicasRestantes);
                 }
 
-                // Actualizar badge global si existe
                 if (typeof window.actualizarBadgeGlobal === 'function') {
                     setTimeout(() => window.actualizarBadgeGlobal(), 100);
                 }
@@ -134,7 +126,7 @@ const AuthModule = {
                     exito: true, 
                     token: data.token, 
                     usuario: data.usuario,
-                    muestrasRestantes: data.usuario?.muestrasFisicasRestantes || 5
+                    muestrasRestantes: data.usuario?.muestrasFisicasRestantes || 5 
                 };
             } else {
                 console.warn("[auth.js] Error del servidor:", data.error);
@@ -146,7 +138,6 @@ const AuthModule = {
         }
     },
 
-    // Verificar si hay una sesión activa (token válido guardado)
     verificarSesionActiva: function() {
         try {
             const token = localStorage.getItem('tarotia_token');
@@ -157,7 +148,6 @@ const AuthModule = {
         }
     },
 
-    // Obtener información del usuario actual
     obtenerUsuario: function() {
         try {
             return {
@@ -170,7 +160,6 @@ const AuthModule = {
         }
     },
 
-    // Obtener muestras restantes (desde localStorage o servidor)
     obtenerMuestrasRestantes: function() {
         try {
             const restantes = localStorage.getItem('tarotia_muestras_restantes');
@@ -180,7 +169,6 @@ const AuthModule = {
         }
     },
 
-    // Cerrar sesión completa
     cerrarSesion: function() {
         try {
             localStorage.removeItem('tarotia_token');
@@ -200,9 +188,8 @@ const AuthModule = {
         }
     },
 
-    // Verificar estado del usuario en el servidor
     verificarEstadoEnServidor: async function() {
-        const token = this.obtenerToken();
+        const token = window.obtenerToken();
         if (!token) return null;
 
         try {
@@ -215,14 +202,12 @@ const AuthModule = {
                 const esPremium = data.usuario?.plan === 'Premium';
                 const muestrasRestantes = data.usuario?.muestrasFisicasRestantes || 0;
                 
-                // Actualizar localStorage
                 localStorage.setItem('tarotia_plan_premium', esPremium ? 'true' : 'false');
                 localStorage.setItem('tarotia_muestras_restantes', muestrasRestantes);
                 window.esUsuarioPremium = esPremium;
                 
                 return { esPremium, muestrasRestantes, usuario: data.usuario };
             } else {
-                // Token inválido → cerrar sesión
                 this.cerrarSesion();
                 return null;
             }
@@ -237,17 +222,14 @@ const AuthModule = {
 // EXPOSICIÓN GLOBAL DE FUNCIONES
 // ==========================================
 
-// Función para iniciar sesión desde la UI
 window.iniciarSesion = function() {
     AuthModule.iniciarSesion();
 };
 
-// Función para autenticar usuario (usada por access.js)
 window.autenticarUsuario = async function(nombre, email) {
     return await AuthModule.autenticarUsuario(nombre, email);
 };
 
-// Obtener token JWT
 window.obtenerToken = function() {
     try {
         return localStorage.getItem('tarotia_token');
@@ -256,27 +238,22 @@ window.obtenerToken = function() {
     }
 };
 
-// Verificar si hay sesión activa
 window.verificarSesionActiva = function() {
     return AuthModule.verificarSesionActiva();
 };
 
-// Obtener usuario actual
 window.obtenerUsuarioActual = function() {
     return AuthModule.obtenerUsuario();
 };
 
-// Obtener muestras restantes
 window.obtenerMuestrasRestantes = function() {
     return AuthModule.obtenerMuestrasRestantes();
 };
 
-// Verificar estado en el servidor
 window.verificarEstadoServidor = async function() {
     return await AuthModule.verificarEstadoEnServidor();
 };
 
-// Cerrar sesión
 window.cerrarSesionTarot = function() {
     AuthModule.cerrarSesion();
 };
@@ -285,16 +262,13 @@ window.cerrarSesionTarot = function() {
 // INICIALIZACIÓN AUTOMÁTICA
 // ==========================================
 
-// Cuando el DOM esté listo, verificar sesión
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("[auth.js] DOM listo, verificando sesión...");
     
-    // Si hay token, verificar estado en el servidor
     if (window.obtenerToken()) {
         const estado = await AuthModule.verificarEstadoEnServidor();
         if (estado) {
             console.log("[auth.js] ✅ Sesión activa:", estado.usuario?.email, "Plan:", estado.esPremium ? 'Premium' : 'Gratis');
-            // Actualizar badge global
             if (typeof window.actualizarBadgeGlobal === 'function') {
                 await window.actualizarBadgeGlobal();
             }
