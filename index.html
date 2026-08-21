@@ -606,11 +606,18 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-window.seleccionarEstiloAutomatico = function(estilo){
-    window.estiloSeleccionado=estilo; window.modoFisicoActivo=false;
-    window.preguntaCustomSeleccionada=""; window.cartasFisicoSeleccionadas=null;
-    window.submodoFisicoActual=null; localStorage.removeItem('tarotia_submodo_fisico');
-    window.mostrarPantalla('screen-selector');
+// En el bloque <script> de navegación inline
+window.seleccionarEstiloAutomatico = function(estilo) {
+    // Ahora usa verificarAccesoEstilo en lugar de abrir directamente
+    if (typeof window.verificarAccesoEstilo === 'function') {
+        window.verificarAccesoEstilo(estilo);
+    } else {
+        // Fallback
+        window.estiloSeleccionado = estilo;
+        window.modoFisicoActivo = false;
+        window.preguntaCustomSeleccionada = "";
+        window.mostrarPantalla('screen-selector');
+    }
 };
 
 window.abrirModuloProfesional = function(){ window.mostrarPantalla('screen-modulo-profesional'); };
