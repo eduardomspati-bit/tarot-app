@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -201,6 +202,7 @@
             color: rgba(255,255,255,0.4);
         }
     </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -294,7 +296,6 @@
             <!-- SECCIÓN DE PAGO / ACCESO PREMIUM -->
             <div style="max-width: 400px; margin: 20px auto; background: rgba(255,215,0,0.05); border: 1px dashed rgba(255,215,0,0.4); padding: 15px; border-radius: 12px; text-align: center;">
                 <p style="color: #ffd700; font-size: 0.9rem; margin-bottom: 10px;">⭐ ¿Querés acceso ilimitado Premium?</p>
-                <!-- REEMPLAZA ESTE ENLACE CON TU LINK REAL DE MERCADO PAGO -->
                 <a href="https://link.mercadopago.com.ar/TULINKDEMP" target="_blank" class="btn-consulta-gratis" style="background: linear-gradient(135deg, #009ee3, #0073a8); font-size: 0.95rem; padding: 12px; margin-bottom: 10px;">
                     💳 Comprar con Mercado Pago
                 </a>
@@ -320,34 +321,35 @@
         <h3 style="margin-bottom: 15px;">Selecciona el estilo de lectura (Tiradas Automáticas):</h3>
         <div class="menu-portada">
            <!-- ESTILO MÁGICO -->
-<div class="opcion-tarjeta" onclick="verificarAccesoEstilo('magico')">
-    <div class="opcion-icono">🔮</div>
-    <div class="opcion-info">
-        <h3>Estilo Mágico</h3>
-        <p>Tirada automática por duplas. Lectura directa, mística y predictiva.</p>
-        <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
-    </div>
-</div>
+            <div class="opcion-tarjeta" onclick="verificarAccesoEstilo('magico')">
+                <div class="opcion-icono">🔮</div>
+                <div class="opcion-info">
+                    <h3>Estilo Mágico</h3>
+                    <p>Tirada automática por duplas. Lectura directa, mística y predictiva.</p>
+                    <span id="badge-magico" class="badge-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+                </div>
+            </div>
 
-<!-- ESTILO FILOSÓFICO -->
-<div class="opcion-tarjeta" onclick="verificarAccesoEstilo('filosofico')">
-    <div class="opcion-icono">🧘‍♂️</div>
-    <div class="opcion-info">
-        <h3>Estilo Filosófico</h3>
-        <p>Tirada automática por duplas. Lectura profunda, psicológica y evolutiva.</p>
-        <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
-    </div>
-</div>
+            <!-- ESTILO FILOSÓFICO -->
+            <div class="opcion-tarjeta" onclick="verificarAccesoEstilo('filosofico')">
+                <div class="opcion-icono">🧘‍♂️</div>
+                <div class="opcion-info">
+                    <h3>Estilo Filosófico</h3>
+                    <p>Tirada automática por duplas. Lectura profunda, psicológica y evolutiva.</p>
+                    <span id="badge-filosofico" class="badge-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+                </div>
+            </div>
 
-<!-- MÓDULO PROFESIONAL -->
-<div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="verificarAccesoFisico('predictivo_fisico')">
-    <div class="opcion-icono">💼</div>
-    <div class="opcion-info">
-        <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
-        <p>Herramientas avanzadas, lecturas con Mazo Físico y desgloses técnicos.</p>
-        <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
-    </div>
-</div>
+            <!-- MÓDULO PROFESIONAL -->
+            <div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="verificarAccesoFisico('predictivo_fisico')">
+                <div class="opcion-icono">💼</div>
+                <div class="opcion-info">
+                    <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
+                    <p>Herramientas avanzadas, lecturas con Mazo Físico y desgloses técnicos.</p>
+                    <span id="badge-profesional" class="badge-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+                </div>
+            </div>
+        </div>
 
         <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
             📜 Ver Mis Lecturas Anteriores
@@ -435,68 +437,68 @@
     </div>
 
     <!-- ========== MESA DE RESULTADOS ========== -->
-<div id="screen-result" class="screen hidden">
-    <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
+    <div id="screen-result" class="screen hidden">
+        <h3 id="reading-theme-title" style="color: var(--accent); margin-top:0;"></h3>
 
-    <div class="tarot-table">
-        <!-- DUPLA 1 -->
-        <div class="duple-box">
-            <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
-            <div class="card-container">
-                <div id="img-a" class="card-visual"></div>
-                <div id="name-a" class="card-name"></div>
+        <div class="tarot-table">
+            <!-- DUPLA 1 -->
+            <div class="duple-box">
+                <div class="duple-title">Dupla 1: Presente / Estado Inicial</div>
+                <div class="card-container">
+                    <div id="img-a" class="card-visual"></div>
+                    <div id="name-a" class="card-name"></div>
+                </div>
+                <div class="card-container">
+                    <div id="img-b" class="card-visual"></div>
+                    <div id="name-b" class="card-name"></div>
+                </div>
             </div>
-            <div class="card-container">
-                <div id="img-b" class="card-visual"></div>
-                <div id="name-b" class="card-name"></div>
+
+            <!-- DUPLA 2 -->
+            <div class="duple-box">
+                <div class="duple-title">Dupla 2: Futuro / Evolución</div>
+                <div class="card-container">
+                    <div id="img-c" class="card-visual"></div>
+                    <div id="name-c" class="card-name"></div>
+                </div>
+                <div class="card-container">
+                    <div id="img-d" class="card-visual"></div>
+                    <div id="name-d" class="card-name"></div>
+                </div>
             </div>
         </div>
 
-        <!-- DUPLA 2 -->
-        <div class="duple-box">
-            <div class="duple-title">Dupla 2: Futuro / Evolución</div>
-            <div class="card-container">
-                <div id="img-c" class="card-visual"></div>
-                <div id="name-c" class="card-name"></div>
+        <div class="reading-output" id="interpretation-text"></div>
+
+        <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
+        <div id="voice-panel-container">
+            <!-- Panel para Estilo Mágico y Filosófico -->
+            <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
+                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+                <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
+                <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
+                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
             </div>
-            <div class="card-container">
-                <div id="img-d" class="card-visual"></div>
-                <div id="name-d" class="card-name"></div>
+
+            <!-- Panel para Módulo Profesional / Estructural -->
+            <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
+                <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
+                <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
+                <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
+                <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
             </div>
+        </div>
+
+        <!-- ========== BOTONES DE NAVEGACIÓN SIEMPRE VISIBLES ========== -->
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+            <button class="back-btn" onclick="volverInicio()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
+                🔄 Nueva Consulta
+            </button>
+            <button class="back-btn" onclick="volverAPortada()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
+                ⬅ Volver al Menú
+            </button>
         </div>
     </div>
-
-    <div class="reading-output" id="interpretation-text"></div>
-
-    <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
-    <div id="voice-panel-container">
-        <!-- Panel para Estilo Mágico y Filosófico -->
-        <div id="voice-panel-magico-filosofico" class="voice-panel" style="display:none;">
-            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-            <button class="btn-voice" onclick="reproducirVoz('conclusion')">📌 Solo Conclusión</button>
-            <button class="btn-voice" onclick="reproducirVoz('predicciones')">🔮 Predicciones</button>
-            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-        </div>
-
-        <!-- Panel para Módulo Profesional / Estructural -->
-        <div id="voice-panel-profesional" class="voice-panel" style="display:none;">
-            <button class="btn-voice" onclick="reproducirVoz('todo')">🔊 Leer todo</button>
-            <button class="btn-voice" onclick="reproducirVozDupla(1)">🔊 Dupla 1</button>
-            <button class="btn-voice" onclick="reproducirVozDupla(2)">🔊 Dupla 2</button>
-            <button class="btn-voice" onclick="window.speechSynthesis.cancel()">⏹ Detener</button>
-        </div>
-    </div>
-
-    <!-- ========== BOTONES DE NAVEGACIÓN SIEMPRE VISIBLES ========== -->
-    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-        <button class="back-btn" onclick="volverInicio()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
-            🔄 Nueva Consulta
-        </button>
-        <button class="back-btn" onclick="volverAPortada()" style="margin:0; flex:1; min-width:120px; max-width:250px;">
-            ⬅ Volver al Menú
-        </button>
-    </div>
-</div>
 
     <!-- ========== MÓDULO PROFESIONAL ========== -->
     <div id="screen-modulo-profesional" class="screen hidden">
@@ -556,33 +558,45 @@
 
 </div>
 
-<!-- Carga de Scripts con cache-busting -->
-<script src="js/arcanos.js?v=7"></script>
-<script src="js/config.js?v=7"></script>
-<script src="js/auth.js?v=7"></script>
-<script src="js/access.js?v=7"></script>
-<script src="js/voice.js?v=7"></script>
-<script src="js/history.js?v=7"></script>
-<script src="js/duplas.js?v=7"></script>
-<script src="js/app.js?v=7"></script>
+<!-- Carga de Scripts con cache-busting v8 -->
+<script src="js/arcanos.js?v=8"></script>
+<script src="js/config.js?v=8"></script>
+<script src="js/auth.js?v=8"></script>
+<script src="js/access.js?v=8"></script>
+<script src="js/voice.js?v=8"></script>
+<script src="js/history.js?v=8"></script>
+<script src="js/duplas.js?v=8"></script>
+<script src="js/app.js?v=8"></script>
 
-<!-- NAVEGACIÓN INLINE v7 - Flujo corregido -->
+<!-- NAVEGACIÓN INLINE v8 - Flujo corregido -->
 <script>
 window.preguntaCustomSeleccionada = "";
 
-const mostrarPantallaOriginal = window.mostrarPantalla || function(id) {
-    document.querySelectorAll('.screen').forEach(p => { p.style.display='none'; p.classList.add('hidden'); });
-    const d = document.getElementById(id);
-    if(d){ d.style.display='block'; d.classList.remove('hidden'); window.scrollTo(0,0); }
-};
-
+// Navegación robusta con fallback
 window.mostrarPantalla = function(id) {
-    // ⛔ DETENER VOZ al cambiar de pantalla
-    if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-    }
+    console.log('[nav] mostrarPantalla →', id);
 
-    mostrarPantallaOriginal(id);
+    // Detener voz
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    // Ocultar todas
+    document.querySelectorAll('.screen').forEach(p => {
+        p.style.display = 'none';
+        p.classList.add('hidden');
+    });
+
+    // Mostrar la solicitada
+    const d = document.getElementById(id);
+    if (d) {
+        d.style.display = 'block';
+        d.classList.remove('hidden');
+        d.style.visibility = 'visible';
+        d.style.opacity = '1';
+        window.scrollTo(0, 0);
+    } else {
+        console.error('[nav] ❌ No existe el elemento:', id);
+        alert('Error interno: pantalla ' + id + ' no encontrada. Recargá la página.');
+    }
 
     if (id === 'screen-result') {
         setTimeout(() => {
@@ -593,26 +607,10 @@ window.mostrarPantalla = function(id) {
     }
 };
 
-// Detener voz si el usuario cierra la app o cambia de pestaña
-window.addEventListener('beforeunload', function() {
-    if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-    }
-});
-
-document.addEventListener('visibilitychange', function() {
-    if (document.hidden && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-    }
-});
-
-// En el bloque <script> de navegación inline
 window.seleccionarEstiloAutomatico = function(estilo) {
-    // Ahora usa verificarAccesoEstilo en lugar de abrir directamente
     if (typeof window.verificarAccesoEstilo === 'function') {
         window.verificarAccesoEstilo(estilo);
     } else {
-        // Fallback
         window.estiloSeleccionado = estilo;
         window.modoFisicoActivo = false;
         window.preguntaCustomSeleccionada = "";
@@ -659,15 +657,11 @@ window.confirmarPreguntaYEjecutar=function(){
     window.ejecutarLecturaSegunModo('Pregunta Específica');
 };
 window.ejecutarLecturaSegunModo = function(tema) {
-    console.log("[nav] ejecutarLecturaSegunModo - tema:", tema);
-    console.log("[nav] modoFisicoActivo:", window.modoFisicoActivo);
-    
-    // Si no hay cartas seleccionadas en modo físico, generar automáticas
+    console.log("[nav] ejecutarLecturaSegunModo - tema:", tema, "modoFisico:", window.modoFisicoActivo);
     if (window.modoFisicoActivo && !window.cartasFisicoSeleccionadas) {
         console.warn("[nav] Modo físico activo pero sin cartas. Generando automáticas...");
-        window.modoFisicoActivo = false; // Cambiar a automático
+        window.modoFisicoActivo = false;
     }
-    
     if (typeof window.procesarTiradaCompleta === 'function') {
         window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada || "");
     } else {
@@ -699,38 +693,26 @@ window.volverALanding=function(){
     window.mostrarPantalla('screen-landing');
 };
 
-// Función para verificar pago automáticamente consultando al backend o guardando estado local
 window.verificarPagoAutomaticoPorEmail = async function() {
-    const email = prompt("📧 Ingresá el correo con el que realizaste el pago en Mercado Pago:");
+    const email = prompt("📧 Ingresá el correo con el que realizaste el pago:");
     if (!email || !email.includes('@')) {
         alert("⚠️ Por favor, ingresa un correo válido.");
         return;
     }
-
-    try {
-        // Ejemplo de petición a tu backend para chequear el estatus del pago de ese email
-        /*
-        const response = await fetch(`https://tu-backend.onrender.com/api/verificar-pago?email=${encodeURIComponent(email)}`);
-        const data = await response.json();
-        if (data.premium) {
-            localStorage.setItem('tarotia_email_usuario', email);
-            localStorage.setItem('tarotia_plan_premium', 'true');
-            alert("✨ ¡Pago verificado con éxito! Acceso Premium activado.");
-            window.mostrarPantalla('screen-portada');
-            return;
-        }
-        */
-
-        // Solución rápida si usas link directo sin webhook activo aún:
-        localStorage.setItem('tarotia_email_usuario', email.trim().toLowerCase());
-        alert("🔍 Verificando registro en el sistema para: " + email + "\nSi completaste el pago, en breve se sincronizará el acceso.");
-        window.mostrarPantalla('screen-portada');
-    } catch (error) {
-        console.error("Error al verificar pago:", error);
-        alert("Hubo un error al verificar. Intenta nuevamente en unos minutos.");
-    }
+    localStorage.setItem('tarotia_email_usuario', email.trim().toLowerCase());
+    alert("🔍 Verificando registro para: " + email + "\nSi completaste el pago, en breve se sincronizará el acceso.");
+    window.mostrarPantalla('screen-portada');
 };
 
-console.log("✅ Navegación inline v7 con Mercado Pago cargada y limpia");
+// Detener voz al cerrar/cambiar pestaña
+window.addEventListener('beforeunload', function() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+});
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && window.speechSynthesis) window.speechSynthesis.cancel();
+});
+
+console.log("✅ Navegación inline v8 corregida cargada");
 </script>
+</body>
 </html>
