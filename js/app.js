@@ -1,11 +1,16 @@
 // ==========================================
-// APP.JS DEFINITIVO - Solo lógica de la app
-// SIN funciones de navegación (están inline en index.html)
+// APP.JS v8 - Corrección pantalla vacía
 // ==========================================
-console.log("[app.js] Cargado - versión definitiva");
+console.log("[app.js] Cargado - versión v8 corregida");
+
+// Fallback de URL si config.js no cargó
+if (typeof window.SERVIDOR_URL === 'undefined' || !window.SERVIDOR_URL) {
+    window.SERVIDOR_URL = 'https://tarot-613b.onrender.com';
+    console.warn("[app.js] ⚠️ SERVIDOR_URL no definida, usando fallback");
+}
 
 // ==========================================
-// FUNCIONES DE MANEJO DE CARTAS
+// FUNCIONES DE CARTAS
 // ==========================================
 
 window.obtenerCuatroCartasAleatorias = function() {
@@ -13,8 +18,7 @@ window.obtenerCuatroCartasAleatorias = function() {
     console.log("[app.js] Mazo length:", mazo ? mazo.length : 0);
 
     if (!mazo || !mazo.length) {
-        console.error("❌ [app.js] Mazo vacío. Verificá arcanos.js");
-        // Retornar mazo de emergencia
+        console.error("❌ [app.js] Mazo vacío. Usando emergencia.");
         return ["El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz"];
     }
 
@@ -95,7 +99,7 @@ window.renderizarMesaDuplas = function(cartas, tema) {
         }
         if (elImg) {
             const imgUrl = nombreAImagen(cartaNombre);
-            elImg.innerHTML = `<img src="${imgUrl}" alt="${cartaNombre || 'carta'}" onerror="this.parentElement.innerHTML='🃏'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+            elImg.innerHTML = `<img src="${imgUrl}" alt="${cartaNombre || 'carta'}" onerror="this.parentElement.innerHTML='<div style=\\'font-size:2rem;text-align:center;padding:20px;\\'>🃏</div>'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
         }
     });
 };
@@ -113,7 +117,7 @@ window.consultaGratis = async function() {
         return;
     }
 
-    if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-gratis-result');
+    window.mostrarPantalla('screen-gratis-result');
 
     const preguntaMostrar = document.getElementById('gratis-pregunta-mostrar');
     if (preguntaMostrar) preguntaMostrar.textContent = pregunta;
@@ -152,12 +156,23 @@ window.consultaGratis = async function() {
         };
         console.log("[app.js] 📤 Consulta gratis:", payload);
 
-        const urlEndpoint = window.SERVIDOR_URL.endsWith('/') ? `${window.SERVIDOR_URL}tirada` : `${window.SERVIDOR_URL}/tirada`;
+        const baseUrl = (window.SERVIDOR_URL || 'https://tarot-613b.onrender.com').replace(/\/$/, '');
+        const urlEndpoint = `${baseUrl}/tirada`;
+        
         const respuesta = await fetch(urlEndpoint, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const data = await respuesta.json();
+        
+        let data;
+        const contentType = respuesta.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await respuesta.json();
+        } else {
+            const text = await respuesta.text();
+            throw new Error('El servidor respondió con HTML en lugar de JSON. ¿Está caído?');
+        }
+        
         if (!respuesta.ok) throw new Error(data.error || 'Error servidor');
 
         let texto = data.lectura || data.respuesta || data.texto || '';
@@ -167,7 +182,11 @@ window.consultaGratis = async function() {
     } catch (error) {
         console.error('❌ [app.js] Error consulta gratis:', error);
         if (contenedorRespuesta) {
-            contenedorRespuesta.innerHTML = `<div style="color:#ff6b6b; text-align:center; padding:20px;">❌ ${error.message}</div>`;
+            contenedorRespuesta.innerHTML = `
+                <div style="color:#ff6b6b; text-align:center; padding:20px;">
+                    ❌ ${error.message}<br><br>
+                    <small style="color:#888;">Probá recargar la página o verificá tu conexión.</small>
+                </div>`;
         }
     }
 };
@@ -175,11 +194,11 @@ window.consultaGratis = async function() {
 window.nuevaConsultaGratis = function() {
     const input = document.getElementById('input-pregunta-gratis');
     if (input) input.value = '';
-    if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-landing');
+    window.mostrarPantalla('screen-landing');
 };
 
 window.entrarAppCompleta = function() {
-    if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-portada');
+    window.mostrarPantalla('screen-portada');
 };
 
 // ==========================================
@@ -202,12 +221,23 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
         };
         console.log("[app.js] 📤 Enviando:", payload);
 
-        const urlEndpoint = window.SERVIDOR_URL.endsWith('/') ? `${window.SERVIDOR_URL}tirada` : `${window.SERVIDOR_URL}/tirada`;
+        const baseUrl = (window.SERVIDOR_URL || 'https://tarot-613b.onrender.com').replace(/\/$/, '');
+        const urlEndpoint = `${baseUrl}/tirada`;
+        
         const respuesta = await fetch(urlEndpoint, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        const data = await respuesta.json();
+        
+        let data;
+        const contentType = respuesta.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await respuesta.json();
+        } else {
+            const text = await respuesta.text();
+            throw new Error('El servidor respondió con HTML en lugar de JSON. ¿Está caído?');
+        }
+        
         console.log("[app.js] 📥 Respuesta:", data);
 
         if (!respuesta.ok) throw new Error(data.error || `HTTP ${respuesta.status}`);
@@ -223,13 +253,21 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
     } catch (error) {
         console.error("❌ [app.js] Error:", error);
         if (contenedorTexto) {
-            contenedorTexto.innerHTML = `<div style="color:#ff6b6b; text-align:center; padding:20px;">❌ ${error.message}</div>`;
+            contenedorTexto.innerHTML = `
+                <div style="color:#ff6b6b; text-align:center; padding:20px; border:1px solid rgba(255,100,100,0.3); border-radius:12px;">
+                    <h4 style="margin-top:0;">⚠️ Error de conexión</h4>
+                    <p>${error.message}</p>
+                    <p style="font-size:0.85rem; color:#888; margin-top:10px;">
+                        Las cartas están listas, pero el Oráculo no respondió.<br>
+                        Revisá tu conexión o intentá más tarde.
+                    </p>
+                </div>`;
         }
     }
 };
 
 // ==========================================
-// FLUJO PRINCIPAL DE LA TIRADA (CORREGIDO)
+// FLUJO PRINCIPAL DE LA TIRADA
 // ==========================================
 
 window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
@@ -240,64 +278,46 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
     
     let cartasElegidas = [];
 
-    // ==========================================
-    // CASO 1: MODO FÍSICO (Mazo real)
-    // ==========================================
+    // CASO 1: MODO FÍSICO
     if (window.modoFisicoActivo) {
         console.log("[app.js] 🃏 Modo Físico activo");
         
         if (window.cartasFisicoSeleccionadas && window.cartasFisicoSeleccionadas.length === 4
             && window.cartasFisicoSeleccionadas.every(c => c && c.trim() !== '')) {
             cartasElegidas = window.cartasFisicoSeleccionadas;
-            console.log("[app.js] ✅ Usando cartas físicas guardadas:", cartasElegidas);
         } else {
-            // Intentar leer del DOM
             cartasElegidas = [
                 document.getElementById('fisico-carta1')?.value,
                 document.getElementById('fisico-carta2')?.value,
                 document.getElementById('fisico-carta3')?.value,
                 document.getElementById('fisico-carta4')?.value
             ];
-            console.log("[app.js] 📖 Leyendo del DOM:", cartasElegidas);
         }
     } 
-    // ==========================================
-    // CASO 2: MODO AUTOMÁTICO (Tirada aleatoria)
-    // ==========================================
+    // CASO 2: MODO AUTOMÁTICO
     else {
-        console.log("[app.js] 🎲 Generando tirada automática aleatoria...");
+        console.log("[app.js] 🎲 Generando tirada automática...");
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
-        console.log("[app.js] 🃏 Cartas generadas:", cartasElegidas);
-        
-        // Si no se generaron cartas, usar mazo de emergencia
         if (!cartasElegidas || cartasElegidas.length < 4) {
-            console.warn("[app.js] ⚠️ Falló generación, usando mazo de emergencia");
+            console.warn("[app.js] ⚠️ Falló generación, usando emergencia");
             cartasElegidas = ["El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz"];
         }
     }
 
-    // ==========================================
-    // VALIDACIÓN FINAL
-    // ==========================================
+    // VALIDACIÓN
     if (!cartasElegidas || cartasElegidas.length < 4) {
         console.error("❌ [app.js] Cartas incompletas:", cartasElegidas);
         alert("⚠️ Error al obtener las cartas. Intenta de nuevo.");
         return;
     }
 
-    // Verificar que todas las cartas tengan valor
     if (!cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
-        console.error("❌ [app.js] Alguna carta está vacía:", cartasElegidas);
-        
+        console.error("❌ [app.js] Alguna carta vacía:", cartasElegidas);
         if (window.modoFisicoActivo) {
             alert("⚠️ No se detectaron todas las cartas físicas. Volvé a seleccionarlas.");
-            if (typeof window.mostrarPantalla === 'function') {
-                window.mostrarPantalla('screen-fisico');
-            }
+            window.mostrarPantalla('screen-fisico');
             return;
         }
-        
-        console.warn("[app.js] 🔄 Regenerando cartas...");
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
         if (!cartasElegidas || cartasElegidas.length < 4) {
             alert("❌ Error crítico. Recarga la página.");
@@ -305,21 +325,17 @@ window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
         }
     }
 
-    // ==========================================
-    // MOSTRAR RESULTADO
-    // ==========================================
+    // MOSTRAR RESULTADO INMEDIATAMENTE (antes del servidor)
     console.log("[app.js] ✅ Cartas finales:", cartasElegidas);
-    
-    if (typeof window.mostrarPantalla === 'function') {
-        window.mostrarPantalla('screen-result');
-    }
-    
+    window.mostrarPantalla('screen-result');
     window.renderizarMesaDuplas(cartasElegidas, tema);
+    
+    // Luego consultar al servidor
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
 
 // ==========================================
-// CONTROL DE PANEL DE VOZ SEGÚN MODO
+// PANEL DE VOZ
 // ==========================================
 
 window.mostrarPanelVozSegunModo = function() {
@@ -333,15 +349,13 @@ window.mostrarPanelVozSegunModo = function() {
     
     if (esModoProfesional) {
         if (panelProfesional) panelProfesional.style.display = 'grid';
-        console.log("[UI] Panel profesional (Dupla 1 y Dupla 2)");
     } else {
         if (panelMagico) panelMagico.style.display = 'grid';
-        console.log("[UI] Panel mágico/filosófico (Leer todo, Conclusión, Predicciones)");
     }
 };
 
 // ==========================================
-// TIRADA ESTRUCTURAL / TÉCNICA
+// TIRADA ESTRUCTURAL
 // ==========================================
 
 window.procesarTiradaEstructural = async function() {
@@ -369,11 +383,11 @@ window.procesarTiradaEstructural = async function() {
     window.mostrarPanelVozSegunModo();
 
     try {
-        const API_BASE = window.SERVIDOR_URL.replace('/tirada', '');
-        console.log("[app.js] Consultando duplas en:", API_BASE);
+        const baseUrl = (window.SERVIDOR_URL || 'https://tarot-613b.onrender.com').replace(/\/$/, '');
+        console.log("[app.js] Consultando duplas en:", baseUrl);
 
-        const url1 = `${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`;
-        const url2 = `${API_BASE}/api/duplas/buscar?a=${encodeURIComponent(c3)}&b=${encodeURIComponent(c4)}`;
+        const url1 = `${baseUrl}/api/duplas/buscar?a=${encodeURIComponent(c1)}&b=${encodeURIComponent(c2)}`;
+        const url2 = `${baseUrl}/api/duplas/buscar?a=${encodeURIComponent(c3)}&b=${encodeURIComponent(c4)}`;
         
         console.log("🔗 URL Dupla 1:", url1);
         console.log("🔗 URL Dupla 2:", url2);
@@ -385,7 +399,6 @@ window.procesarTiradaEstructural = async function() {
 
         const data1 = await resp1.json();
         const data2 = await resp2.json();
-        console.log("[app.js] Dupla 1 respuesta:", data1, "Dupla 2 respuesta:", data2);
 
         let html = '';
 
@@ -453,3 +466,5 @@ window.procesarTiradaEstructural = async function() {
         }
     }
 };
+
+console.log("[app.js] ✅ Módulo app.js v8 listo");
