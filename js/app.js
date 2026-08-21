@@ -1,283 +1,317 @@
 // ==========================================
-// ACCESS.JS v10.1 - Registro obligatorio + Backup offline
+// APP.JS v1 - Lógica principal del Tarot
 // ==========================================
 
-const TIRADAS_POR_REGISTRO = 5;
-
-// Backup en memoria si localStorage falla
-window._tarotiaMemoria = window._tarotiaMemoria || { registradasUsadas: 0 };
-
-function _lsGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
-function _lsSet(key, val) { try { localStorage.setItem(key, String(val)); return true; } catch(e) { return false; } }
+console.log("[app.js] Cargando...");
 
 // ==========================================
-// MUESTRAS RESTANTES
+// PROCESAR TIRADA COMPLETA
 // ==========================================
 
-async function obtenerMuestrasRestantesGlobal() {
-    if (window.esUsuarioPremium) return 999;
-
-    const token = window.obtenerToken ? window.obtenerToken() : null;
-    const API_BASE = (window.SERVIDOR_URL || 'https://tarot-613b.onrender.com').replace('/tirada', '').replace(/\/$/, '');
-
-    if (!token) return 0;
-
-    try {
-        const resp = await fetch(`${API_BASE}/api/tiradas/muestras`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resp.ok) {
-            const data = await resp.json();
-            // Guardar en local como backup
-            _lsSet('tarotia_muestras_backup', data.muestrasRestantes);
-            return data.muestrasRestantes;
-        }
-    } catch (e) {
-        console.warn("[access] Servidor offline, usando backup local.");
+window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
+    console.log("[app] 🔮 procesarTiradaCompleta - tema:", tema, "pregunta:", preguntaCustom);
+    
+    // Mostrar pantalla de resultados
+    window.mostrarPantalla('screen-result');
+    
+    const output = document.getElementById('interpretation-text');
+    if (output) {
+        output.innerHTML = '<div style="text-align:center; padding:30px; color:#a78bfa;">🔮 Las cartas están hablando...<br><span style="font-size:0.8rem;color:#666;">Consultando al oráculo</span></div>';
     }
-
-    // Fallback: usar último valor conocido
-    const backup = _lsGet('tarotia_muestras_backup');
-    return backup ? parseInt(backup, 10) : 0;
-}
-
-// ==========================================
-// REGISTRAR USO
-// ==========================================
-
-async function registrarUsoTiradaGlobal() {
-    if (window.esUsuarioPremium) return 999;
-
-    const token = window.obtenerToken ? window.obtenerToken() : null;
-    if (!token) return -1;
-
-    const API_BASE = (window.SERVIDOR_URL || 'https://tarot-613b.onrender.com').replace('/tirada', '').replace(/\/$/, '');
-
+    
     try {
-        const resp = await fetch(`${API_BASE}/api/tiradas/usar-muestra`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+        // 1. Obtener las cartas
+        let cartas = window.cartasFisicoSeleccionadas;
+        
+        if (!cartas || cartas.length < 4) {
+            // Generar cartas aleatorias
+            const mazo = window.arcanosCompleto || obtenerMazoFallback();
+            cartas = [];
+            const indices = [];
+            while (indices.length < 4) {
+                const idx = Math.floor(Math.random() * mazo.length);
+                if (!indices.includes(idx)) {
+                    indices.push(idx);
+                    cartas.push(mazo[idx]);
+                }
             }
+            window.cartasFisicoSeleccionadas = cartas;
+        }
+        
+        const [a, b, c, d] = cartas;
+        console.log("[app] Cartas:", { a, b, c, d });
+        
+        // 2. Mostrar cartas en pantalla
+        mostrarCartasEnPantalla(a, b, c, d, tema, preguntaCustom);
+        
+        // 3. Determinar estilo
+        let estilo = window.estiloSeleccionado || 'filosofico';
+        const submodo = localStorage.getItem('tarotia_submodo_fisico');
+        if (submodo === 'tarotista_fisico' || submodo === 'predictivo_fisico') {
+            estilo = 'manual';
+        }
+        
+        // 4. Llamar a la API
+        const API_BASE = window.SERVIDOR_URL || 'https://tarot-613b.onrender.com';
+        console.log("[app] Llamando a API:", API_BASE);
+        
+        const response = await fetch(`${API_BASE}/tirada`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tema: tema,
+                a: a,
+                b: b,
+                c: c,
+                d: d,
+                estilo: estilo,
+                pregunta: preguntaCustom || '',
+                modo: window.modoFisicoActivo ? 'fisico' : 'auto'
+            })
         });
         
-        if (resp.ok) {
-            const data = await resp.json();
-            _lsSet('tarotia_muestras_backup', data.muestrasRestantes);
-            actualizarBadgeGlobal();
-            return data.muestrasRestantes;
-        } else if (resp.status === 403 || resp.status === 429) {
-            _lsSet('tarotia_muestras_backup', 0);
-            return -1; // Agotadas
-        } else {
-            return 0; // Error del servidor, no sabemos
+        const data = await response.json();
+        console.log("[app] Respuesta:", data);
+        
+        if (!response.ok || data.error) {
+            throw new Error(data.error || data.detalle || 'Error del servidor');
         }
-    } catch (e) {
-        console.error("[access] Error de red:", e);
-        // ⚠️ NO retornar -2 que fuerza muro de pago
-        // Usar backup local como fallback temporal
-        const backup = parseInt(_lsGet('tarotia_muestras_backup') || '0', 10);
-        if (backup > 0) {
-            _lsSet('tarotia_muestras_backup', backup - 1);
-            return backup - 1;
+        
+        // 5. Mostrar interpretación
+        if (output && data.lectura) {
+            output.innerHTML = data.lectura;
+        } else if (output) {
+            output.innerHTML = '<p style="color:#ef4444;">No se pudo obtener la interpretación.</p>';
         }
-        return -1; // Sin backup, sí al muro
-    }
-}
-
-// ==========================================
-// BADGE
-// ==========================================
-
-async function actualizarBadgeGlobal() {
-    const badges = [
-        document.getElementById('badge-magico'),
-        document.getElementById('badge-filosofico'),
-        document.getElementById('badge-profesional'),
-        document.getElementById('badge-fisico-muestra')
-    ].filter(Boolean);
-
-    const token = window.obtenerToken ? window.obtenerToken() : null;
-
-    if (window.esUsuarioPremium) {
-        badges.forEach(b => { b.innerText = "Ilimitado ✨"; b.style.borderColor = "#a78bfa"; });
-    } else if (token) {
-        const restantes = await obtenerMuestrasRestantesGlobal();
-        const txt = restantes > 0 ? `📧 ${restantes} lecturas` : "Sin muestras 🔒";
-        const color = restantes > 0 ? "#60a5fa" : "#ef4444";
-        badges.forEach(b => { b.innerText = txt; b.style.borderColor = color; });
-    } else {
-        badges.forEach(b => { b.innerText = "🔒 Registro requerido"; b.style.borderColor = "#fbbf24"; });
-    }
-}
-
-// ==========================================
-// FLUJO PRINCIPAL (REGISTRO OBLIGATORIO)
-// ==========================================
-
-async function verificarAccesoGlobal(modo, submodo) {
-    console.log(`[access] verificarAccesoGlobal: modo=${modo}, submodo=${submodo}`);
-
-    if (window.esUsuarioPremium) {
-        abrirModo(modo, submodo);
-        return;
-    }
-
-    const token = window.obtenerToken ? window.obtenerToken() : null;
-
-    // ⛔ SIN TOKEN = Registro obligatorio
-    if (!token) {
-        const quiereRegistrarse = confirm(
-            "✨ Para acceder al Tarot Completo necesitamos tu email.\n\n" +
-            "✅ Aceptar → Ingresar mi email\n" +
-            "❌ Cancelar → Volver al inicio"
-        );
-        if (quiereRegistrarse) {
-            await pedirEmailYRegistrar(modo, submodo);
-        } else {
-            window.mostrarPantalla('screen-portada');
+        
+        // 6. Guardar en historial
+        if (typeof window.guardarEnHistorialLocal === 'function') {
+            window.guardarEnHistorialLocal(tema, { a, b, c, d }, output ? output.innerHTML : '');
         }
-        return;
-    }
-
-    // ✅ CON TOKEN: verificar muestras
-    const restantes = await registrarUsoTiradaGlobal();
-    
-    if (restantes >= 0) {
-        abrirModo(modo, submodo);
-    } else {
-        lanzarMuroDePago();
-    }
-}
-
-// ==========================================
-// REGISTRO
-// ==========================================
-
-async function pedirEmailYRegistrar(modo, submodo) {
-    const emailInput = prompt("📧 Ingresa tu correo para desbloquear tus lecturas:");
-
-    if (!emailInput) {
-        window.mostrarPantalla('screen-portada');
-        return;
-    }
-
-    if (!emailInput.includes('@') || !emailInput.includes('.')) {
-        alert("⚠️ Correo inválido.");
-        await pedirEmailYRegistrar(modo, submodo);
-        return;
-    }
-
-    if (typeof window.autenticarUsuario === 'function') {
-        try {
-            const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
-            if (resultado && resultado.exito) {
-                alert("✅ ¡Registro exitoso!");
-                _lsSet('tarotia_muestras_backup', resultado.muestrasRestantes || 5);
-                await actualizarBadgeGlobal();
-                // Reintentar acceso (ahora con token)
-                await verificarAccesoGlobal(modo, submodo);
-            } else {
-                alert("❌ Error: " + (resultado?.mensaje || "desconocido"));
-                window.mostrarPantalla('screen-portada');
-            }
-        } catch (e) {
-            console.error("Error al autenticar:", e);
-            alert("❌ Error de conexión. Intenta de nuevo.");
-            window.mostrarPantalla('screen-portada');
+        
+        // 7. Mostrar panel de voz
+        if (typeof window.mostrarPanelVozSegunModo === 'function') {
+            setTimeout(window.mostrarPanelVozSegunModo, 300);
         }
-    } else {
-        alert("⚠️ Sistema de autenticación no disponible.");
-        window.mostrarPantalla('screen-portada');
+        
+        console.log("[app] ✅ Tirada completada");
+        
+    } catch (error) {
+        console.error("[app] ❌ Error:", error);
+        if (output) {
+            output.innerHTML = `
+                <div style="text-align:center; padding:20px; color:#ef4444; background: rgba(239,68,68,0.1); border-radius:12px;">
+                    <p>⚠️ Error al realizar la tirada</p>
+                    <p style="font-size:0.9rem; color:#94a3b8;">${error.message || 'Intenta de nuevo'}</p>
+                    <button onclick="window.volverAPortada()" style="margin-top:15px; padding:10px 20px; background:#a855f7; border:none; border-radius:8px; color:white; cursor:pointer;">
+                        🔄 Volver al menú
+                    </button>
+                </div>
+            `;
+        }
     }
-}
-
-// ==========================================
-// RESTO (abrirModo, muro, códigos, etc.)
-// ==========================================
-
-function abrirModo(modo, submodo) {
-    if (modo === 'fisico') {
-        window.modoFisicoActivo = true;
-        window.submodoFisicoActual = submodo || 'predictivo_fisico';
-        localStorage.setItem('tarotia_submodo_fisico', submodo || 'predictivo_fisico');
-        window.cartasFisicoSeleccionadas = null;
-        window.preguntaCustomSeleccionada = "";
-        if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
-        window.mostrarPantalla('screen-fisico');
-    } else if (modo === 'selector') {
-        window.modoFisicoActivo = false;
-        window.estiloSeleccionado = submodo || 'magico';
-        window.preguntaCustomSeleccionada = "";
-        window.mostrarPantalla('screen-selector');
-    } else if (modo === 'portada') {
-        window.mostrarPantalla('screen-portada');
-    }
-}
-
-function lanzarMuroDePago() {
-    const codigo = prompt(
-        "🔒 Has agotado tus lecturas gratuitas.\n\n" +
-        "Ingresá tu código Premium, o dejalo vacío para comprar:"
-    );
-    if (codigo === null) {
-        window.mostrarPantalla('screen-portada');
-        return;
-    }
-    if (codigo.trim()) {
-        canjearCodigoPremium(codigo.trim());
-    } else {
-        window.abrirMercadoPago();
-    }
-}
-
-function canjearCodigoPremium(codigo) {
-    if (!codigo) return;
-    const codigoLimpio = codigo.trim().toUpperCase();
-    const CODIGOS_VALIDOS = ['ADMIN2026', 'PASEMISTICO', 'TAROTGRATIS'];
-    if (CODIGOS_VALIDOS.includes(codigoLimpio)) {
-        window.esUsuarioPremium = true;
-        try {
-            localStorage.setItem('simularPremium', 'true');
-            localStorage.setItem('tarotia_plan_premium', 'true');
-        } catch (e) {}
-        alert('✨ ¡Código premium activado! Acceso ilimitado.');
-        actualizarBadgeGlobal();
-        window.mostrarPantalla('screen-portada');
-    } else {
-        alert('❌ Código inválido.');
-        lanzarMuroDePago();
-    }
-}
-
-window.abrirMercadoPago = function() {
-    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
 };
 
-window.verificarAccesoFisico = (submodo) => verificarAccesoGlobal('fisico', submodo);
-window.verificarAccesoEstilo = (estilo) => verificarAccesoGlobal('selector', estilo);
-window.verificarAccesoPortada = () => window.mostrarPantalla('screen-portada');
+// ==========================================
+// MOSTRAR CARTAS EN PANTALLA
+// ==========================================
 
-// Verificar token al cargar
-document.addEventListener('DOMContentLoaded', async () => {
-    const token = window.obtenerToken ? window.obtenerToken() : null;
-    if (token) {
-        try {
-            const API_BASE = (window.SERVIDOR_URL || 'https://tarot-613b.onrender.com').replace('/tirada', '').replace(/\/$/, '');
-            const resp = await fetch(`${API_BASE}/api/auth/perfil`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!resp.ok) {
-                // Token inválido, limpiar
-                localStorage.removeItem('tarotia_token');
-                localStorage.removeItem('tarotia_email_usuario');
-            }
-        } catch (e) {
-            // Servidor durmiendo, dejar token por ahora
+function mostrarCartasEnPantalla(a, b, c, d, tema, preguntaCustom) {
+    const cartas = [a, b, c, d];
+    const ids = ['img-a', 'name-a', 'img-b', 'name-b', 'img-c', 'name-c', 'img-d', 'name-d'];
+    
+    cartas.forEach((carta, i) => {
+        const imgEl = document.getElementById(ids[i * 2]);
+        const nameEl = document.getElementById(ids[i * 2 + 1]);
+        if (imgEl) {
+            imgEl.textContent = '🃏';
+            imgEl.style.fontSize = '3.5rem';
+            imgEl.style.textAlign = 'center';
+        }
+        if (nameEl) {
+            nameEl.textContent = carta;
+            nameEl.style.color = '#ffd700';
+            nameEl.style.fontWeight = 'bold';
+            nameEl.style.fontSize = '1.1rem';
+            nameEl.style.textAlign = 'center';
+            nameEl.style.marginTop = '5px';
+        }
+    });
+    
+    const title = document.getElementById('reading-theme-title');
+    if (title) {
+        const texto = preguntaCustom && preguntaCustom.length > 0 
+            ? `🔮 "${preguntaCustom}"` 
+            : `🔮 ${tema || 'Lectura de Tarot'}`;
+        title.textContent = texto;
+        title.style.color = '#a78bfa';
+        title.style.textAlign = 'center';
+        title.style.marginBottom = '20px';
+    }
+}
+
+// ==========================================
+// CONSULTA GRATIS
+// ==========================================
+
+window.consultaGratis = async function() {
+    const input = document.getElementById('input-pregunta-gratis');
+    const pregunta = input ? input.value.trim() : '';
+    
+    if (!pregunta) {
+        alert('⚠️ Escribí tu pregunta primero.');
+        return;
+    }
+    
+    window.mostrarPantalla('screen-gratis-result');
+    
+    const mostrar = document.getElementById('gratis-pregunta-mostrar');
+    if (mostrar) mostrar.textContent = pregunta;
+    
+    const mazo = window.arcanosCompleto || obtenerMazoFallback();
+    const cartas = [];
+    const indices = [];
+    while (indices.length < 4) {
+        const idx = Math.floor(Math.random() * mazo.length);
+        if (!indices.includes(idx)) {
+            indices.push(idx);
+            cartas.push(mazo[idx]);
         }
     }
-    await actualizarBadgeGlobal();
-});
+    const [a, b, c, d] = cartas;
+    
+    const visualContainer = document.getElementById('gratis-cartas-visuales');
+    if (visualContainer) {
+        visualContainer.innerHTML = cartas.map(c => `
+            <div style="width:60px;height:90px;background:linear-gradient(135deg,#1a0f2e,#2d1b4e);border:1px solid rgba(168,85,247,0.3);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.6rem;color:#ffd700;text-align:center;padding:5px;word-wrap:break-word;">
+                🃏<br>${c.slice(0,12)}
+            </div>
+        `).join('');
+    }
+    
+    const output = document.getElementById('gratis-respuesta-contenedor');
+    if (output) {
+        output.innerHTML = '<div style="text-align:center;padding:20px;color:#a78bfa;">🔮 Consultando al oráculo...</div>';
+    }
+    
+    try {
+        const API_BASE = window.SERVIDOR_URL || 'https://tarot-613b.onrender.com';
+        const response = await fetch(`${API_BASE}/tirada`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tema: 'Consulta Gratis',
+                a: a,
+                b: b,
+                c: c,
+                d: d,
+                estilo: 'magico',
+                pregunta: pregunta,
+                modo: 'gratis'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (output) {
+            if (data.lectura) {
+                output.innerHTML = data.lectura;
+            } else {
+                output.innerHTML = `<p style="color:#ef4444;">⚠️ No se pudo obtener respuesta.</p>`;
+            }
+        }
+    } catch (error) {
+        console.error("[app] Error:", error);
+        if (output) {
+            output.innerHTML = `
+                <p style="color:#ef4444;">⚠️ Error de conexión. Intenta de nuevo.</p>
+                <p style="font-size:0.8rem;color:#666;">${error.message}</p>
+            `;
+        }
+    }
+};
 
-console.log("[access] ✅ v10.1 cargado - Registro obligatorio + backup offline");
+window.nuevaConsultaGratis = function() {
+    const input = document.getElementById('input-pregunta-gratis');
+    if (input) input.value = '';
+    window.mostrarPantalla('screen-landing');
+};
+
+// ==========================================
+// ENTRAR APP COMPLETA
+// ==========================================
+
+window.entrarAppCompleta = function() {
+    console.log("[app] Entrar al Tarot Completo");
+    const token = window.obtenerToken ? window.obtenerToken() : null;
+    
+    if (token) {
+        window.mostrarPantalla('screen-portada');
+        if (typeof window.actualizarBadgeGlobal === 'function') {
+            window.actualizarBadgeGlobal();
+        }
+    } else {
+        window.mostrarPantalla('screen-auth');
+    }
+};
+
+// ==========================================
+// VOZ (placeholder)
+// ==========================================
+
+window.reproducirVoz = function(seccion) {
+    console.log("[voz] Reproducir:", seccion);
+    alert(`🔊 Función de voz para: ${seccion} (implementar en voice.js)`);
+};
+
+window.reproducirVozDupla = function(numero) {
+    console.log("[voz] Reproducir dupla:", numero);
+    alert(`🔊 Función de voz para dupla ${numero} (implementar en voice.js)`);
+};
+
+window.mostrarPanelVozSegunModo = function() {
+    const panelMagico = document.getElementById('voice-panel-magico-filosofico');
+    const panelProfesional = document.getElementById('voice-panel-profesional');
+    const submodo = localStorage.getItem('tarotia_submodo_fisico');
+    
+    if (submodo === 'tarotista_fisico' || submodo === 'predictivo_fisico') {
+        if (panelMagico) panelMagico.style.display = 'none';
+        if (panelProfesional) panelProfesional.style.display = 'flex';
+    } else {
+        if (panelMagico) panelMagico.style.display = 'flex';
+        if (panelProfesional) panelProfesional.style.display = 'none';
+    }
+};
+
+// ==========================================
+// SELECTORES FÍSICOS
+// ==========================================
+
+window.cargarSelectoresFisicos = function() {
+    const mazo = window.arcanosCompleto || obtenerMazoFallback();
+    const selects = ['fisico-carta1', 'fisico-carta2', 'fisico-carta3', 'fisico-carta4'];
+    
+    selects.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = '<option value="">Seleccionar carta...</option>' + 
+                mazo.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+    });
+};
+
+// ==========================================
+// FALLBACK
+// ==========================================
+
+function obtenerMazoFallback() {
+    return [
+        "El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz", "El Emperador",
+        "El Papa", "Los Enamorados", "El Carro", "La Justicia", "El Ermitaño",
+        "La Rueda", "La Fuerza", "El Colgado", "La Muerte", "La Templanza",
+        "El Diablo", "La Torre", "La Estrella", "La Luna", "El Sol",
+        "El Juicio", "El Mundo"
+    ];
+}
+
+console.log("[app.js] ✅ Módulo principal cargado");
