@@ -2,19 +2,60 @@
 // CONTROL DE ACCESOS, AUTENTICACIÓN Y MUESTRAS FÍSICAS
 // ==========================================
 
-const TIRADAS_LIBRES_LOCALES = 2;
+// ==========================================
+// CONFIGURACIÓN GLOBAL
+// ==========================================
+
+const TIRADAS_LIBRES_SIN_REGISTRO = 2;    // Tiradas gratis sin email
+const TIRADAS_POR_REGISTRO = 5;           // Tiradas gratis CON email
+const MAX_MUESTRAS_FISICAS = 5;           // Mismas 5 del backend
+
+// ==========================================
+// FUNCIONES DE ACCESO LOCAL
+// ==========================================
 
 function obtenerTiradasLibresLocalesUsadas() {
-    let usadas = localStorage.getItem('tarotia_libres_usadas');
-    return usadas ? parseInt(usadas, 10) : 0;
+    try {
+        let usadas = localStorage.getItem('tarotia_libres_usadas');
+        return usadas ? parseInt(usadas, 10) : 0;
+    } catch (e) {
+        return 0;
+    }
 }
 
 function registrarTiradaLibreLocalUsada() {
-    let usadas = obtenerTiradasLibresLocalesUsadas();
-    localStorage.setItem('tarotia_libres_usadas', usadas + 1);
+    try {
+        let usadas = obtenerTiradasLibresLocalesUsadas();
+        localStorage.setItem('tarotia_libres_usadas', usadas + 1);
+    } catch (e) {
+        console.warn("No se pudo guardar en localStorage");
+    }
 }
 
-async function obtenerMuestrasFisicasRestantes() {
+function obtenerTiradasRegistradasUsadas() {
+    try {
+        let usadas = localStorage.getItem('tarotia_registradas_usadas');
+        return usadas ? parseInt(usadas, 10) : 0;
+    } catch (e) {
+        return 0;
+    }
+}
+
+function registrarTiradaRegistradaUsada() {
+    try {
+        let usadas = obtenerTiradasRegistradasUsadas();
+        localStorage.setItem('tarotia_registradas_usadas', usadas + 1);
+    } catch (e) {
+        console.warn("No se pudo guardar en localStorage");
+    }
+}
+
+// ==========================================
+// VERIFICAR MUESTRAS RESTANTES (GLOBAL)
+// ==========================================
+
+async function obtenerMuestrasRestantesGlobal() {
+    // 1. Si es Premium → ilimitado
     if (window.esUsuarioPremium) return 999;
 
     const token = window.obtenerToken ? window.obtenerToken() : null;
@@ -22,6 +63,7 @@ async function obtenerMuestrasFisicasRestantes() {
         ? window.SERVIDOR_URL.replace('/tirada', '')
         : 'https://tarot-613b.onrender.com';
 
+    // 2. Si tiene token → consultar en el servidor
     if (token) {
         try {
             const resp = await fetch(`${API_BASE}/api/tiradas/muestras`, {
@@ -32,15 +74,21 @@ async function obtenerMuestrasFisicasRestantes() {
                 return data.muestrasRestantes;
             }
         } catch (e) {
-            console.warn("⚠️ Servidor offline, consultando caché local.");
+            console.warn("⚠️ Servidor offline, usando caché local.");
         }
     }
 
-    const libresRestantes = Math.max(0, TIRADAS_LIBRES_LOCALES - obtenerTiradasLibresLocalesUsadas());
+    // 3. Si NO tiene token → usar las 2 locales
+    const libresRestantes = Math.max(0, TIRADAS_LIBRES_SIN_REGISTRO - obtenerTiradasLibresLocalesUsadas());
     return libresRestantes;
 }
 
-async function registrarUsoTiradaFisica() {
+// ==========================================
+// REGISTRAR USO DE TIRADA (GLOBAL)
+// ==========================================
+
+async function registrarUsoTiradaGlobal() {
+    // 1. Si es Premium → ilimitado
     if (window.esUsuarioPremium) return 999;
 
     const token = window.obtenerToken ? window.obtenerToken() : null;
@@ -48,6 +96,7 @@ async function registrarUsoTiradaFisica() {
         ? window.SERVIDOR_URL.replace('/tirada', '')
         : 'https://tarot-613b.onrender.com';
 
+    // 2. Si tiene token → usar backend
     if (token) {
         try {
             const resp = await fetch(`${API_BASE}/api/tiradas/usar-muestra`, {
@@ -59,136 +108,140 @@ async function registrarUsoTiradaFisica() {
             });
             if (resp.ok) {
                 const data = await resp.json();
-                actualizarBadgeMuestrasFisicas();
+                actualizarBadgeGlobal();
                 return data.muestrasRestantes;
             } else {
-                const data = await resp.json().catch(() => ({}));
-                console.warn("⚠️ Servidor respondió:", resp.status, data.error);
+                console.warn("⚠️ Servidor respondió error:", resp.status);
                 return -1;
             }
         } catch (e) {
-            console.error("Error al registrar muestra en MongoDB:", e);
+            console.error("Error al registrar en MongoDB:", e);
             return -1;
         }
     }
-    return -1;
+
+    // 3. Si NO tiene token → usar las 2 locales
+    const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+    if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
+        registrarTiradaLibreLocalUsada();
+        const restantes = TIRADAS_LIBRES_SIN_REGISTRO - (libresUsadas + 1);
+        return restantes;
+    }
+    
+    return -1; // Sin muestras disponibles
 }
 
-async function actualizarBadgeMuestrasFisicas() {
-    const badge = document.getElementById('badge-physic-muestra-prof')
-               || document.getElementById('badge-fisico-muestra-prof')
-               || document.getElementById('badge-fisico-muestra');
+// ==========================================
+// BADGE GLOBAL
+// ==========================================
+
+async function actualizarBadgeGlobal() {
+    // Buscar cualquier badge de muestras en la UI
+    const badges = document.querySelectorAll('[id*="badge-fisico"], [id*="badge-muestra"], [id*="badge-physic"]');
+    const badge = badges[0] || document.getElementById('badge-fisico-muestra');
 
     if (badge) {
         if (window.esUsuarioPremium) {
             badge.innerText = "Ilimitado ✨";
             badge.style.borderColor = "#a78bfa";
         } else {
-            const restantes = await obtenerMuestrasFisicasRestantes();
-            badge.innerText = restantes > 0 ? `${restantes} Muestras` : "Agotado 🔒";
+            const restantes = await obtenerMuestrasRestantesGlobal();
+            const token = window.obtenerToken ? window.obtenerToken() : null;
+            
+            if (token) {
+                badge.innerText = `📧 ${restantes} lecturas`;
+                badge.style.borderColor = "#60a5fa";
+            } else {
+                badge.innerText = restantes > 0 ? `🃏 ${restantes} gratis` : "Regístrate 🔓";
+                badge.style.borderColor = "#fbbf24";
+            }
         }
     }
 }
 
-function canjearCodigoPremium(codigo) {
-    if (!codigo) return;
-    const codigoLimpio = codigo.trim().toUpperCase();
-
-    if (typeof CODIGOS_PREMIUM_VALIDOS !== 'undefined' && CODIGOS_PREMIUM_VALIDOS.includes(codigoLimpio)) {
-        window.esUsuarioPremium = true;
-        localStorage.setItem('simularPremium', 'true');
-        localStorage.setItem('tarotia_plan_premium', 'true');
-        alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
-        actualizarBadgeMuestrasFisicas();
-    } else {
-        alert('❌ Código inválido o expirado. Probá con otro o contactá al administrador.');
-    }
-}
-
-window.abrirMercadoPago = function() {
-    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
-};
-
 // ==========================================
-// ACCESO A MAZO FÍSICO (NÚCLEO DEL EMBUDO) - CORREGIDO
+// FLUJO PRINCIPAL: VERIFICAR ACCESO (TODOS LOS MODOS)
 // ==========================================
 
-async function verificarAccesoFisico(submodo) {
-    console.log("[access.js] verificarAccesoFisico llamado, submodo:", submodo);
+async function verificarAccesoGlobal(modo, submodo) {
+    console.log(`[access.js] verificarAccesoGlobal: modo=${modo}, submodo=${submodo}`);
     
+    // 1. Si es Premium → acceso directo
     if (window.esUsuarioPremium) {
-        abrirPantallaFisico(submodo);
+        abrirModo(modo, submodo);
         return;
     }
 
-    // ==========================================
-    // PASO 1: Verificar si tiene token (ya se registró)
-    // ==========================================
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    console.log("[access.js] Token encontrado:", token ? "SI" : "NO");
     
+    // 2. Si TIENE token → usar las 5 lecturas de la nube
     if (token) {
-        // Ya tiene token, usar las muestras de la nube
-        const muestrasRestantes = await registrarUsoTiradaFisica();
-        if (muestrasRestantes >= 0) {
-            abrirPantallaFisico(submodo);
+        const restantes = await registrarUsoTiradaGlobal();
+        if (restantes >= 0) {
+            abrirModo(modo, submodo);
+            return;
         } else {
+            // Sin muestras en la nube → ofrecer Premium
             lanzarMuroDePago();
+            return;
         }
-        return;
     }
 
-    // ==========================================
-    // PASO 2: NO tiene token → PEDIR EMAIL
-    // ==========================================
-    console.log("[access.js] No hay token, pidiendo email...");
-    
-    // Preguntar si el usuario quiere registrarse (opcional: dar 2 gratis si dice que no)
-    const respuesta = confirm(
-        "🔮 Para acceder al Mazo Físico necesitás registrarte con tu email.\n\n" +
-        "✅ 'Aceptar' → Ingresar tu email y obtener 5 tiradas gratuitas en la nube.\n" +
-        "❌ 'Cancelar' → Usar 2 tiradas gratuitas sin registro (solo en este dispositivo)."
+    // 3. NO tiene token → preguntar si quiere registrarse
+    const quiereRegistrarse = confirm(
+        "🔮 Para acceder a las lecturas de Tarot necesitás registrarte con tu email.\n\n" +
+        "✅ 'Aceptar' → Registrarte y obtener 5 lecturas gratuitas.\n" +
+        "❌ 'Cancelar' → Usar 2 lecturas gratuitas SIN registro (solo en este dispositivo)."
     );
-    
-    if (!respuesta) {
-        // Usuario eligió NO registrarse → dar 2 tiradas locales
-        const libresUsadas = obtenerTiradasLibresLocalesUsadas();
-        if (libresUsadas < TIRADAS_LIBRES_LOCALES) {
-            registrarTiradaLibreLocalUsada();
-            console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_LOCALES})`);
-            abrirPantallaFisico(submodo);
-        } else {
-            // Ya gastó las 2 gratis, ahora SÍ o SÍ debe registrarse
-            alert("🔒 Has agotado tus 2 tiradas gratuitas locales.\n\nPara continuar, debes registrarte con tu email.");
-            await pedirEmailYRegistrar(submodo);
-        }
-        return;
-    }
 
-    // Usuario aceptó registrarse
-    await pedirEmailYRegistrar(submodo);
+    if (quiereRegistrarse) {
+        await pedirEmailYRegistrar(modo, submodo);
+    } else {
+        // Usar las 2 gratis locales
+        const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+        if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
+            registrarTiradaLibreLocalUsada();
+            console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_SIN_REGISTRO})`);
+            abrirModo(modo, submodo);
+        } else {
+            // Ya gastó las 2 gratis → ahora SÍ o SÍ debe registrarse
+            alert("🔒 Has agotado tus 2 lecturas gratuitas locales.\n\nPara continuar, debes registrarte con tu email.");
+            await pedirEmailYRegistrar(modo, submodo);
+        }
+    }
 }
 
 // ==========================================
-// FUNCIÓN AUXILIAR: Pedir email y registrar
+// PEDIR EMAIL Y REGISTRAR
 // ==========================================
 
-async function pedirEmailYRegistrar(submodo) {
+async function pedirEmailYRegistrar(modo, submodo) {
     const emailInput = prompt(
-        "📧 Ingresa tu correo electrónico para desbloquear 5 tiradas gratuitas:\n\n" +
+        "📧 ¡Bienvenido a TarotIA!\n\n" +
+        "Ingresa tu correo electrónico para desbloquear 5 lecturas gratuitas:\n\n" +
         "(Tu correo solo se usa para guardar tu progreso y activar tu cuenta)"
     );
     
-    if (!emailInput) {
-        alert("⚠️ El correo es necesario para continuar con las lecturas gratuitas.");
-        // Volver a intentar
-        await pedirEmailYRegistrar(submodo);
+    if (!emailInput || emailInput === null) {
+        alert("⚠️ El correo es necesario para continuar.");
+        // Preguntar si quiere usar las 2 gratis locales
+        const usarGratis = confirm("¿Querés usar 2 lecturas gratuitas sin registrarte?");
+        if (usarGratis) {
+            const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+            if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
+                registrarTiradaLibreLocalUsada();
+                abrirModo(modo, submodo);
+                return;
+            }
+        }
+        // Si no quiere o ya no tiene gratis, reintentar
+        await pedirEmailYRegistrar(modo, submodo);
         return;
     }
     
     if (!emailInput.includes('@') || !emailInput.includes('.')) {
         alert("⚠️ Por favor, ingresa un correo electrónico válido.");
-        await pedirEmailYRegistrar(submodo);
+        await pedirEmailYRegistrar(modo, submodo);
         return;
     }
 
@@ -197,48 +250,131 @@ async function pedirEmailYRegistrar(submodo) {
         try {
             const resultado = await window.autenticarUsuario("Consultante", emailInput.trim().toLowerCase());
             if (resultado && resultado.exito) {
-                alert("✅ ¡Correo registrado con éxito! Tienes 5 tiradas gratuitas en la nube.");
-                // Ahora tiene token, reintentar el acceso
-                await verificarAccesoFisico(submodo);
+                alert("✅ ¡Correo registrado con éxito! Tienes 5 lecturas gratuitas.\n\n🔮 ¡A disfrutar!");
+                // Actualizar badge
+                await actualizarBadgeGlobal();
+                // Reintentar el acceso (ahora tiene token)
+                await verificarAccesoGlobal(modo, submodo);
             } else {
                 alert("❌ No se pudo registrar el correo. Error: " + (resultado?.mensaje || "desconocido"));
-                // Reintentar
-                await pedirEmailYRegistrar(submodo);
+                await pedirEmailYRegistrar(modo, submodo);
             }
         } catch (e) {
             console.error("Error al autenticar:", e);
             alert("❌ Error de conexión. Intenta de nuevo.");
-            await pedirEmailYRegistrar(submodo);
+            await pedirEmailYRegistrar(modo, submodo);
         }
     } else {
         alert("⚠️ Sistema de autenticación no disponible. Recarga la página.");
     }
 }
 
-function abrirPantallaFisico(submodo) {
-    window.modoFisicoActivo = true;
-    window.submodoFisicoActual = submodo;
-    localStorage.setItem('tarotia_submodo_fisico', submodo);
-    window.cartasFisicoSeleccionadas = null;
-    window.preguntaCustomSeleccionada = "";
-    if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
-    if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-fisico');
+// ==========================================
+// ABRIR MODO SEGÚN EL TIPO
+// ==========================================
+
+function abrirModo(modo, submodo) {
+    console.log(`[access.js] abrirModo: ${modo}, ${submodo}`);
+    
+    if (modo === 'fisico') {
+        window.modoFisicoActivo = true;
+        window.submodoFisicoActual = submodo || 'predictivo_fisico';
+        localStorage.setItem('tarotia_submodo_fisico', submodo || 'predictivo_fisico');
+        window.cartasFisicoSeleccionadas = null;
+        window.preguntaCustomSeleccionada = "";
+        if (typeof window.cargarSelectoresFisicos === 'function') window.cargarSelectoresFisicos();
+        if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-fisico');
+    } else if (modo === 'selector') {
+        window.modoFisicoActivo = false;
+        window.estiloSeleccionado = submodo || 'magico';
+        window.preguntaCustomSeleccionada = "";
+        if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-selector');
+    } else if (modo === 'portada') {
+        if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-portada');
+    }
 }
 
+// ==========================================
+// MURO DE PAGO
+// ==========================================
+
 function lanzarMuroDePago() {
-    const codigo = prompt("🔒 Has agotado tus muestras gratuitas totales.\n\nIngresa tu código de acceso Premium o pulsa Aceptar para adquirir tu Pase Místico por Mercado Pago:");
-    if (codigo) {
-        canjearCodigoPremium(codigo);
+    const codigo = prompt(
+        "🔒 Has agotado tus lecturas gratuitas.\n\n" +
+        "Opciones:\n" +
+        "1. Ingresá tu código Premium\n" +
+        "2. Pulsá 'Aceptar' para adquirir tu Pase Místico\n" +
+        "3. Pulsá 'Cancelar' para volver"
+    );
+    
+    if (codigo === null) {
+        // Canceló → volver a portada
+        if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-portada');
+        return;
+    }
+    
+    if (codigo.trim()) {
+        canjearCodigoPremium(codigo.trim());
     } else {
         window.abrirMercadoPago();
     }
 }
 
-function verificarAccesoTarotistaFisico() {
-    verificarAccesoFisico('tarotista_fisico');
+function canjearCodigoPremium(codigo) {
+    if (!codigo) return;
+    const codigoLimpio = codigo.trim().toUpperCase();
+
+    // Códigos válidos (también se validan en el backend)
+    const CODIGOS_VALIDOS = ['ADMIN2026', 'PASEMISTICO', 'TAROTGRATIS'];
+    
+    if (CODIGOS_VALIDOS.includes(codigoLimpio)) {
+        window.esUsuarioPremium = true;
+        try {
+            localStorage.setItem('simularPremium', 'true');
+            localStorage.setItem('tarotia_plan_premium', 'true');
+        } catch (e) {}
+        alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
+        actualizarBadgeGlobal();
+        // Volver a abrir el modo
+        if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-portada');
+    } else {
+        alert('❌ Código inválido o expirado. Probá con otro o contactá al administrador.');
+        lanzarMuroDePago();
+    }
 }
 
-function verificarAccesoTarotista() {
+window.abrirMercadoPago = function() {
+    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
+};
+
+// ==========================================
+// FUNCIONES EXPUESTAS PARA EL HTML
+// ==========================================
+
+// Para el Módulo Profesional → Mazo Físico
+window.verificarAccesoFisico = function(submodo) {
+    verificarAccesoGlobal('fisico', submodo);
+};
+
+// Para los estilos automáticos (Mágico, Filosófico)
+window.verificarAccesoEstilo = function(estilo) {
+    verificarAccesoGlobal('selector', estilo);
+};
+
+// Para la portada (ya registrado)
+window.verificarAccesoPortada = function() {
+    const token = window.obtenerToken ? window.obtenerToken() : null;
+    if (token) {
+        // Ya tiene token, mostrar portada
+        if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-portada');
+    } else {
+        // No tiene token, pedir registro
+        verificarAccesoGlobal('portada', null);
+    }
+};
+
+// Para el Tarotista (Premium)
+window.verificarAccesoTarotista = function() {
     if (window.esUsuarioPremium) {
         if (typeof irAlEjeConsulta === 'function') irAlEjeConsulta('manual');
     } else {
@@ -247,10 +383,15 @@ function verificarAccesoTarotista() {
             canjearCodigoPremium(codigo);
         }
     }
-}
+};
+
+// Para el Mazo Físico Tarotista (Premium)
+window.verificarAccesoTarotistaFisico = function() {
+    verificarAccesoGlobal('fisico', 'tarotista_fisico');
+};
 
 // ==========================================
-// VERIFICACIÓN DE SEGURIDAD Y MÓDULO DE INICIO
+// VERIFICACIÓN DE ESTADO AL INICIAR
 // ==========================================
 
 async function verificarEstadoReal() {
@@ -266,16 +407,21 @@ async function verificarEstadoReal() {
         if (resp.ok) {
             const data = await resp.json();
             window.esUsuarioPremium = (data.usuario.plan === 'Premium');
-            actualizarBadgeMuestrasFisicas();
+            await actualizarBadgeGlobal();
         }
     } catch (e) {
         console.warn("No se pudo verificar el estado en el servidor.");
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    verificarEstadoReal(); 
-    actualizarBadgeMuestrasFisicas(); 
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("[access.js] Inicializando sistema de acceso global...");
+    await verificarEstadoReal();
+    await actualizarBadgeGlobal();
 });
 
-console.log("[access.js] Flujo progresivo corregido: PRIMERO pide email, después da gratis si rechaza");
+console.log("[access.js] ✅ Flujo global cargado: TODOS los modos piden email al inicio");
