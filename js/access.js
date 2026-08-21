@@ -120,51 +120,44 @@ async function obtenerMuestrasRestantesGlobal() {
 // REGISTRAR USO (ESTRICTO)
 // ==========================================
 
-async function registrarUsoTiradaGlobal() {
-    if (window.esUsuarioPremium) return 999;
+// ==========================================
+// VERIFICACIÓN ESTRICTA DESDE EL SERVIDOR
+// ==========================================
 
+async function verificarEstadoReal() {
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined' && window.SERVIDOR_URL)
-        ? window.SERVIDOR_URL.replace('/tirada', '').replace(/\/$/, '')
-        : 'https://tarot-613b.onrender.com';
+    
+    // Por defecto, asumimos que NO es premium hasta que el servidor diga lo contrario
+    window.esUsuarioPremium = false; 
 
-    if (token) {
-        try {
-            const resp = await fetch(`${API_BASE}/api/tiradas/usar-muestra`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                }
-            });
-            if (resp.ok) {
-                const data = await resp.json();
-                actualizarBadgeGlobal();
-                return data.muestrasRestantes;
-            } else {
-                console.warn("[access] Servidor respondió error:", resp.status);
-                // Si el servidor dice que no hay muestras, respetarlo
-                if (resp.status === 403 || resp.status === 429) {
-                    return -1;
-                }
-                // Otro error: no sabemos, asumimos que se usó para no bloquear
-                // pero devolvemos 0 para forzar revisión
-                return 0;
-            }
-        } catch (e) {
-            console.error("[access] Error de red al registrar:", e);
-            // Sin conexión: usar contador local como fallback
-            return -2; // Código especial: sin conexión
+    if (!token) {
+        await actualizarBadgeGlobal();
+        return;
+    }
+
+    try {
+        const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined' && window.SERVIDOR_URL)
+            ? window.SERVIDOR_URL.replace('/tirada', '').replace(/\/$/, '')
+            : 'https://tarot-613b.onrender.com';
+
+        const resp = await fetch(`${API_BASE}/api/auth/perfil`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (resp.ok) {
+            const data = await resp.json();
+            // El servidor decide si sigue siendo Premium según la base de datos
+            window.esUsuarioPremium = (data.usuario?.plan === 'Premium');
+        } else {
+            // Si el token expiró o el servidor rechaza la sesión, chau privilegios
+            window.esUsuarioPremium = false;
         }
+    } catch (e) {
+        console.warn("[access] Sin conexión con el servidor. Por seguridad, se niega el estatus premium local.");
+        window.esUsuarioPremium = false; // Nunca regales acceso si no se puede validar con la nube
     }
 
-    // Sin token: contador local estricto
-    const libresUsadas = obtenerTiradasLibresLocalesUsadas();
-    if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
-        const nuevo = registrarTiradaLibreLocalUsada();
-        return TIRADAS_LIBRES_SIN_REGISTRO - nuevo;
-    }
-    return -1;
+    await actualizarBadgeGlobal();
 }
 
 // ==========================================
