@@ -1,37 +1,89 @@
 // ==========================================
-// ACCESS.JS v8 - Control de accesos corregido
+// ACCESS.JS v9 - Control de accesos ROBUSTO
 // ==========================================
 
 const TIRADAS_LIBRES_SIN_REGISTRO = 2;
 const TIRADAS_POR_REGISTRO = 5;
 const MAX_MUESTRAS_FISICAS = 5;
 
-function obtenerTiradasLibresLocalesUsadas() {
+// ==========================================
+// CONTADOR EN MEMORIA (backup si localStorage falla)
+// ==========================================
+window._tarotiaMemoria = window._tarotiaMemoria || {
+    libresUsadas: 0,
+    registradasUsadas: 0
+};
+
+// ==========================================
+// LOCALSTORAGE ROBUSTO
+// ==========================================
+
+function _lsSet(key, value) {
     try {
-        let usadas = localStorage.getItem('tarotia_libres_usadas');
-        return usadas ? parseInt(usadas, 10) : 0;
-    } catch (e) { return 0; }
+        localStorage.setItem(key, String(value));
+        return true;
+    } catch (e) {
+        console.warn("[access] localStorage bloqueado/lleno:", key);
+        return false;
+    }
+}
+
+function _lsGet(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return null;
+    }
+}
+
+function _lsRemove(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch (e) {}
+}
+
+// ==========================================
+// CONTADORES LOCALES
+// ==========================================
+
+function obtenerTiradasLibresLocalesUsadas() {
+    const val = _lsGet('tarotia_libres_usadas');
+    if (val !== null) {
+        const n = parseInt(val, 10);
+        if (!isNaN(n)) return n;
+    }
+    // Fallback a memoria
+    return window._tarotiaMemoria.libresUsadas || 0;
 }
 
 function registrarTiradaLibreLocalUsada() {
-    try {
-        let usadas = obtenerTiradasLibresLocalesUsadas();
-        localStorage.setItem('tarotia_libres_usadas', usadas + 1);
-    } catch (e) { console.warn("No se pudo guardar en localStorage"); }
+    const actuales = obtenerTiradasLibresLocalesUsadas();
+    const nuevo = actuales + 1;
+    const guardado = _lsSet('tarotia_libres_usadas', nuevo);
+    if (!guardado) {
+        window._tarotiaMemoria.libresUsadas = nuevo;
+    }
+    console.log('[access] Tirada libre registrada:', nuevo, '/', TIRADAS_LIBRES_SIN_REGISTRO);
+    return nuevo;
 }
 
 function obtenerTiradasRegistradasUsadas() {
-    try {
-        let usadas = localStorage.getItem('tarotia_registradas_usadas');
-        return usadas ? parseInt(usadas, 10) : 0;
-    } catch (e) { return 0; }
+    const val = _lsGet('tarotia_registradas_usadas');
+    if (val !== null) {
+        const n = parseInt(val, 10);
+        if (!isNaN(n)) return n;
+    }
+    return window._tarotiaMemoria.registradasUsadas || 0;
 }
 
 function registrarTiradaRegistradaUsada() {
-    try {
-        let usadas = obtenerTiradasRegistradasUsadas();
-        localStorage.setItem('tarotia_registradas_usadas', usadas + 1);
-    } catch (e) { console.warn("No se pudo guardar en localStorage"); }
+    const actuales = obtenerTiradasRegistradasUsadas();
+    const nuevo = actuales + 1;
+    const guardado = _lsSet('tarotia_registradas_usadas', nuevo);
+    if (!guardado) {
+        window._tarotiaMemoria.registradasUsadas = nuevo;
+    }
+    return nuevo;
 }
 
 // ==========================================
@@ -56,7 +108,7 @@ async function obtenerMuestrasRestantesGlobal() {
                 return data.muestrasRestantes;
             }
         } catch (e) {
-            console.warn("⚠️ Servidor offline, usando caché local.");
+            console.warn("[access] Servidor offline, usando contador local.");
         }
     }
 
@@ -65,7 +117,7 @@ async function obtenerMuestrasRestantesGlobal() {
 }
 
 // ==========================================
-// REGISTRAR USO
+// REGISTRAR USO (ESTRICTO)
 // ==========================================
 
 async function registrarUsoTiradaGlobal() {
@@ -90,23 +142,28 @@ async function registrarUsoTiradaGlobal() {
                 actualizarBadgeGlobal();
                 return data.muestrasRestantes;
             } else {
-                console.warn("⚠️ Servidor respondió error:", resp.status);
-                // Si el servidor falla, no bloquear al usuario
-                return 1;
+                console.warn("[access] Servidor respondió error:", resp.status);
+                // Si el servidor dice que no hay muestras, respetarlo
+                if (resp.status === 403 || resp.status === 429) {
+                    return -1;
+                }
+                // Otro error: no sabemos, asumimos que se usó para no bloquear
+                // pero devolvemos 0 para forzar revisión
+                return 0;
             }
         } catch (e) {
-            console.error("Error al registrar en MongoDB:", e);
-            // Fallback: no bloquear si el servidor no responde
-            return 1;
+            console.error("[access] Error de red al registrar:", e);
+            // Sin conexión: usar contador local como fallback
+            return -2; // Código especial: sin conexión
         }
     }
 
+    // Sin token: contador local estricto
     const libresUsadas = obtenerTiradasLibresLocalesUsadas();
     if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
-        registrarTiradaLibreLocalUsada();
-        return TIRADAS_LIBRES_SIN_REGISTRO - (libresUsadas + 1);
+        const nuevo = registrarTiradaLibreLocalUsada();
+        return TIRADAS_LIBRES_SIN_REGISTRO - nuevo;
     }
-    
     return -1;
 }
 
@@ -124,10 +181,10 @@ async function actualizarBadgeGlobal() {
 
     const restantes = await obtenerMuestrasRestantesGlobal();
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    
+
     let texto = "";
     let color = "";
-    
+
     if (window.esUsuarioPremium) {
         texto = "Ilimitado ✨";
         color = "#a78bfa";
@@ -135,8 +192,8 @@ async function actualizarBadgeGlobal() {
         texto = `📧 ${restantes} lecturas`;
         color = "#60a5fa";
     } else {
-        texto = restantes > 0 ? `🃏 ${restantes} gratis` : "Regístrate 🔓";
-        color = "#fbbf24";
+        texto = restantes > 0 ? `🃏 ${restantes} gratis` : "Sin muestras 🔒";
+        color = restantes > 0 ? "#fbbf24" : "#ef4444";
     }
 
     badges.forEach(badge => {
@@ -146,41 +203,54 @@ async function actualizarBadgeGlobal() {
 }
 
 // ==========================================
-// FLUJO PRINCIPAL
+// FLUJO PRINCIPAL (ESTRICTO)
 // ==========================================
 
 async function verificarAccesoGlobal(modo, submodo) {
-    console.log(`[access.js] verificarAccesoGlobal: modo=${modo}, submodo=${submodo}`);
-    
+    console.log(`[access] verificarAccesoGlobal: modo=${modo}, submodo=${submodo}`);
+
+    // 1. Premium = pase directo
     if (window.esUsuarioPremium) {
+        console.log('[access] Usuario Premium, acceso directo');
         abrirModo(modo, submodo);
         return;
     }
 
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    
+
+    // 2. Con token: consultar servidor
     if (token) {
         const restantes = await registrarUsoTiradaGlobal();
         if (restantes >= 0) {
             abrirModo(modo, submodo);
             return;
-        } else {
-            lanzarMuroDePago();
-            return;
+        } else if (restantes === -2) {
+            // Sin conexión: usar contador local como fallback temporal
+            console.warn('[access] Sin conexión, usando contador local temporal');
+            const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+            if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
+                registrarTiradaLibreLocalUsada();
+                abrirModo(modo, submodo);
+                return;
+            }
         }
+        lanzarMuroDePago();
+        return;
     }
 
-    // Sin token: usar tiradas locales o registrar
+    // 3. Sin token: contador local estricto
     const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+    console.log(`[access] Tiradas usadas: ${libresUsadas}/${TIRADAS_LIBRES_SIN_REGISTRO}`);
+
     if (libresUsadas < TIRADAS_LIBRES_SIN_REGISTRO) {
-        // Aún tiene gratis locales: dejar pasar directo
-        registrarTiradaLibreLocalUsada();
-        console.log(`✨ Tirada libre local usada (${libresUsadas + 1}/${TIRADAS_LIBRES_SIN_REGISTRO})`);
+        const nuevo = registrarTiradaLibreLocalUsada();
+        console.log(`[access] Acceso permitido. Quedan: ${TIRADAS_LIBRES_SIN_REGISTRO - nuevo}`);
         abrirModo(modo, submodo);
     } else {
-        // Se agotaron: pedir registro
+        // Agotadas
+        console.log('[access] Muestras agotadas. Mostrando muro.');
         const quiereRegistrarse = confirm(
-            "🔮 Has usado tus 2 lecturas gratuitas.\n\n" +
+            "🔒 Has usado tus 2 lecturas gratuitas.\n\n" +
             "¿Querés registrarte con tu email para obtener 5 lecturas más?\n\n" +
             "✅ Aceptar → Registrarte\n" +
             "❌ Cancelar → Volver al menú"
@@ -202,12 +272,12 @@ async function pedirEmailYRegistrar(modo, submodo) {
         "📧 ¡Bienvenido a TarotIA!\n\n" +
         "Ingresa tu correo electrónico para desbloquear 5 lecturas gratuitas:"
     );
-    
+
     if (!emailInput || emailInput === null) {
         window.mostrarPantalla('screen-portada');
         return;
     }
-    
+
     if (!emailInput.includes('@') || !emailInput.includes('.')) {
         alert("⚠️ Correo inválido.");
         await pedirEmailYRegistrar(modo, submodo);
@@ -241,8 +311,8 @@ async function pedirEmailYRegistrar(modo, submodo) {
 // ==========================================
 
 function abrirModo(modo, submodo) {
-    console.log(`[access.js] abrirModo: ${modo}, ${submodo}`);
-    
+    console.log(`[access] abrirModo: ${modo}, ${submodo}`);
+
     if (modo === 'fisico') {
         window.modoFisicoActivo = true;
         window.submodoFisicoActual = submodo || 'predictivo_fisico';
@@ -268,14 +338,14 @@ function abrirModo(modo, submodo) {
 function lanzarMuroDePago() {
     const codigo = prompt(
         "🔒 Has agotado tus lecturas gratuitas.\n\n" +
-        "Ingresá tu código Premium, o dejalo vacío para comprar:"
+        "Ingresá tu código de acceso Premium, o dejalo vacío para comprar:"
     );
-    
+
     if (codigo === null) {
         window.mostrarPantalla('screen-portada');
         return;
     }
-    
+
     if (codigo.trim()) {
         canjearCodigoPremium(codigo.trim());
     } else {
@@ -287,7 +357,7 @@ function canjearCodigoPremium(codigo) {
     if (!codigo) return;
     const codigoLimpio = codigo.trim().toUpperCase();
     const CODIGOS_VALIDOS = ['ADMIN2026', 'PASEMISTICO', 'TAROTGRATIS'];
-    
+
     if (CODIGOS_VALIDOS.includes(codigoLimpio)) {
         window.esUsuarioPremium = true;
         try {
@@ -298,7 +368,7 @@ function canjearCodigoPremium(codigo) {
         actualizarBadgeGlobal();
         window.mostrarPantalla('screen-portada');
     } else {
-        alert('❌ Código inválido.');
+        alert('❌ Código inválido o expirado.');
         lanzarMuroDePago();
     }
 }
@@ -342,6 +412,36 @@ window.verificarAccesoTarotistaFisico = function() {
 };
 
 // ==========================================
+// DEBUG - Ver estado de muestras
+// ==========================================
+
+window.debugMuestras = function() {
+    const token = window.obtenerToken ? window.obtenerToken() : null;
+    const libresUsadas = obtenerTiradasLibresLocalesUsadas();
+    const libresRestantes = Math.max(0, TIRADAS_LIBRES_SIN_REGISTRO - libresUsadas);
+    const premium = window.esUsuarioPremium;
+    const plan = _lsGet('tarotia_plan_premium');
+
+    console.log('=== DEBUG MUESTRAS ===');
+    console.log('Token:', token ? 'Sí' : 'No');
+    console.log('Premium (window):', premium);
+    console.log('Premium (localStorage):', plan);
+    console.log('Tiradas libres usadas:', libresUsadas);
+    console.log('Tiradas libres restantes:', libresRestantes);
+    console.log('Memoria backup:', window._tarotiaMemoria);
+    console.log('======================');
+
+    alert(
+        `🔍 Estado de muestras:\n` +
+        `Premium: ${premium ? 'Sí ✨' : 'No'}\n` +
+        `Token: ${token ? 'Sí' : 'No'}\n` +
+        `Gratis usadas: ${libresUsadas}/${TIRADAS_LIBRES_SIN_REGISTRO}\n` +
+        `Gratis restantes: ${libresRestantes}\n\n` +
+        `Abrí la consola (F12) para más detalles.`
+    );
+};
+
+// ==========================================
 // INICIALIZACIÓN
 // ==========================================
 
@@ -353,7 +453,7 @@ async function verificarEstadoReal() {
         const API_BASE = (typeof window.SERVIDOR_URL !== 'undefined' && window.SERVIDOR_URL)
             ? window.SERVIDOR_URL.replace('/tirada', '').replace(/\/$/, '')
             : 'https://tarot-613b.onrender.com';
-            
+
         const resp = await fetch(`${API_BASE}/api/auth/perfil`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -364,14 +464,20 @@ async function verificarEstadoReal() {
             await actualizarBadgeGlobal();
         }
     } catch (e) {
-        console.warn("No se pudo verificar el estado en el servidor.");
+        console.warn("[access] No se pudo verificar estado en servidor.");
     }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log("[access.js] Inicializando...");
+    console.log("[access] v9 inicializando...");
     await verificarEstadoReal();
     await actualizarBadgeGlobal();
+
+    // Si hay token viejo pero no es premium, mostrar estado real
+    const token = window.obtenerToken ? window.obtenerToken() : null;
+    if (token && !window.esUsuarioPremium) {
+        console.log('[access] Usuario logueado pero no premium. Contador en servidor.');
+    }
 });
 
-console.log("[access.js] ✅ Flujo v8 cargado");
+console.log("[access] ✅ v9 cargado - control estricto de muestras");
