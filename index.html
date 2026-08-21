@@ -293,6 +293,13 @@
                 <p id="auth-error" style="color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; display: none;"></p>
             </div>
 
+            <!-- SECCIÓN CÓDIGO DE ACCESO -->
+            <div style="max-width: 400px; margin: 15px auto; text-align: center;">
+                <button onclick="ingresarCodigoAcceso()" style="background: transparent; border: 1px dashed rgba(168, 85, 247, 0.4); color: #a78bfa; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%; transition: all 0.3s;">
+                    🔑 Tengo un código de acceso
+                </button>
+            </div>
+
             <!-- SECCIÓN DE PAGO / ACCESO PREMIUM -->
             <div style="max-width: 400px; margin: 20px auto; background: rgba(255,215,0,0.05); border: 1px dashed rgba(255,215,0,0.4); padding: 15px; border-radius: 12px; text-align: center;">
                 <p style="color: #ffd700; font-size: 0.9rem; margin-bottom: 10px;">⭐ ¿Querés acceso ilimitado Premium?</p>
@@ -357,6 +364,10 @@
 
         <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--muted-text); width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem;">
             📧 Vincular mi Correo Electrónico
+        </button>
+
+        <button type="button" onclick="ingresarCodigoAcceso()" style="background: rgba(168,85,247,0.05); border: 1px dashed rgba(168, 85, 247, 0.4); color: #a78bfa; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; margin-top: 10px; transition: all 0.3s;">
+            🔑 Tengo un código de acceso
         </button>
     </div>
 
@@ -711,6 +722,31 @@ window.addEventListener('beforeunload', function() {
 document.addEventListener('visibilitychange', function() {
     if (document.hidden && window.speechSynthesis) window.speechSynthesis.cancel();
 });
+
+window.ingresarCodigoAcceso = function() {
+    const codigo = prompt("🔑 Ingresá tu código de acceso:");
+    if (codigo && codigo.trim()) {
+        if (typeof canjearCodigoPremium === 'function') {
+            canjearCodigoPremium(codigo.trim());
+        } else {
+            // Fallback si access.js no cargó aún
+            const codigoLimpio = codigo.trim().toUpperCase();
+            const CODIGOS_VALIDOS = ['ADMIN2026', 'PASEMISTICO', 'TAROTGRATIS'];
+            if (CODIGOS_VALIDOS.includes(codigoLimpio)) {
+                window.esUsuarioPremium = true;
+                try {
+                    localStorage.setItem('simularPremium', 'true');
+                    localStorage.setItem('tarotia_plan_premium', 'true');
+                } catch (e) {}
+                alert('✨ ¡Código premium activado con éxito! Ahora tenés acceso ilimitado.');
+                if (typeof actualizarBadgeGlobal === 'function') actualizarBadgeGlobal();
+                window.mostrarPantalla('screen-portada');
+            } else {
+                alert('❌ Código inválido o expirado.');
+            }
+        }
+    }
+};
 
 console.log("✅ Navegación inline v8 corregida cargada");
 </script>
