@@ -658,8 +658,22 @@ window.confirmarPreguntaYEjecutar=function(){
     if(!window.preguntaCustomSeleccionada){alert("⚠️ Escribí tu pregunta.");return;}
     window.ejecutarLecturaSegunModo('Pregunta Específica');
 };
-window.ejecutarLecturaSegunModo=function(tema){
-    if(typeof window.procesarTiradaCompleta==='function') window.procesarTiradaCompleta(tema,window.preguntaCustomSeleccionada);
+window.ejecutarLecturaSegunModo = function(tema) {
+    console.log("[nav] ejecutarLecturaSegunModo - tema:", tema);
+    console.log("[nav] modoFisicoActivo:", window.modoFisicoActivo);
+    
+    // Si no hay cartas seleccionadas en modo físico, generar automáticas
+    if (window.modoFisicoActivo && !window.cartasFisicoSeleccionadas) {
+        console.warn("[nav] Modo físico activo pero sin cartas. Generando automáticas...");
+        window.modoFisicoActivo = false; // Cambiar a automático
+    }
+    
+    if (typeof window.procesarTiradaCompleta === 'function') {
+        window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada || "");
+    } else {
+        console.error("[nav] ❌ procesarTiradaCompleta no está definida");
+        alert("⚠️ Error: La función de tirada no está disponible. Recarga la página.");
+    }
 };
 window.volverAPortada=function(){
     window.modoFisicoActivo=false;window.submodoFisicoActual=null;
