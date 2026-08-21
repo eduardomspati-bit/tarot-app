@@ -14,7 +14,8 @@ window.obtenerCuatroCartasAleatorias = function() {
 
     if (!mazo || !mazo.length) {
         console.error("❌ [app.js] Mazo vacío. Verificá arcanos.js");
-        return [];
+        // Retornar mazo de emergencia
+        return ["El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz"];
     }
 
     const mezclado = [...mazo];
@@ -228,45 +229,95 @@ window.enviarPeticionRender = async function(cartas, tema, preguntaCustom) {
 };
 
 // ==========================================
-// FLUJO PRINCIPAL DE LA TIRADA
+// FLUJO PRINCIPAL DE LA TIRADA (CORREGIDO)
 // ==========================================
 
 window.procesarTiradaCompleta = async function(tema, preguntaCustom) {
+    console.log("[app.js] 🔮 procesarTiradaCompleta - tema:", tema);
+    console.log("[app.js] 📌 modoFisicoActivo:", window.modoFisicoActivo);
+    console.log("[app.js] 📌 cartasFisicoSeleccionadas:", window.cartasFisicoSeleccionadas);
+    console.log("[app.js] 📌 estiloSeleccionado:", window.estiloSeleccionado);
+    
     let cartasElegidas = [];
 
+    // ==========================================
+    // CASO 1: MODO FÍSICO (Mazo real)
+    // ==========================================
     if (window.modoFisicoActivo) {
+        console.log("[app.js] 🃏 Modo Físico activo");
+        
         if (window.cartasFisicoSeleccionadas && window.cartasFisicoSeleccionadas.length === 4
             && window.cartasFisicoSeleccionadas.every(c => c && c.trim() !== '')) {
             cartasElegidas = window.cartasFisicoSeleccionadas;
-            console.log("[app.js] Usando cartas físicas guardadas:", cartasElegidas);
+            console.log("[app.js] ✅ Usando cartas físicas guardadas:", cartasElegidas);
         } else {
+            // Intentar leer del DOM
             cartasElegidas = [
                 document.getElementById('fisico-carta1')?.value,
                 document.getElementById('fisico-carta2')?.value,
                 document.getElementById('fisico-carta3')?.value,
                 document.getElementById('fisico-carta4')?.value
             ];
-            console.log("[app.js] Leyendo del DOM:", cartasElegidas);
+            console.log("[app.js] 📖 Leyendo del DOM:", cartasElegidas);
         }
-    } else {
+    } 
+    // ==========================================
+    // CASO 2: MODO AUTOMÁTICO (Tirada aleatoria)
+    // ==========================================
+    else {
+        console.log("[app.js] 🎲 Generando tirada automática aleatoria...");
         cartasElegidas = window.obtenerCuatroCartasAleatorias();
+        console.log("[app.js] 🃏 Cartas generadas:", cartasElegidas);
+        
+        // Si no se generaron cartas, usar mazo de emergencia
+        if (!cartasElegidas || cartasElegidas.length < 4) {
+            console.warn("[app.js] ⚠️ Falló generación, usando mazo de emergencia");
+            cartasElegidas = ["El Loco", "El Mago", "La Sacerdotisa", "La Emperatriz"];
+        }
     }
 
-    if (!cartasElegidas || cartasElegidas.length < 4 || !cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
+    // ==========================================
+    // VALIDACIÓN FINAL
+    // ==========================================
+    if (!cartasElegidas || cartasElegidas.length < 4) {
         console.error("❌ [app.js] Cartas incompletas:", cartasElegidas);
-        if (window.modoFisicoActivo) {
-            alert("⚠️ No se detectaron las cartas físicas. Volvé a seleccionarlas.");
-            if (typeof mostrarPantalla === 'function') mostrarPantalla('screen-fisico');
-        } else {
-            alert("⚠️ Error al obtener las cartas.");
-        }
+        alert("⚠️ Error al obtener las cartas. Intenta de nuevo.");
         return;
     }
 
-    if (typeof window.mostrarPantalla === 'function') window.mostrarPantalla('screen-result');
+    // Verificar que todas las cartas tengan valor
+    if (!cartasElegidas[0] || !cartasElegidas[1] || !cartasElegidas[2] || !cartasElegidas[3]) {
+        console.error("❌ [app.js] Alguna carta está vacía:", cartasElegidas);
+        
+        if (window.modoFisicoActivo) {
+            alert("⚠️ No se detectaron todas las cartas físicas. Volvé a seleccionarlas.");
+            if (typeof window.mostrarPantalla === 'function') {
+                window.mostrarPantalla('screen-fisico');
+            }
+            return;
+        }
+        
+        console.warn("[app.js] 🔄 Regenerando cartas...");
+        cartasElegidas = window.obtenerCuatroCartasAleatorias();
+        if (!cartasElegidas || cartasElegidas.length < 4) {
+            alert("❌ Error crítico. Recarga la página.");
+            return;
+        }
+    }
+
+    // ==========================================
+    // MOSTRAR RESULTADO
+    // ==========================================
+    console.log("[app.js] ✅ Cartas finales:", cartasElegidas);
+    
+    if (typeof window.mostrarPantalla === 'function') {
+        window.mostrarPantalla('screen-result');
+    }
+    
     window.renderizarMesaDuplas(cartasElegidas, tema);
     await window.enviarPeticionRender(cartasElegidas, tema, preguntaCustom);
 };
+
 // ==========================================
 // CONTROL DE PANEL DE VOZ SEGÚN MODO
 // ==========================================
@@ -275,14 +326,11 @@ window.mostrarPanelVozSegunModo = function() {
     const panelMagico = document.getElementById('voice-panel-magico-filosofico');
     const panelProfesional = document.getElementById('voice-panel-profesional');
     
-    // Verificar si estamos en modo estructural/técnico (profesional)
     const esModoProfesional = window.submodoFisicoActual === 'tarotista_fisico';
     
-    // Ocultar ambos primero
     if (panelMagico) panelMagico.style.display = 'none';
     if (panelProfesional) panelProfesional.style.display = 'none';
     
-    // Mostrar el que corresponde
     if (esModoProfesional) {
         if (panelProfesional) panelProfesional.style.display = 'grid';
         console.log("[UI] Panel profesional (Dupla 1 y Dupla 2)");
@@ -291,6 +339,7 @@ window.mostrarPanelVozSegunModo = function() {
         console.log("[UI] Panel mágico/filosófico (Leer todo, Conclusión, Predicciones)");
     }
 };
+
 // ==========================================
 // TIRADA ESTRUCTURAL / TÉCNICA
 // ==========================================
@@ -317,7 +366,6 @@ window.procesarTiradaEstructural = async function() {
         `;
     }
 
-    // Ocultar el panel de voz al inicio
     window.mostrarPanelVozSegunModo();
 
     try {
@@ -373,11 +421,6 @@ window.procesarTiradaEstructural = async function() {
 
         if (contenedorTexto) contenedorTexto.innerHTML = html;
 
-        // ==========================================
-        // ALMACENAR TEXTOS PARA VOZ Y MOSTRAR PANEL
-        // ==========================================
-        
-        // Almacenar textos de duplas para voz
         window.textoDupla1 = data1.encontrada ? 
             `Dupla 1: ${c1} y ${c2}. ${data1.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
             `Dupla 1: ${c1} y ${c2}. Sin interpretación cargada.`;
@@ -386,13 +429,10 @@ window.procesarTiradaEstructural = async function() {
             `Dupla 2: ${c3} y ${c4}. ${data2.significado?.replace(/<[^>]*>/g, '').replace(/🔮|✨/g, '').trim()}` : 
             `Dupla 2: ${c3} y ${c4}. Sin interpretación cargada.`;
 
-        // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
-        // Mostrar el panel de voz SOLO si hay al menos una dupla encontrada
-if (data1.encontrada || data2.encontrada) {
-    window.mostrarPanelVozSegunModo();
-}
+        if (data1.encontrada || data2.encontrada) {
+            window.mostrarPanelVozSegunModo();
+        }
 
-        // Guardar en historial
         if (typeof guardarEnHistorialLocal === 'function') {
             const resumen = `Dupla 1 (${c1}+${c2}): ${data1.encontrada?'OK':'Sin datos'} | Dupla 2 (${c3}+${c4}): ${data2.encontrada?'OK':'Sin datos'}`;
             guardarEnHistorialLocal('Análisis Estructural', {a:c1,b:c2,c:c3,d:c4}, resumen);
