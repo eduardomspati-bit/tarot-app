@@ -269,7 +269,7 @@ function lanzarMuroDePago() {
             </p>
             <div class="modal-premium-plan">
                 <h3>Plan Premium</h3>
-                <p class="modal-premium-price">$1.999</p>
+                <p class="modal-premium-price">$7.000 ARS</p>
                 <p class="modal-premium-note">Pago único · Acceso permanente</p>
                 <ul class="modal-premium-features">
                     <li>🔮 Lecturas ilimitadas</li>
@@ -409,7 +409,7 @@ function canjearCodigoPremium(codigo) {
 // ==========================================
 
 window.abrirMercadoPago = function() {
-    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
+    // ⚠️ IMPORTANTE: Reemplazá esta URL por tu link real de MercadoPago\n    // Generalo desde: https://www.mercadopago.com.ar/tools/create-link\n    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
     alert('💳 Después de completar el pago, tu acceso se activará automáticamente.\n\nSi ya pagaste y no ves tu acceso, hacé clic en "Tengo un código" e ingresá el código que recibiste por email.');
 };
 
