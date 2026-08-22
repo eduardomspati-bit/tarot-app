@@ -409,9 +409,48 @@ function canjearCodigoPremium(codigo) {
 // ==========================================
 
 window.abrirMercadoPago = function() {
-    window.open('https://mpago.la/2rDcjLS', '_blank');
-    alert('💳 Después de completar el pago, tu acceso se activará automáticamente.\n\nSi ya pagaste y no ves tu acceso, hacé clic en "Tengo un código" e ingresá el código que recibiste por email.');
+    // 1. Abrimos PRIMERO la ventana (antes de cualquier alert o lógica)
+    //    para que el navegador lo reconozca como "user gesture" válido.
+    const mpWindow = window.open('https://mpago.la/2rDcjLS', '_blank');
+
+    // 2. Cerramos el modal premium si está abierto
+    cerrarModalPremium();
+
+    // 3. Si el navegador bloqueó el popup, mpWindow será null o undefined
+    if (!mpWindow || mpWindow.closed || typeof mpWindow.closed === 'undefined') {
+        // Fallback: mostrar mensaje en UI en vez de alert bloqueante
+        mostrarToastPremium('⚠️ Tu navegador bloqueó la ventana de pago. Permití los popups o usá el botón "Código" si ya pagaste.');
+    } else {
+        // Mensaje elegante después de un instante (no bloquea el thread)
+        setTimeout(() => {
+            mostrarToastPremium('💳 Después de pagar, tu acceso se activa automáticamente. Si ya pagaste, usá "Tengo un código".');
+        }, 800);
+    }
 };
+
+// Toast elegante (reemplaza los alert feos)
+function mostrarToastPremium(mensaje) {
+    // Remover toast anterior si existe
+    const anterior = document.getElementById('toast-premium');
+    if (anterior) anterior.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'toast-premium';
+    toast.style.cssText = `
+        position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+        background: rgba(20, 12, 35, 0.95); border: 1px solid rgba(168,85,247,0.4);
+        color: #e0d5f0; padding: 14px 24px; border-radius: 12px;
+        font-size: 0.9rem; z-index: 10000; max-width: 90%; text-align: center;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+        animation: slideUp 0.4s ease;
+    `;
+    toast.textContent = mensaje;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 6000);
+}
 
 // ==========================================
 // EXPOSICIÓN GLOBAL
