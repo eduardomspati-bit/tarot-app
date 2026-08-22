@@ -201,7 +201,96 @@
         .auth-input::placeholder {
             color: rgba(255,255,255,0.4);
         }
+
+        /* === ESTILOS NUEVOS: HISTORIAL === */
+        .historial-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(168,85,247,0.15);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+        .historial-card:hover {
+            border-color: rgba(168,85,247,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+        .historial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+        .historial-eje {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .historial-fecha {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.75rem;
+        }
+        .historial-cartas {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin: 10px 0;
+        }
+        .historial-dupla {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .carta-mini {
+            background: rgba(168,85,247,0.08);
+            border: 1px solid rgba(168,85,247,0.2);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            color: #a78bfa;
+        }
+        .historial-resumen {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            margin: 8px 0 0 0;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* === ESTILOS NUEVOS: CONECTOR DUPLAS === */
+        .conector-duplas {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px 0;
+            gap: 12px;
+        }
+        .conector-linea {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #a855f7, #ffd700, transparent);
+            max-width: 80px;
+        }
+        .conector-texto {
+            color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* === ESTILOS NUEVOS: BANNER PREMIUM === */
+        .banner-premium-box {
+            background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(168,85,247,0.05));
+            border: 1px solid rgba(255,215,0,0.25);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -280,7 +369,7 @@
             </div>
             <h2 style="color: #ffd700; margin-bottom: 5px;">✨ Bienvenido a TarotIA</h2>
             <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 30px;">
-                Ingresá tu correo para acceder al Tarot Completo
+                Ingresá tu correo para acceder a tus lecturas
             </p>
 
             <div class="auth-box consulta-gratis-box">
@@ -288,30 +377,24 @@
                 <input type="email" id="auth-email" class="auth-input" placeholder="tu@email.com"
                        onkeypress="if(event.key==='Enter') iniciarSesion()">
                 <button class="btn-consulta-gratis" onclick="iniciarSesion()" style="width: 100%;">
-                    🔮 Entrar al Tarot Completo
+                    🔮 Entrar al Tarot
                 </button>
                 <p id="auth-error" style="color: #ff6b6b; font-size: 0.85rem; margin-top: 10px; display: none;"></p>
             </div>
 
-            <!-- SECCIÓN CÓDIGO DE ACCESO -->
-            <div style="max-width: 400px; margin: 15px auto; text-align: center;">
-                <button onclick="ingresarCodigoAcceso()" style="background: transparent; border: 1px dashed rgba(168, 85, 247, 0.4); color: #a78bfa; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%; transition: all 0.3s;">
-                    🔑 Tengo un código de acceso
+            <div style="margin-top: 20px; text-align: center;">
+                <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-bottom: 10px;">
+                    ¿Tenés un código de acceso o querés comprar Premium?
+                </p>
+                <button onclick="ingresarCodigoAcceso()" style="background: transparent; border: 1px dashed rgba(168,85,247,0.3); color: #a78bfa; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; margin-right: 8px;">
+                    🔑 Código
+                </button>
+                <button onclick="window.abrirMercadoPago()" style="background: transparent; border: 1px dashed rgba(255,215,0,0.3); color: #ffd700; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+                    💳 Comprar
                 </button>
             </div>
 
-            <!-- SECCIÓN DE PAGO / ACCESO PREMIUM -->
-            <div style="max-width: 400px; margin: 20px auto; background: rgba(255,215,0,0.05); border: 1px dashed rgba(255,215,0,0.4); padding: 15px; border-radius: 12px; text-align: center;">
-                <p style="color: #ffd700; font-size: 0.9rem; margin-bottom: 10px;">⭐ ¿Querés acceso ilimitado Premium?</p>
-                <a href="https://link.mercadopago.com.ar/TULINKDEMP" target="_blank" class="btn-consulta-gratis" style="background: linear-gradient(135deg, #009ee3, #0073a8); font-size: 0.95rem; padding: 12px; margin-bottom: 10px;">
-                    💳 Comprar con Mercado Pago
-                </a>
-                <button onclick="verificarPagoAutomaticoPorEmail()" style="background: transparent; border: none; color: #a78bfa; font-size: 0.85rem; cursor: pointer; text-decoration: underline;">
-                    🔄 Ya pagué / Verificar acceso por mail
-                </button>
-            </div>
-
-            <div style="text-align: center; margin-top: 15px;">
+            <div style="text-align: center; margin-top: 20px;">
                 <button onclick="volverALanding()" class="btn-entrar-app">
                     ← Volver a Consulta Gratis
                 </button>
@@ -321,19 +404,36 @@
 
     <!-- ========== PORTADA PRINCIPAL (APP COMPLETA) ========== -->
     <div id="screen-portada" class="screen hidden">
-        <button class="btn-carta-diaria" onclick="if(typeof tirarCartaDiaria==='function') tirarCartaDiaria();">
-            ✨ Mi Carta Consejo del Día Gratis ✨
-        </button>
 
-        <h3 style="margin-bottom: 15px;">Selecciona el estilo de lectura (Tiradas Automáticas):</h3>
+        <!-- Banner Premium (aparece solo si aplica) -->
+        <div id="banner-premium" class="banner-premium-box" style="display: none;">
+            <div style="position: relative; z-index: 1;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">💎</div>
+                <h3 style="color: #ffd700; margin: 0 0 8px 0; font-size: 1.15rem;">Desbloqueá el Tarot Completo</h3>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin: 0 0 15px 0; line-height: 1.4;">
+                    Lecturas ilimitadas, todos los estilos, mazo físico y voz en todas las lecturas.
+                </p>
+                <button onclick="window.abrirMercadoPago()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #1a0f2e; border: none; padding: 14px 32px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(255,215,0,0.3); text-transform: uppercase; letter-spacing: 1px;">
+                    💳 Obtener Premium — $1.999
+                </button>
+                <p style="color: rgba(255,255,255,0.3); font-size: 0.75rem; margin: 10px 0 0 0;">Pago único · Acceso permanente</p>
+            </div>
+        </div>
+
+        <!-- Contador sutil -->
+        <div id="muestras-container" style="display: none; text-align: center; margin: 0 0 20px 0; padding: 10px; background: rgba(168,85,247,0.03); border-radius: 10px; border: 1px solid rgba(168,85,247,0.08);">
+            <span id="muestras-texto" style="color: #a78bfa; font-size: 0.85rem;"></span>
+        </div>
+
+        <h3 style="margin-bottom: 15px; color: var(--muted-text); font-size: 1rem; font-weight: normal;">¿Cómo querés consultar hoy?</h3>
+
         <div class="menu-portada">
-           <!-- ESTILO MÁGICO -->
+            <!-- ESTILO MÁGICO -->
             <div class="opcion-tarjeta" onclick="verificarAccesoEstilo('magico')">
                 <div class="opcion-icono">🔮</div>
                 <div class="opcion-info">
                     <h3>Estilo Mágico</h3>
-                    <p>Tirada automática por duplas. Lectura directa, mística y predictiva.</p>
-                    <span id="badge-magico" class="badge-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+                    <p>Lectura directa, mística y predictiva. Ideal para preguntas puntuales.</p>
                 </div>
             </div>
 
@@ -342,37 +442,26 @@
                 <div class="opcion-icono">🧘‍♂️</div>
                 <div class="opcion-info">
                     <h3>Estilo Filosófico</h3>
-                    <p>Tirada automática por duplas. Lectura profunda, psicológica y evolutiva.</p>
-                    <span id="badge-filosofico" class="badge-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+                    <p>Lectura profunda, psicológica y evolutiva. Para reflexionar.</p>
                 </div>
             </div>
 
             <!-- MÓDULO PROFESIONAL -->
-            <div class="opcion-tarjeta" style="border-color: #a78bfa; background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.01));" onclick="abrirModuloProfesional()">
+            <div class="opcion-tarjeta" style="border-color: rgba(168,85,247,0.4);" onclick="abrirModuloProfesional()">
                 <div class="opcion-icono">💼</div>
                 <div class="opcion-info">
-                    <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.8rem; font-weight: bold; background: rgba(167, 139, 250, 0.15); padding: 2px 6px; border-radius: 4px; margin-left: 5px;">PREMIUM</span></h3>
-                    <p>Herramientas avanzadas, lecturas con Mazo Físico y desgloses técnicos.</p>
-                    <span id="badge-profesional" class="badge-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">🔓 Registrate</span>
+                    <h3>Módulo Profesional <span style="color: #a78bfa; font-size: 0.7rem; font-weight: bold; background: rgba(167,139,250,0.15); padding: 2px 8px; border-radius: 10px; margin-left: 6px; text-transform: uppercase;">Premium</span></h3>
+                    <p>Herramientas avanzadas con Mazo Físico y análisis técnico.</p>
                 </div>
             </div>
         </div>
-<!-- Contador de muestras -->
-<div id="muestras-container" style="text-align:center; margin: 10px 0 20px 0; padding: 12px; background:rgba(168,85,247,0.05); border-radius:12px; border:1px solid rgba(168,85,247,0.15);">
-    <span id="muestras-texto" style="color:#a78bfa; font-size:0.95rem;">
-        🔮 Cargando muestras...
-    </span>
-</div>
-        <button onclick="abrirHistorial()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--muted-text); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 12px; font-size: 0.95rem; cursor: pointer;">
+
+        <button onclick="abrirHistorial()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: var(--muted-text); width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px; font-size: 0.95rem; cursor: pointer; transition: all 0.3s;">
             📜 Ver Mis Lecturas Anteriores
         </button>
 
-        <button type="button" onclick="pedirEmailAlUsuario()" class="btn-email-vinculo" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--muted-text); width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem;">
-            📧 Vincular mi Correo Electrónico
-        </button>
-
-        <button type="button" onclick="ingresarCodigoAcceso()" style="background: rgba(168,85,247,0.05); border: 1px dashed rgba(168, 85, 247, 0.4); color: #a78bfa; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.95rem; margin-top: 10px; transition: all 0.3s;">
-            🔑 Tengo un código de acceso
+        <button onclick="cerrarSesionTarot()" style="background: transparent; border: none; color: rgba(255,255,255,0.2); width: 100%; padding: 8px; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">
+            Cerrar sesión
         </button>
     </div>
 
@@ -484,6 +573,13 @@
             </div>
         </div>
 
+        <!-- Conector visual entre duplas -->
+        <div class="conector-duplas">
+            <div class="conector-linea"></div>
+            <span class="conector-texto">Evolución</span>
+            <div class="conector-linea"></div>
+        </div>
+
         <div class="reading-output" id="interpretation-text"></div>
 
         <!-- ========== PANEL DE VOZ DINÁMICO ========== -->
@@ -530,7 +626,6 @@
                 <div class="opcion-info">
                     <h3>Mazo Físico Predictivo</h3>
                     <p>Carga la Dupla 1 y Dupla 2 de tu mazo real para una lectura fluida.</p>
-                    <span id="badge-fisico-muestra" style="font-size: 0.75rem; color: #a78bfa; margin-top: 5px; display: inline-block;">5 Muestras</span>
                 </div>
             </div>
 
@@ -574,17 +669,17 @@
 
 </div>
 
-<!-- Carga de Scripts con cache-busting v8 -->
+<!-- Carga de Scripts con cache-busting v9 -->
 <script src="js/arcanos.js?v=9"></script>
 <script src="js/config.js?v=9"></script>
 <script src="js/navigation.js?v=9"></script>
 <script src="js/auth.js?v=9"></script>
 <script src="js/voice.js?v=9"></script>
 <script src="js/history.js?v=9"></script>
-<script src="js/access.js?v=10"></script>
+<script src="js/access.js?v=11"></script>
 <script src="js/app.js?v=9"></script>
 
-<!-- NAVEGACIÓN INLINE v8 - Flujo corregido -->
+<!-- NAVEGACIÓN INLINE v9 - Flujo corregido y limpio -->
 <script>
 window.preguntaCustomSeleccionada = "";
 
@@ -697,36 +792,25 @@ window.abrirHistorial=function(){
     if(typeof window.cargarHistorial==='function')window.cargarHistorial();
     window.mostrarPantalla('screen-historial');
 };
-window.pedirEmailAlUsuario=function(){
-    const email=prompt("📧 Ingresá tu correo:");
-    if(email&&email.includes('@')){alert("✅ Correo vinculado: "+email);localStorage.setItem('tarotia_email_usuario',email);}
-};
-window.tirarCartaDiaria=function(){
-    const mazo=window.obtenerMazoActivo?window.obtenerMazoActivo():["El Loco","El Mago","La Sacerdotisa"];
-    alert("🔮 Carta del Día: "+mazo[Math.floor(Math.random()*mazo.length)]);
-};
-window.volverALanding=function(){
-    window.mostrarPantalla('screen-landing');
-};
- // ==========================================
+
+// ==========================================
 // FUNCIÓN PARA ENTRAR AL TAROT COMPLETO
 // ==========================================
 
 window.entrarAppCompleta = function() {
     console.log("[nav] Entrar al Tarot Completo");
-    
-    // Primero verificamos si hay sesión activa
+
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    
+
     if (token) {
-        // Si ya tiene token, va directo a la portada
         window.mostrarPantalla('screen-portada');
-        // Actualizar badges
         if (typeof window.actualizarBadgeGlobal === 'function') {
             window.actualizarBadgeGlobal();
         }
+        if (typeof window.actualizarContadorMuestras === 'function') {
+            window.actualizarContadorMuestras();
+        }
     } else {
-        // Si no tiene token, mostrar pantalla de autenticación
         window.mostrarPantalla('screen-auth');
     }
 };   
@@ -756,7 +840,6 @@ window.ingresarCodigoAcceso = function() {
         if (typeof canjearCodigoPremium === 'function') {
             canjearCodigoPremium(codigo.trim());
         } else {
-            // Fallback si access.js no cargó aún
             const codigoLimpio = codigo.trim().toUpperCase();
             const CODIGOS_VALIDOS = ['ADMIN2026', 'PASEMISTICO', 'TAROTGRATIS'];
             if (CODIGOS_VALIDOS.includes(codigoLimpio)) {
@@ -775,7 +858,16 @@ window.ingresarCodigoAcceso = function() {
     }
 };
 
-console.log("✅ Navegación inline v8 corregida cargada");
+// ==========================================
+// CONECTOR VISUAL ENTRE DUPLAS
+// ==========================================
+window.agregarConectorDuplas = function() {
+    // El conector ya está en el HTML estático, no hace falta inyectarlo dinámicamente
+    // Esta función queda como hook por si querés animarlo en el futuro
+    console.log("[nav] Conector de duplas renderizado");
+};
+
+console.log("✅ Navegación inline v9 limpia cargada");
 </script>
 </body>
 </html>
