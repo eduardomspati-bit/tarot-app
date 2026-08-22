@@ -389,7 +389,7 @@
                 <button onclick="ingresarCodigoAcceso()" style="background: transparent; border: 1px dashed rgba(168,85,247,0.3); color: #a78bfa; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; margin-right: 8px;">
                     🔑 Código
                 </button>
-                <button onclick="window.abrirMercadoPago()"  <!-- El link de MP se configura en access.js --> style="background: transparent; border: 1px dashed rgba(255,215,0,0.3); color: #ffd700; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+                <button onclick="window.abrirMercadoPago()" style="background: transparent; border: 1px dashed rgba(255,215,0,0.3); color: #ffd700; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
                     💳 Comprar
                 </button>
             </div>
@@ -413,7 +413,7 @@
                 <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin: 0 0 15px 0; line-height: 1.4;">
                     Lecturas ilimitadas, todos los estilos, mazo físico y voz en todas las lecturas.
                 </p>
-                <button onclick="window.abrirMercadoPago()"  <!-- El link de MP se configura en access.js --> style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #1a0f2e; border: none; padding: 14px 32px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(255,215,0,0.3); text-transform: uppercase; letter-spacing: 1px;">
+                <button onclick="window.abrirMercadoPago()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #1a0f2e; border: none; padding: 14px 32px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(255,215,0,0.3); text-transform: uppercase; letter-spacing: 1px;">
                     💳 Obtener Premium — $7.000 ARS
                 </button>
                 <p style="color: rgba(255,255,255,0.3); font-size: 0.75rem; margin: 10px 0 0 0;">Pago único · Acceso permanente</p>
@@ -675,8 +675,8 @@
 <script src="js/navigation.js?v=9"></script>
 <script src="js/auth.js?v=9"></script>
 <script src="js/voice.js?v=9"></script>
-<script src="js/history.js?v=9"></script>
-<script src="js/access.js?v=11"></script>
+<script src="js/history.js?v=2"></script>
+<script src="js/access.js?v=12"></script>
 <script src="js/app.js?v=9"></script>
 
 <!-- NAVEGACIÓN INLINE v9 - Flujo corregido y limpio -->
@@ -705,7 +705,7 @@ window.mostrarPantalla = function(id) {
         d.style.opacity = '1';
         window.scrollTo(0, 0);
     } else {
-        console.error('[nav] ❌ No existe el elemento:', id);
+        console.error('[nav] No existe el elemento:', id);
         alert('Error interno: pantalla ' + id + ' no encontrada. Recargá la página.');
     }
 
@@ -776,7 +776,7 @@ window.ejecutarLecturaSegunModo = function(tema) {
     if (typeof window.procesarTiradaCompleta === 'function') {
         window.procesarTiradaCompleta(tema, window.preguntaCustomSeleccionada || "");
     } else {
-        console.error("[nav] ❌ procesarTiradaCompleta no está definida");
+        console.error("[nav] procesarTiradaCompleta no está definida");
         alert("⚠️ Error: La función de tirada no está disponible. Recarga la página.");
     }
 };
@@ -862,8 +862,6 @@ window.ingresarCodigoAcceso = function() {
 // CONECTOR VISUAL ENTRE DUPLAS
 // ==========================================
 window.agregarConectorDuplas = function() {
-    // El conector ya está en el HTML estático, no hace falta inyectarlo dinámicamente
-    // Esta función queda como hook por si querés animarlo en el futuro
     console.log("[nav] Conector de duplas renderizado");
 };
 
