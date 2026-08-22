@@ -409,7 +409,7 @@ function canjearCodigoPremium(codigo) {
 // ==========================================
 
 window.abrirMercadoPago = function() {
-    // ⚠️ IMPORTANTE: Reemplazá esta URL por tu link real de MercadoPago\n    // Generalo desde: https://www.mercadopago.com.ar/tools/create-link\n    window.open('https://link.mercadopago.com.ar/TULINKDEMP', '_blank');
+    window.open('https://mpago.la/2rDcjLS', '_blank');
     alert('💳 Después de completar el pago, tu acceso se activará automáticamente.\n\nSi ya pagaste y no ves tu acceso, hacé clic en "Tengo un código" e ingresá el código que recibiste por email.');
 };
 
