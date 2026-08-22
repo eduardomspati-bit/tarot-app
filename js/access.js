@@ -1,5 +1,5 @@
 // ==========================================
-// ACCESS.JS v11.0 - Registro obligatorio + Modal Premium + Contador
+// ACCESS.JS v12.0 - Flujo limpio + Banner Premium inteligente
 // ==========================================
 
 const TIRADAS_POR_REGISTRO = 5;
@@ -59,11 +59,10 @@ async function registrarUsoTiradaGlobal() {
                 'Authorization': `Bearer ${token}` 
             }
         });
-        
+
         if (resp.ok) {
             const data = await resp.json();
             _lsSet('tarotia_muestras_backup', data.muestrasRestantes);
-            actualizarBadgeGlobal();
             actualizarContadorMuestras();
             return data.muestrasRestantes;
         } else if (resp.status === 403 || resp.status === 429) {
@@ -86,62 +85,63 @@ async function registrarUsoTiradaGlobal() {
 }
 
 // ==========================================
-// CONTADOR DE MUESTRAS (NUEVO)
+// CONTADOR DE MUESTRAS (LIMPIO)
 // ==========================================
 
 async function actualizarContadorMuestras() {
-    const contenedor = document.getElementById('muestras-texto');
-    if (!contenedor) return;
-    
+    const bannerPremium = document.getElementById('banner-premium');
+    const contenedorMuestras = document.getElementById('muestras-container');
+    const textoMuestras = document.getElementById('muestras-texto');
+
+    if (!bannerPremium || !contenedorMuestras) return;
+
     const token = window.obtenerToken ? window.obtenerToken() : null;
-    
+
+    // Sin token = mostrar banner premium (invitación a registrarse)
     if (!token) {
-        contenedor.textContent = '🔓 Registrate para acceder al Tarot Completo';
-        contenedor.style.color = '#a78bfa';
+        bannerPremium.style.display = 'block';
+        contenedorMuestras.style.display = 'none';
         return;
     }
-    
+
+    // Premium = nada de esto
     if (window.esUsuarioPremium) {
-        contenedor.textContent = '✨ Plan Premium - Lecturas Ilimitadas ✨';
-        contenedor.style.color = '#ffd700';
+        bannerPremium.style.display = 'none';
+        contenedorMuestras.style.display = 'none';
         return;
     }
-    
+
+    // Registrado, no premium: contador sutil
     const restantes = await obtenerMuestrasRestantesGlobal();
-    
+
     if (restantes > 0) {
-        const emoji = restantes === 1 ? '🎴' : '🎴';
-        contenedor.textContent = `${emoji} Te quedan ${restantes} lectura${restantes > 1 ? 's' : ''} gratis de ${TIRADAS_POR_REGISTRO}`;
-        contenedor.style.color = '#60a5fa';
+        bannerPremium.style.display = 'none';
+        contenedorMuestras.style.display = 'block';
+        textoMuestras.textContent = `🎴 ${restantes} lectura${restantes > 1 ? 's' : ''} gratuita${restantes > 1 ? 's' : ''} restante${restantes > 1 ? 's' : ''}`;
+        textoMuestras.style.color = '#60a5fa';
     } else {
-        contenedor.textContent = '🔒 Sin muestras gratis - Hacé Upgrade a Premium';
-        contenedor.style.color = '#ef4444';
+        // Se acabaron: mostrar banner de upgrade
+        bannerPremium.style.display = 'block';
+        contenedorMuestras.style.display = 'block';
+        textoMuestras.textContent = 'Sin lecturas gratuitas';
+        textoMuestras.style.color = '#ef4444';
     }
 }
 
 // ==========================================
-// BADGE
+// BADGE (ahora solo log, sin badges visuales en tarjetas)
 // ==========================================
 
 async function actualizarBadgeGlobal() {
-    const badges = [
-        document.getElementById('badge-magico'),
-        document.getElementById('badge-filosofico'),
-        document.getElementById('badge-profesional'),
-        document.getElementById('badge-fisico-muestra')
-    ].filter(Boolean);
-
     const token = window.obtenerToken ? window.obtenerToken() : null;
 
     if (window.esUsuarioPremium) {
-        badges.forEach(b => { b.innerText = "Ilimitado ✨"; b.style.borderColor = "#a78bfa"; });
+        console.log("[access] Usuario Premium");
     } else if (token) {
         const restantes = await obtenerMuestrasRestantesGlobal();
-        const txt = restantes > 0 ? `📧 ${restantes} lecturas` : "Sin muestras 🔒";
-        const color = restantes > 0 ? "#60a5fa" : "#ef4444";
-        badges.forEach(b => { b.innerText = txt; b.style.borderColor = color; });
+        console.log("[access] Muestras restantes:", restantes);
     } else {
-        badges.forEach(b => { b.innerText = "🔒 Registro requerido"; b.style.borderColor = "#fbbf24"; });
+        console.log("[access] Sin sesión");
     }
 }
 
@@ -159,7 +159,7 @@ async function verificarAccesoGlobal(modo, submodo) {
 
     const token = window.obtenerToken ? window.obtenerToken() : null;
 
-    // ⛔ SIN TOKEN = Registro obligatorio
+    // Sin token = Registro obligatorio
     if (!token) {
         const quiereRegistrarse = confirm(
             "✨ Para acceder al Tarot Completo necesitamos tu email.\n\n" +
@@ -174,9 +174,9 @@ async function verificarAccesoGlobal(modo, submodo) {
         return;
     }
 
-    // ✅ CON TOKEN: verificar muestras
+    // Con token: verificar muestras
     const restantes = await registrarUsoTiradaGlobal();
-    
+
     if (restantes >= 0) {
         abrirModo(modo, submodo);
     } else {
@@ -250,71 +250,112 @@ function abrirModo(modo, submodo) {
 }
 
 // ==========================================
-// 🎯 MURO DE PAGO CON MODAL BONITO (NUEVO)
+// MURO DE PAGO CON MODAL LIMPIO
 // ==========================================
 
 function lanzarMuroDePago() {
-    // Si ya hay un modal abierto, no crear otro
     if (document.getElementById('modal-premium')) return;
-    
-    const modalHTML = `
-        <div id="modal-premium" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(10px); animation:fadeIn 0.3s ease;">
-            <div style="background:linear-gradient(145deg, #1a0f2e, #2d1b4e); padding:40px 30px; border-radius:24px; max-width:420px; width:90%; border:1px solid rgba(168,85,247,0.3); text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.8); position:relative; max-height:90vh; overflow-y:auto;">
-                
-                <!-- Botón cerrar -->
-                <button onclick="cerrarModalPremium()" style="position:absolute; top:12px; right:16px; background:transparent; border:none; color:rgba(255,255,255,0.4); font-size:1.5rem; cursor:pointer; transition:0.2s;">
-                    ✕
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-premium';
+    modal.className = 'modal-premium-overlay';
+    modal.innerHTML = `
+        <div class="modal-premium-box">
+            <button class="modal-premium-close" onclick="cerrarModalPremium()">✕</button>
+            <div class="modal-premium-icon">💎</div>
+            <h2 class="modal-premium-title">¡Excelente!</h2>
+            <p class="modal-premium-subtitle">
+                Ya usaste tus <strong>${TIRADAS_POR_REGISTRO} lecturas gratis</strong>.
+            </p>
+            <div class="modal-premium-plan">
+                <h3>Plan Premium</h3>
+                <p class="modal-premium-price">$1.999</p>
+                <p class="modal-premium-note">Pago único · Acceso permanente</p>
+                <ul class="modal-premium-features">
+                    <li>🔮 Lecturas ilimitadas</li>
+                    <li>🧘‍♂️ Todos los estilos (Mágico, Filosófico, Profesional)</li>
+                    <li>🃏 Mazo Físico incluido</li>
+                    <li>📜 Historial ilimitado</li>
+                    <li>🎙️ Voz en todas las lecturas</li>
+                </ul>
+            </div>
+            <div class="modal-premium-actions">
+                <button class="btn-premium-buy" onclick="window.abrirMercadoPago()">
+                    💳 Comprar Ahora
                 </button>
-                
-                <!-- Icono -->
-                <div style="font-size:4rem; margin-bottom:5px;">💎</div>
-                
-                <h2 style="color:#ffd700; margin:0; font-size:1.8rem;">¡Excelente!</h2>
-                <p style="color:rgba(255,255,255,0.5); margin:5px 0 15px 0; font-size:0.95rem;">
-                    Ya usaste tus <strong style="color:#a78bfa;">${TIRADAS_POR_REGISTRO} lecturas gratis</strong>.
-                </p>
-                
-                <!-- Plan Premium -->
-                <div style="background:rgba(168,85,247,0.08); padding:20px; border-radius:16px; margin:15px 0; border:1px solid rgba(168,85,247,0.15);">
-                    <h3 style="color:#a78bfa; margin:0; font-size:1.1rem;">Plan Premium</h3>
-                    <p style="color:#ffd700; font-size:2rem; font-weight:bold; margin:5px 0;">$1.999</p>
-                    <p style="color:rgba(255,255,255,0.4); font-size:0.8rem; margin:0;">Pago único · Acceso permanente</p>
-                    
-                    <div style="text-align:left; margin:15px 0 0 0; color:rgba(255,255,255,0.6); font-size:0.85rem; line-height:1.8;">
-                        ✓ 🔮 Lecturas ilimitadas<br>
-                        ✓ 🧘‍♂️ Todos los estilos (Mágico, Filosófico, Profesional)<br>
-                        ✓ 🃏 Mazo Físico incluido<br>
-                        ✓ 📜 Historial ilimitado<br>
-                        ✓ 🎙️ Voz en todas las lecturas
-                    </div>
-                </div>
-                
-                <!-- Botones -->
-                <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
-                    <button onclick="window.abrirMercadoPago()" style="padding:16px; background:linear-gradient(135deg, #009ee3, #0073a8); border:none; border-radius:14px; color:white; font-weight:bold; font-size:1.05rem; cursor:pointer; transition:0.3s; box-shadow:0 4px 20px rgba(0,158,227,0.3);">
-                        💳 Comprar Ahora
-                    </button>
-                    <button onclick="cerrarModalPremium(); ingresarCodigoPremium()" style="padding:12px; background:transparent; border:1px solid rgba(255,255,255,0.15); border-radius:14px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:0.9rem; transition:0.3s;">
-                        🔑 Tengo un código de acceso
-                    </button>
-                    <button onclick="cerrarModalPremium()" style="padding:8px; background:transparent; border:none; color:rgba(255,255,255,0.25); cursor:pointer; font-size:0.8rem; text-decoration:underline;">
-                        Volver al menú
-                    </button>
-                </div>
+                <button class="btn-premium-code" onclick="cerrarModalPremium(); ingresarCodigoPremium()">
+                    🔑 Tengo un código de acceso
+                </button>
+                <button class="btn-premium-back" onclick="cerrarModalPremium()">
+                    Volver al menú
+                </button>
             </div>
         </div>
     `;
-    
-    // Agregar el modal al DOM
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = modalHTML;
-    document.body.appendChild(modalContainer.firstElementChild);
-    
-    // Agregar estilo para la animación si no existe
+
+    document.body.appendChild(modal);
+
+    // Inyectar estilos del modal si no existen
     if (!document.getElementById('modal-premium-style')) {
         const style = document.createElement('style');
         style.id = 'modal-premium-style';
         style.textContent = `
+            .modal-premium-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.85); z-index: 9999;
+                display: flex; justify-content: center; align-items: center;
+                backdrop-filter: blur(10px);
+                animation: fadeIn 0.3s ease;
+            }
+            .modal-premium-box {
+                background: linear-gradient(145deg, #1a0f2e, #2d1b4e);
+                padding: 40px 30px; border-radius: 24px; max-width: 420px; width: 90%;
+                border: 1px solid rgba(168,85,247,0.3); text-align: center;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative;
+                max-height: 90vh; overflow-y: auto;
+            }
+            .modal-premium-close {
+                position: absolute; top: 12px; right: 16px;
+                background: transparent; border: none;
+                color: rgba(255,255,255,0.4); font-size: 1.5rem; cursor: pointer;
+            }
+            .modal-premium-icon { font-size: 4rem; margin-bottom: 5px; }
+            .modal-premium-title { color: #ffd700; margin: 0; font-size: 1.8rem; }
+            .modal-premium-subtitle { color: rgba(255,255,255,0.5); margin: 5px 0 15px 0; font-size: 0.95rem; }
+            .modal-premium-subtitle strong { color: #a78bfa; }
+            .modal-premium-plan {
+                background: rgba(168,85,247,0.08); padding: 20px; border-radius: 16px;
+                margin: 15px 0; border: 1px solid rgba(168,85,247,0.15);
+            }
+            .modal-premium-plan h3 { color: #a78bfa; margin: 0; font-size: 1.1rem; }
+            .modal-premium-price { color: #ffd700; font-size: 2rem; font-weight: bold; margin: 5px 0; }
+            .modal-premium-note { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin: 0; }
+            .modal-premium-features {
+                text-align: left; margin: 15px 0 0 0;
+                color: rgba(255,255,255,0.6); font-size: 0.85rem; line-height: 1.8;
+                list-style: none; padding: 0;
+            }
+            .modal-premium-features li { padding-left: 5px; }
+            .modal-premium-actions {
+                display: flex; flex-direction: column; gap: 10px; margin-top: 10px;
+            }
+            .btn-premium-buy {
+                padding: 16px; background: linear-gradient(135deg, #009ee3, #0073a8);
+                border: none; border-radius: 14px; color: white; font-weight: bold;
+                font-size: 1.05rem; cursor: pointer; transition: 0.3s;
+                box-shadow: 0 4px 20px rgba(0,158,227,0.3);
+            }
+            .btn-premium-buy:hover { transform: translateY(-2px); }
+            .btn-premium-code {
+                padding: 12px; background: transparent;
+                border: 1px solid rgba(255,255,255,0.15); border-radius: 14px;
+                color: rgba(255,255,255,0.5); cursor: pointer; font-size: 0.9rem;
+            }
+            .btn-premium-back {
+                padding: 8px; background: transparent; border: none;
+                color: rgba(255,255,255,0.25); cursor: pointer; font-size: 0.8rem;
+                text-decoration: underline;
+            }
             @keyframes fadeIn {
                 from { opacity: 0; transform: scale(0.95); }
                 to { opacity: 1; transform: scale(1); }
@@ -329,7 +370,6 @@ function cerrarModalPremium() {
     if (modal) modal.remove();
 }
 
-// Función para ingresar código desde el modal
 function ingresarCodigoPremium() {
     const codigo = prompt("🔑 Ingresá tu código de acceso Premium:");
     if (codigo && codigo.trim()) {
@@ -358,7 +398,6 @@ function canjearCodigoPremium(codigo) {
         window.mostrarPantalla('screen-portada');
     } else {
         alert('❌ Código inválido.');
-        // Reabrir el modal si estaba cerrado
         if (!document.getElementById('modal-premium')) {
             lanzarMuroDePago();
         }
@@ -412,11 +451,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     await actualizarBadgeGlobal();
     await actualizarContadorMuestras();
-    
-    // Observar cambios en display de las pantallas
+
     document.querySelectorAll('.screen').forEach(screen => {
         observer.observe(screen, { attributes: true, attributeFilter: ['style', 'class'] });
     });
 });
 
-console.log("[access] ✅ v11.0 cargado - Modal Premium + Contador de muestras");
+console.log("[access] ✅ v12.0 cargado - Flujo limpio + Banner Premium inteligente");
