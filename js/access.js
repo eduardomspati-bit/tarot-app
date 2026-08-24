@@ -270,9 +270,9 @@ function lanzarMuroDePago() {
             <div class="modal-premium-plan">
                 <h3>Plan Premium</h3>
                 <p class="modal-premium-price">$7.000 ARS</p>
-                <p class="modal-premium-note">Pago único · Acceso permanente</p>
+                <p class="modal-premium-note">Pago único · MecadoPago</p>
                 <ul class="modal-premium-features">
-                    <li>🔮 Lecturas ilimitadas</li>
+                    <li>🔮 Lecturas ilimitadas x 30 días</li>
                     <li>🧘‍♂️ Todos los estilos (Mágico, Filosófico, Profesional)</li>
                     <li>🃏 Mazo Físico incluido</li>
                     <li>📜 Historial ilimitado</li>
