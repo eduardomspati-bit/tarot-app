@@ -576,3 +576,145 @@
         font-size: 0.8rem;
     }
 }
+/* ==========================================
+   ESTILOS DE LA GUÍA DE LECTURA
+   ========================================== */
+.guia-card {
+    max-width: 650px;
+    margin: 20px auto;
+    padding: 30px 25px;
+    background: rgba(20, 15, 35, 0.95);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 16px;
+    color: var(--text-color);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    text-align: left;
+}
+
+.guia-title {
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.6rem;
+    text-shadow: 0 0 15px var(--accent-glow);
+}
+
+.guia-intro {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--muted-text);
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.guia-section h3 {
+    color: #c084fc;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+    padding-bottom: 8px;
+}
+
+.guia-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.guia-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
+}
+
+.step-number {
+    background: var(--accent);
+    color: #07030d;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-desc {
+    display: block;
+    color: var(--muted-text);
+    font-size: 0.95rem;
+    margin-top: 4px;
+}
+
+.guia-example {
+    background: rgba(147, 51, 234, 0.1);
+    border-left: 4px solid #a855f7;
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 25px 0;
+    font-style: italic;
+    color: #e0d5f0;
+    line-height: 1.6;
+}
+
+.guia-tip-box {
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px dashed rgba(255, 215, 0, 0.3);
+    padding: 15px;
+    border-radius: 10px;
+    margin: 25px 0;
+    color: #fde68a;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.guia-spiritual {
+    background: linear-gradient(135deg, rgba(15, 10, 30, 0.8), rgba(30, 20, 45, 0.8));
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 25px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--muted-text);
+    text-align: center;
+}
+
+.guia-actions {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn-guia-back {
+    background: linear-gradient(135deg, #a855f7, #6b21a8);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+.btn-guia-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5);
+}
+
+/* Responsive para la guía */
+@media (max-width: 480px) {
+    .guia-card {
+        padding: 20px 15px;
+        margin: 10px;
+    }
+    .guia-title {
+        font-size: 1.4rem;
+    }
+}
